@@ -26,13 +26,10 @@ public class Player : Creature
         if (HeldItem != null){
             ThrowItem();
         } else {
-            Collider[] nearbyObjects = Physics.OverlapSphere(transform.position,2,interactLM);
-            if (nearbyObjects.Length>0){
-                // if (nearbyObjects[0].gameObject.layer == 8){;//if berry{
-                //     PickupFood();
-                // }
+            Collider[] nearbyObjects = Physics.OverlapSphere(transform.position,2,interactLM);//for player, I just look at surrounding environment. For AI, use FindClosestObjectOfLayer
+            if (nearbyObjects.Length>0){ 
                 Target = nearbyObjects[0].gameObject;//i only use the first object of an array which I believe is random, but that's fine I think?
-                TargetDist = Mathf.Abs(Vector3.Distance(transform.position,Target.transform.position));
+                TargetDist = GetTargetDist(Target.transform.position);
                 MeleeAttack();
             }   
         }

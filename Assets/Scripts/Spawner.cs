@@ -14,6 +14,10 @@ public class Spawner : MonoBehaviour
     Queue<GameObject> berryQueue = new Queue<GameObject>();
     Queue<GameObject> bombQueue = new Queue<GameObject>();
 
+    [HideInInspector]public List<GameObject> ActivesBushes =  new List<GameObject>();
+    [HideInInspector]public List<GameObject> ActiveBerries =  new List<GameObject>();
+    [HideInInspector]public List<GameObject> ActiveBombs =  new List<GameObject>();
+
     void Awake(){
         manager = GetComponent<GameManager>();
         InitializeQueues();
@@ -56,6 +60,7 @@ public class Spawner : MonoBehaviour
     public void SpawnEnvironment(Vector3 spawnPos, EnvironmentType type){
         GameObject newItem = null;
         Queue<GameObject> useQueue = new Queue<GameObject>();
+        List<GameObject> useList = new List<GameObject>();
         GameObject usePrefab = treePrefab;
         if (type == EnvironmentType.Tree){
             useQueue = treeQueue;
@@ -63,15 +68,18 @@ public class Spawner : MonoBehaviour
         } else if (type == EnvironmentType.Bush){
             useQueue = bushQueue;
             usePrefab = bushPrefab;
+            useList = ActivesBushes;
         } else if (type == EnvironmentType.Berry){
             useQueue = berryQueue;
             usePrefab = berryPrefab;
+            useList = ActiveBerries;
         } else if (type == EnvironmentType.Rock){
             useQueue = rockQueue;
             usePrefab = rockPrefab;
         } else if (type == EnvironmentType.Bomb){
             useQueue = bombQueue;
             usePrefab = bombPrefab;
+            useList = ActiveBombs;
         }
         if (useQueue.Count > 0){
             newItem = useQueue.Dequeue();
@@ -79,6 +87,7 @@ public class Spawner : MonoBehaviour
             newItem = Instantiate(usePrefab);
             newItem.transform.SetParent(transform);
         }
+        useList.Add(newItem);
 
         // if (type == EnvironmentType.Tree){
         //     if (treeQueue.Count > 0){
@@ -137,12 +146,15 @@ public class Spawner : MonoBehaviour
             treeQueue.Enqueue(item);
         } else if (type == EnvironmentType.Bush){
             bushQueue.Enqueue(item);
+            ActivesBushes.Remove(item);
         } else if (type == EnvironmentType.Rock){
             rockQueue.Enqueue(item);
         } else if (type == EnvironmentType.Berry){
             berryQueue.Enqueue(item);
+            ActiveBerries.Remove(item);
         } else if (type == EnvironmentType.Bomb){
             bombQueue.Enqueue(item);
+            ActiveBombs.Remove(item);
         }
     }
 }

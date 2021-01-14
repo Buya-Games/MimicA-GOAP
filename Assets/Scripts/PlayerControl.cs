@@ -21,11 +21,8 @@ public class PlayerControl : MonoBehaviour
     // Update is called every frame
     void Update(){
         keybInputDirection = new Vector3(Input.GetAxisRaw ("Horizontal"),0,Input.GetAxisRaw("Vertical")).normalized;//when move with WSAD or arrow keys
-        //if (Input.GetMouseButtonDown(0)){//when press LMB
-            MoveMouse();
-        //}
+        MoveMouse();
         if (Input.GetKeyDown(KeyCode.Space)){
-            player.Swing();
             player.Interact();
         }
     }
@@ -60,7 +57,7 @@ public class PlayerControl : MonoBehaviour
         if (Physics.Raycast (ray, out hit, 100)){
             lookTarget = hit.point;
         } else {
-            lookTarget = Vector3.zero;
+            lookTarget = transform.forward * 100;
         }
     }
 

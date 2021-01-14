@@ -6,8 +6,8 @@ public class GameManager : MonoBehaviour
 {
     FrameworkGameData gameData;
     [HideInInspector]public int Food, Bombs;
-    [HideInInspector]public List<Enemy> AliveEnemies = new List<Enemy>();
-    [HideInInspector]public List<Human> AllHumans = new List<Human>(); //includes player and companions
+    [HideInInspector]public List<Enemy> ActiveEnemies = new List<Enemy>();
+    [HideInInspector]public List<Human> ActiveHumans = new List<Human>(); //includes player and companions
     PlayerControl player;
     [HideInInspector] public Spawner spawner;
 
@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
 
     //Start is called before first frame
     void Start(){
-        AllHumans.Add(player.GetComponent<Human>());
+        ActiveHumans.Add(player.GetComponent<Human>());
         StartCoroutine(SpawnBushes());
         //SpawnEnvironment(5, Spawner.EnvironmentType.Tree);
         //SpawnEnvironment(10, Spawner.EnvironmentType.Bush);
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
         while (counter < 100){
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
-            yield return new WaitForSeconds(5);
+            yield return new WaitForSeconds(1);
         }
     }
 

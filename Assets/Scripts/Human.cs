@@ -5,7 +5,7 @@ using UnityEngine;
 public class Human : Creature
 {
     public Enemy FindNearestEnemy(){
-        Enemy[] enemies = manager.AliveEnemies.ToArray();
+        Enemy[] enemies = manager.ActiveEnemies.ToArray();
         Enemy closestEnemy = null;
         float enemyDist = Mathf.Infinity;
         foreach (Enemy e in enemies)
