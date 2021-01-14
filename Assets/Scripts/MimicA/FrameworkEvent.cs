@@ -12,5 +12,6 @@ public abstract class FrameworkEvent: FrameworkGameStateVector
     public abstract bool CheckRange(Creature agent); //checking if inRange
     public abstract bool CheckPreconditions(Creature agent); //checking if conditions necessary to do perform event
     public abstract bool PerformEvent(Creature agent);//performs the event
+    protected abstract bool CompleteEvent(Creature agent);//performs the event
 
 }

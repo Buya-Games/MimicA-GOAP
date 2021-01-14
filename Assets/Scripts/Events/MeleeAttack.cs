@@ -43,6 +43,11 @@ public class MeleeAttack : FrameworkEvent
             GameObject.FindObjectOfType<Spawner>().DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Bush);
         }
         agent.Swing();
+        CompleteEvent(agent);
+        return true;
+    }
+
+    protected override bool CompleteEvent(Creature agent){
         agent.Target = null;
         return true;
     }

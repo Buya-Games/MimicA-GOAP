@@ -56,14 +56,14 @@ public class Player : Creature
         }
     }
     
-    // public void PickupFood(GameObject food){
-    //     Target = food;
-    //     if (availableEvents[2].CheckPreconditions(this)){
-    //         CurrentEvent = availableEvents[2];
-    //         if (availableEvents[2].PerformEvent(this)){
-    //             manager.spawner.DespawnEnvironment(food.gameObject,Spawner.EnvironmentType.Bush);
-    //         }
-    //     }
-    // }
+    public void PickupBerry(Berry berry){
+        Target = berry.gameObject;
+
+        PickupBerry pickup = new PickupBerry();
+        pickup.TargetLayer = Target.gameObject.layer;
+        CurrentEvent = pickup;
+        OnTeach();
+        //I don't perform anything here cuz for player the logic is done inside Berry.cs
+    }
 
 }

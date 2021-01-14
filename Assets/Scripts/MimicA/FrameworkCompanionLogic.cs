@@ -15,6 +15,7 @@ public class FrameworkCompanionLogic : Creature
     Player player;
     public IEnumerator currentCoroutine;
     Rigidbody rb;
+    float eventMaxTime = 10; //don't spend more than 10 seconds on any given decision
     
     protected override void Awake(){
         base.Awake();
@@ -24,14 +25,14 @@ public class FrameworkCompanionLogic : Creature
         //i could implement interfaces on this, but I think this is fine since it's just like a dozen FrameworkEvents to learn
     }
 
+
     protected override void Start(){
         base.Start();
     }
 
     void Learn(){ 
-        if (toDo.Count < 3){//companion will only learn the first 10 FrameworkEvents a player performs
-            toDo.Enqueue(player.CurrentEvent.Clone());
-        } else if (currentEvent == null){
+        toDo.Enqueue(player.CurrentEvent.Clone());
+        if (currentEvent == null){
             GetDecision();
         }
     }
@@ -40,34 +41,48 @@ public class FrameworkCompanionLogic : Creature
     //ideally this should take the game state when deciding, instead of just randomly choosing from possibleEvents
     public void GetDecision(){
         currentEvent = null;
-        FrameworkEvent nextEvent = toDo.Dequeue();
-        Debug.Log("Dequeued " + nextEvent);
-        currentEvent = nextEvent;
-        PerformDecision(nextEvent);
+        if (toDo.Count>0){
+            FrameworkEvent nextEvent = toDo.Dequeue();
+            Debug.Log("Dequeued " + nextEvent);
+            currentEvent = nextEvent;
+            PerformDecision(nextEvent);
+        }
     }
 
     void PerformDecision(FrameworkEvent nextEvent){
-        if (Target == null){
-            Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);
-        }
-        if (Target != null){
-            Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);//check again if something closer popped up
-            StartCoroutine(FaceTarget());//face new target
-            TargetDist = GetTargetDist(Target.transform.position);
-            if (nextEvent.CheckRange(this)){
-                if (nextEvent.PerformEvent(this)){
-                    Debug.Log(nextEvent + " succeeded");
-                } else {
-                    Debug.Log(nextEvent + " failed");
-                }
-                toDo.Enqueue(currentEvent);
-                Debug.Log("Requeued " + currentEvent);
-                Invoke("GetDecision",.5f);
-            } else {
-                StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
-            }
+        if (Time.time > Time.time + eventMaxTime){
+            eventMaxTime+=Time.time;
+            GetDecision();
         } else {
-            Invoke("RepeatDecision",1f);//repeat this (keep trying to find a target)
+            if (Target == null){
+                Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);
+            }
+            if (Target != null){
+                //StartCoroutine(FaceTarget());//facing target
+                Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);//check again if something closer popped up
+                TargetDist = GetTargetDist(Target.transform.position);
+                if (nextEvent.CheckRange(this)){
+                    if (nextEvent.CheckPreconditions(this)){
+                        if (nextEvent.PerformEvent(this)){
+                            //Debug.Log(nextEvent + " succeeded");
+                        } else {
+                            Debug.Log(nextEvent + " FAILED");
+                        }
+                        toDo.Enqueue(currentEvent);
+                        Debug.Log("Finished and requeued " + currentEvent);
+                        Invoke("GetDecision",.5f);
+                    } else {
+                        toDo.Enqueue(currentEvent);
+                        Debug.Log("Precheck failed and requeued " + currentEvent);
+                        Invoke("GetDecision",.5f);
+                    }
+                } else {
+                    //StartCoroutine(FaceTarget());//facing target
+                    StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
+                }
+            } else {
+                Invoke("RepeatDecision",1f);//repeat this (keep trying to find a target)
+            }
         }
     }
 
@@ -75,24 +90,12 @@ public class FrameworkCompanionLogic : Creature
         PerformDecision(currentEvent);
     }
 
-    protected IEnumerator FaceTarget(float turnSpeed = .03f){
-        Vector3 dir = (Target.transform.position - transform.position).normalized;
-        Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x,0,dir.z));
-        int counter = 0;
-        while (counter<50){
-            transform.rotation = Quaternion.Slerp(transform.rotation,rot,turnSpeed);
-            counter++;
-            yield return null;
-        }
-    }
-
-    protected IEnumerator Movement(Vector3 dir){
-        Vector3 rotCheck = transform.rotation.eulerAngles - Quaternion.LookRotation(new Vector3(dir.x,0,dir.z)).eulerAngles;
-        Debug.Log(rotCheck);
-        if (rotCheck.y > 5 || rotCheck.y < -5){//this is probably so stupidly expensive
-            StartCoroutine(FaceTarget());
-        }
-
+    IEnumerator Movement(Vector3 dir){
+        // Vector3 rotCheck = transform.rotation.eulerAngles - Quaternion.LookRotation(new Vector3(dir.x,0,dir.z)).eulerAngles;
+        // Debug.Log(rotCheck);
+        // if (rotCheck.y > 5 || rotCheck.y < -5){//this is probably so stupidly expensive
+        //     StartCoroutine(FaceTarget());
+        // }
         int counter = 0;
         rb.velocity = Vector3.zero;
         while (counter < 50){

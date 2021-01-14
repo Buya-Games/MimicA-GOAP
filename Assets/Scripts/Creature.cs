@@ -8,6 +8,7 @@ public class Creature : MonoBehaviour
     public Stats MyStats;
     [HideInInspector] public GameObject Target;
     [HideInInspector] public float TargetDist;
+    [HideInInspector] public GameObject Cow;
     public GameObject HeldItem;
     [SerializeField] protected Transform melee;
 
@@ -22,6 +23,7 @@ public class Creature : MonoBehaviour
 
     protected virtual void Awake(){
         manager = FindObjectOfType<GameManager>();
+        Cow = FindObjectOfType<Cow>().gameObject;
         SetStats();
     }
 
@@ -96,5 +98,19 @@ public class Creature : MonoBehaviour
             }
         }
         return closest;
+    }
+
+    protected IEnumerator FaceTarget(float turnSpeed = .03f){
+        Vector3 dir = (Target.transform.position - transform.position).normalized;
+        if (dir != Vector3.up){
+            //Debug.Log(dir);
+            Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x,0,dir.z));
+            int counter = 0;
+            while (counter<50){
+                transform.rotation = Quaternion.Slerp(transform.rotation,rot,turnSpeed);
+                counter++;
+                yield return null;
+            }
+        }
     }
 }

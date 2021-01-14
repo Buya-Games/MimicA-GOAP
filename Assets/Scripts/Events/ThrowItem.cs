@@ -16,6 +16,7 @@ public class ThrowItem : FrameworkEvent
         if (agent.HeldItem != null && ThrowTarget != Vector3.zero){
             float dist = Mathf.Abs(Vector3.Distance(agent.transform.position,ThrowTarget));
             if (dist > agent.MyStats.Range){
+                agent.Target = agent.Cow;
                 return false;
             } else {
                 return true;
@@ -39,7 +40,13 @@ public class ThrowItem : FrameworkEvent
         if (dist > agent.MyStats.Range){
             throwStrength = agent.MyStats.Range/dist; //this really only exists for the player, cuz AI companions will always try to move into their throwing range
         }
+        Debug.Log("throwitem" + Time.time);
         agent.HeldItem.GetComponent<IThrowable>().ThrowObject(ThrowTarget,throwStrength);
+        CompleteEvent(agent);
+        return true;
+    }
+    protected override bool CompleteEvent(Creature agent){
+        agent.Target = null;
         agent.HeldItem = null;
         return true;
     }

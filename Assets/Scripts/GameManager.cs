@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
     void SpawnEnvironment(int howMany, Spawner.EnvironmentType type){
         for (int i = 0;i<howMany;i++){
             int posNeg = Random.Range(0,2)*2-1;
-            Vector3 spawnPos = new Vector3(Random.Range(0,15)*posNeg,0,player.transform.position.z + Random.Range(5,15));
+            Vector3 spawnPos = new Vector3(Random.Range(0,30)*posNeg,0,player.transform.position.z + Random.Range(5,30));
             //Vector3 spawnPos = new Vector3(Random.Range(15,50)*posNeg,0,player.transform.position.z + Random.Range(5,20));
             spawner.SpawnEnvironment(spawnPos, type);
         }
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
         while (counter < 100){
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(3);
         }
     }
 

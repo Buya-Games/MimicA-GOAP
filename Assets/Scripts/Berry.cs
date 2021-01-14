@@ -24,6 +24,7 @@ public class Berry : MonoBehaviour, IThrowable
         transform.parent = null;
         transform.localScale = Vector3.one * 0.5f;
         rb.velocity = CalculateTraj(where, throwStrength);
+        Debug.Log("threw berry" + Time.time);
     }
 
     Vector3 CalculateTraj(Vector3 where, float throwStrength){
@@ -39,8 +40,8 @@ public class Berry : MonoBehaviour, IThrowable
     }
 
     void OnCollisionEnter(Collision col){
-        if (col.gameObject.layer == 9){ //if player or companion
-            Creature creature = col.gameObject.GetComponent<Creature>();
+        if (col.gameObject.layer == 9){ //if player
+            Player creature = col.gameObject.GetComponent<Player>();
             if (creature.HeldItem == null){
                 creature.HeldItem = this.gameObject;
                 Vector3 pos = creature.transform.position;
@@ -50,6 +51,7 @@ public class Berry : MonoBehaviour, IThrowable
                 transform.rotation = Quaternion.identity;
                 transform.localScale = new Vector3(0.5f,0.25f,0.5f);
                 GetComponent<Rigidbody>().isKinematic = true;
+                creature.PickupBerry(this);
             }
         }
     }
