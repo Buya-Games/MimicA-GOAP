@@ -325,6 +325,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 862250419370276350, guid: 6d2c64d3802445145bf79c807319d39f, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
     - target: {fileID: 919132149155446097, guid: 6d2c64d3802445145bf79c807319d39f, type: 3}
       propertyPath: m_Name
       value: Cow
@@ -2677,7 +2681,7 @@ MonoBehaviour:
   treePrefab: {fileID: 4890415528186057203, guid: e969ed55bf2248544be0fcdde3f58a1f, type: 3}
   bushPrefab: {fileID: 1932625822225220710, guid: df41610adfb2c14478f85dd851591d5e, type: 3}
   rockPrefab: {fileID: 2343241655515757485, guid: 5f0bd3444348f8742b024422d690dbfb, type: 3}
-  companionPrefab: {fileID: 254786539346806901, guid: 4c845c55190639748ae5c1e7cf78ab1e, type: 3}
+  companionPrefab: {fileID: 66230771}
   enemyPrefab: {fileID: 254786539346806901, guid: 4c845c55190639748ae5c1e7cf78ab1e, type: 3}
   berryPrefab: {fileID: 5636073116567829277, guid: 39c29093838c20c488b53daf7be9e96c, type: 3}
   bombPrefab: {fileID: 5636073116567829277, guid: ff1f54d86268cbc4cb1b938a7c1e9532, type: 3}
