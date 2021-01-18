@@ -100,8 +100,8 @@ public class Creature : MonoBehaviour
         return closest;
     }
 
-    protected IEnumerator FaceTarget(float turnSpeed = .03f){
-        Vector3 dir = (Target.transform.position - transform.position).normalized;
+    protected IEnumerator FaceTarget(Vector3 lookLocation, float turnSpeed = .03f){
+        Vector3 dir = (lookLocation - transform.position).normalized;
         if (dir != Vector3.up){
             //Debug.Log(dir);
             Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x,0,dir.z));

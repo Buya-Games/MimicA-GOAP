@@ -14,6 +14,7 @@ public class ThrowItem : FrameworkEvent
 
     public override bool CheckRange(Creature agent){
         if (agent.HeldItem != null && ThrowTarget != Vector3.zero){
+            //agent.LookAtLocation(ThrowTarget);
             float dist = Mathf.Abs(Vector3.Distance(agent.transform.position,ThrowTarget));
             if (dist > agent.MyStats.Range){
                 agent.Target = agent.Cow;
@@ -48,6 +49,7 @@ public class ThrowItem : FrameworkEvent
     protected override bool CompleteEvent(Creature agent){
         agent.Target = null;
         agent.HeldItem = null;
+        agent.MyStats.Range++;
         return true;
     }
 }

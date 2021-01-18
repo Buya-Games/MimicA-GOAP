@@ -30,10 +30,13 @@ public class FrameworkCompanionLogic : Creature
         base.Start();
     }
 
-    void Learn(){ 
-        toDo.Enqueue(player.CurrentEvent.Clone());
-        if (currentEvent == null){
-            GetDecision();
+    void Learn(){
+        if (toDo.Count<1){
+            toDo.Enqueue(player.CurrentEvent.Clone());
+            Debug.Log("learned " + player.CurrentEvent);
+            if (currentEvent == null){
+                GetDecision();
+            }
         }
     }
 
@@ -43,7 +46,7 @@ public class FrameworkCompanionLogic : Creature
         currentEvent = null;
         if (toDo.Count>0){
             FrameworkEvent nextEvent = toDo.Dequeue();
-            Debug.Log("Dequeued " + nextEvent);
+            //Debug.Log("Dequeued " + nextEvent);
             currentEvent = nextEvent;
             PerformDecision(nextEvent);
         }
@@ -57,9 +60,9 @@ public class FrameworkCompanionLogic : Creature
             if (Target == null){
                 Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);
             }
+            Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);//check again if something closer popped up
             if (Target != null){
                 //StartCoroutine(FaceTarget());//facing target
-                Target = FindClosestObjectOfLayer(nextEvent.TargetLayer);//check again if something closer popped up
                 TargetDist = GetTargetDist(Target.transform.position);
                 if (nextEvent.CheckRange(this)){
                     if (nextEvent.CheckPreconditions(this)){
@@ -69,11 +72,11 @@ public class FrameworkCompanionLogic : Creature
                             Debug.Log(nextEvent + " FAILED");
                         }
                         toDo.Enqueue(currentEvent);
-                        Debug.Log("Finished and requeued " + currentEvent);
+                        //Debug.Log("Finished and requeued " + currentEvent);
                         Invoke("GetDecision",.5f);
                     } else {
                         toDo.Enqueue(currentEvent);
-                        Debug.Log("Precheck failed and requeued " + currentEvent);
+                        //Debug.Log("Precheck failed and requeued " + currentEvent);
                         Invoke("GetDecision",.5f);
                     }
                 } else {
@@ -90,12 +93,15 @@ public class FrameworkCompanionLogic : Creature
         PerformDecision(currentEvent);
     }
 
+    public void LookAtLocation(Vector3 where){
+        StartCoroutine(FaceTarget(where));
+    }
+
     IEnumerator Movement(Vector3 dir){
-        // Vector3 rotCheck = transform.rotation.eulerAngles - Quaternion.LookRotation(new Vector3(dir.x,0,dir.z)).eulerAngles;
-        // Debug.Log(rotCheck);
-        // if (rotCheck.y > 5 || rotCheck.y < -5){//this is probably so stupidly expensive
-        //     StartCoroutine(FaceTarget());
-        // }
+        Vector3 rotCheck = transform.rotation.eulerAngles - Quaternion.LookRotation(new Vector3(dir.x,0,dir.z)).eulerAngles;
+        if (rotCheck.y > 5 || rotCheck.y < -5){//this is probably so stupidly expensive
+            StartCoroutine(FaceTarget(Target.transform.position));
+        }
         int counter = 0;
         rb.velocity = Vector3.zero;
         while (counter < 50){

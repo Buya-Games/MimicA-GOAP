@@ -4,15 +4,8 @@ using UnityEngine;
 
 public class SequenceAnalyzer : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    Dictionary<string,string> SequenceMap = new Dictionary<string, string>();
+    Dictionary<string,float> MostCommonEvent = new Dictionary<string, float>();
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
 }

@@ -57,6 +57,12 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    public void SpawnCompanion(Vector3 spawnPos){
+        GameObject newBuddy = Instantiate(companionPrefab);
+        spawnPos.z-=2;
+        newBuddy.transform.position = spawnPos;
+    }
+
     public void SpawnEnvironment(Vector3 spawnPos, EnvironmentType type){
         GameObject newItem = null;
         Queue<GameObject> useQueue = new Queue<GameObject>();
