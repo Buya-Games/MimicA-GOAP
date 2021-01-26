@@ -11,6 +11,8 @@ public class Creature : MonoBehaviour
     [HideInInspector] public GameObject Cow;
     public GameObject HeldItem;
     [SerializeField] protected Transform melee;
+    [SerializeField] public List<FrameworkEvent> availableActions = new List<FrameworkEvent>();
+    public float motiveReproduction, motiveHarvest, motiveAttack;//the 3 possible goals of a creature
 
     [System.Serializable]
     public class Stats {
@@ -69,35 +71,58 @@ public class Creature : MonoBehaviour
 
     protected GameObject FindClosestObjectOfLayer(int targetLayer){
         List<GameObject> possibleTargets = new List<GameObject>();
+        if (targetLayer == 6){
+            possibleTargets = manager.spawner.ActivesBushes;
+        }
         if (targetLayer == 7){
             possibleTargets = manager.spawner.ActiveBerries;
         }
         if (targetLayer == 8){
-            possibleTargets = manager.spawner.ActivesBushes;
+            possibleTargets = manager.spawner.ActiveMushrooms;
+        }
+        if (targetLayer == 9){
+            possibleTargets = manager.spawner.ActiveFungus;
         }
         if (targetLayer == 10){
             possibleTargets = manager.spawner.ActiveBombs;
         }
+        Debug.Log("looking for closest among " + possibleTargets.Count + " targets");
     
         GameObject closest = null;
         float dist = Mathf.Infinity;
         if (possibleTargets.Count>0){
-            foreach (GameObject b in possibleTargets)
-            {
-                //if first set it as closest
-                if (closest == null){
-                    closest = b;
-                    dist = Mathf.Abs(Vector3.Distance(closest.transform.position, this.transform.position));
-                } else { //else check if closer
-                    float distThis = Mathf.Abs(Vector3.Distance(b.transform.position, this.transform.position));
-                    if (distThis < dist){
+            foreach (GameObject b in possibleTargets){
+                if (b.layer != 15){ //if object not flying in mid-air
+                    //if first set it as closest
+                    if (closest == null){
                         closest = b;
-                        dist = distThis;
+                        dist = Mathf.Abs(Vector3.Distance(closest.transform.position, this.transform.position));
+                    } else { //else check if closer
+                        float distThis = Mathf.Abs(Vector3.Distance(b.transform.position, this.transform.position));
+                        if (distThis < dist){
+                            closest = b;
+                            dist = distThis;
+                        }
                     }
                 }
             }
         }
         return closest;
+    }
+
+    protected List<GameState.State> GetCurrentState(){
+        List<GameState.State> currentState = new List<GameState.State>();
+        if (HeldItem == null){
+            currentState.Add(GameState.State.itemNone);
+        } else if (HeldItem.layer == 7){//if holding berry
+            currentState.Add(GameState.State.itemBerry);
+        } else if (HeldItem.layer == 9){//if holding fungus
+            currentState.Add(GameState.State.itemFungus);
+        } else if (HeldItem.layer == 10){//if holding bomb
+            currentState.Add(GameState.State.itemBomb);
+        } 
+        currentState.AddRange(manager.CurrentState);
+        return currentState;
     }
 
     protected IEnumerator FaceTarget(Vector3 lookLocation, float turnSpeed = .03f){
@@ -112,5 +137,16 @@ public class Creature : MonoBehaviour
                 yield return null;
             }
         }
+    }
+
+    protected Dictionary<string, bool> getWorldState(){
+        Dictionary<string,bool> state = new Dictionary<string, bool>();
+        return state;
+    }
+    protected Dictionary<string, bool> createGoalState(){
+        Dictionary<string,bool> goal = new Dictionary<string, bool>();
+        goal.Add("damagePlayer",true);
+        goal.Add("stayAlive",true);
+        return goal;
     }
 }

@@ -5,10 +5,10 @@ using UnityEngine;
 public class FrameworkGameData: MonoBehaviour
 {
     //keeps track of game states and player actions
-    public Dictionary<FrameworkEvent, FrameworkGameStateVector> PerformedGameStates = new Dictionary<FrameworkEvent, FrameworkGameStateVector>();
+    public Dictionary<FrameworkEvent, GameState> PerformedGameStates = new Dictionary<FrameworkEvent, GameState>();
     Player player;
     GameManager manager;
-    public FrameworkGameStateVector CurrentState;
+    public GameState CurrentState;
 
 
     void Awake(){

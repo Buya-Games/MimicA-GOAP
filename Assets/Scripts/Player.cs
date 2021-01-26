@@ -9,6 +9,7 @@ public class Player : Creature
     public event Action OnTeach;
     public FrameworkEvent CurrentEvent;
     [SerializeField] LayerMask interactLM;
+    bool teaching = false; //set by companions to true when they're born (and false after 10 turns)
 
     // Awake is called before Start so I use it to initialize all the core stuff
     protected override void Awake(){
@@ -35,35 +36,53 @@ public class Player : Creature
         }
     }
 
-    public void ThrowItem(){
-        ThrowItem throwItem = new ThrowItem(control.MousePos(),HeldItem.layer);
-        CurrentEvent = throwItem;
-        if (throwItem.CheckPreconditions(this)){
-            if (throwItem.PerformEvent(this)){
-                OnTeach();
-            }
-        }
-    }
-
     public void MeleeAttack(){
-        MeleeAttack melee = new MeleeAttack();
-        melee.TargetLayer = Target.gameObject.layer;
+        MeleeAttack melee = new MeleeAttack(Target.gameObject.layer);
         CurrentEvent = melee;//prior event should be destroyed by GC
-        if (melee.CheckPreconditions(this)){
+        if (melee.CheckPreconditions(GetCurrentState())){
             if (melee.PerformEvent(this)){
-                OnTeach();
+                if (teaching){
+                    OnTeach();
+                }
             }
         }
     }
     
-    public void PickupBerry(Berry berry){
-        Target = berry.gameObject;
-
-        PickupBerry pickup = new PickupBerry();
-        pickup.TargetLayer = Target.gameObject.layer;
+    public void PickupItem(IThrowable item){
+        Target = item.ThisGameObject();
+        PickupItem pickup = new PickupItem(Target.gameObject.layer);
         CurrentEvent = pickup;
-        OnTeach();
-        //I don't perform anything here cuz for player the logic is done inside Berry.cs
+        if (teaching){
+            OnTeach();
+        }
+        //I don't perform anything here cuz for player the logic is done inside Item.cs
+    }
+
+    public void ThrowItem(){
+        ThrowItem throwItem = new ThrowItem(control.MousePos(),HeldItem.layer);
+        CurrentEvent = throwItem;
+        if (throwItem.CheckPreconditions(GetCurrentState())){
+            if (throwItem.PerformEvent(this)){
+                if (teaching){
+                    OnTeach();
+                }
+            }
+        }
+    }
+
+    //checks if any companions still teachable
+    public void CheckForStudents(){
+        bool anyoneLearning = false;
+        foreach (FrameworkCompanionLogic c in manager.spawner.ActiveCompanions){
+            if (c.learning){
+                anyoneLearning = true;
+            }
+        }
+        if (anyoneLearning){
+            teaching = true;
+        } else {
+            teaching = false;
+        }
     }
 
 }

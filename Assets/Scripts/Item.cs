@@ -2,27 +2,54 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bomb : MonoBehaviour, IThrowable
+public class Item : MonoBehaviour, IThrowable
 {
     Rigidbody rb;
     float gravity;
     [SerializeField] float height;
-    void Initialize()
-    {
+    Spawner.EnvironmentType myType;
+    bool flying;
+    Spawner spawner;
+
+    void Awake(){
         rb = GetComponent<Rigidbody>();
+        spawner = FindObjectOfType<Spawner>();
         gravity = Physics.gravity.y;
-        //_manager = FindObjectOfType<GameManager>();
+        SetType();
+    }
+
+    void SetType(){
+        if (gameObject.layer == 7){
+            myType = Spawner.EnvironmentType.Berry;
+        }
+        if (gameObject.layer == 9){
+            myType = Spawner.EnvironmentType.Fungus;
+        }
+        if (gameObject.layer == 10){
+            myType = Spawner.EnvironmentType.Bomb;
+        }
+    }
+
+    public GameObject ThisGameObject(){
+        return this.gameObject;
+    }
+
+    public void FlyingOrPickedUp(){
+        flying = true;
+        spawner.RemoveFlyingObject(gameObject,myType);
     }
 
     public void ThrowObject(Vector3 where, float throwStrength){
-        Initialize();
+        if (!flying){
+            FlyingOrPickedUp();
+        }
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
         transform.position = higherPos;
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
         transform.parent = null;
-        transform.localScale = Vector3.one * .75f;
+        transform.localScale = Vector3.one * 0.5f;
         rb.velocity = CalculateTraj(where, throwStrength);
     }
 
@@ -39,8 +66,12 @@ public class Bomb : MonoBehaviour, IThrowable
     }
 
     void OnCollisionEnter(Collision col){
-        if (col.gameObject.layer == 9){ //if player or companion
-            Creature creature = col.gameObject.GetComponent<Creature>();
+        if (flying){
+            flying = false;
+            spawner.RemoveFlyingObject(gameObject,myType,true);
+        }
+        if (col.gameObject.layer == 13){ //if player or companion
+            Player creature = col.gameObject.GetComponent<Player>();
             if (creature.HeldItem == null){
                 creature.HeldItem = this.gameObject;
                 Vector3 pos = creature.transform.position;
@@ -48,8 +79,9 @@ public class Bomb : MonoBehaviour, IThrowable
                 transform.position = pos;
                 transform.SetParent(creature.transform);
                 transform.rotation = Quaternion.identity;
-                transform.localScale = new Vector3(.75f,0.375f,.75f);
+                transform.localScale = new Vector3(0.5f,0.25f,0.5f);
                 GetComponent<Rigidbody>().isKinematic = true;
+                creature.PickupItem(this);
             }
         }
     }
