@@ -8,13 +8,13 @@ public class FrameworkPlanner : MonoBehaviour
 
     protected class Node {
 		public Node parent;
-		public float runningCost;
+		public float costBenefit; //higher is better
 		public List<GameState.State> state;
 		public FrameworkEvent action;
 
-		public Node(Node parent, float runningCost, List<GameState.State> state, FrameworkEvent action) {
+		public Node(Node parent, float costBenefit, List<GameState.State> state, FrameworkEvent action) {
 			this.parent = parent;
-			this.runningCost = runningCost;
+			this.costBenefit = costBenefit;
 			this.state = state;
 			this.action = action;
         }
@@ -23,65 +23,83 @@ public class FrameworkPlanner : MonoBehaviour
     public Queue<FrameworkEvent> MakePlan(
         FrameworkCompanionLogic agent, 
         List<GameState.State> worldState, 
-        List<GameState.State> goal)
+        List<GameState.State> goals)
     {
         //List<Node> leaves = new List<Node>();
-        List<FrameworkEvent> leaves = new List<FrameworkEvent>();
-        Node goalNode = new Node(null,0,goal,null);
-        
+        List<Node> leaves = new List<Node>();
+        Node goalNode = new Node(null,0,goals,null);
         bool success = buildBackwardGraph(goalNode, leaves, agent.availableActions, worldState, agent);
-        if (!success){
-            Debug.Log("NO PLAN"); //Should cycle to the next goal
-            return null;
+
+        if (!success){ //if no action can get us to the goal, then see what actions are possible and judge based on their cost/benefit
+            //Debug.Log("can't get to main goal with current actions, so looking for best secondary actions");
+            bool lastResort = false;
+            foreach (FrameworkEvent action in agent.availableActions){
+                if (GameState.CompareStates(action.Preconditions,worldState)){//if it can be performed in the current world state
+                    Node branchNode = new Node(null, action.EstimateActionCost(agent), action.Preconditions, action);
+                    leaves.Add(branchNode);
+                    lastResort = true;
+                }
+            }
+            if (lastResort == false){
+                Debug.Log("Couldn't find ANY plans wtf");
+                return null;
+            }
         }
 
-        // Node cheapest = null;
-		// foreach (Node leaf in leaves) {
-		// 	if (cheapest == null)
-		// 		cheapest = leaf;
-		// 	else {
-		// 		if (leaf.runningCost < cheapest.runningCost)
-		// 			cheapest = leaf;
-		// 	}
-		// }
+        Node cheapest = null;
+		foreach (Node leaf in leaves) {
+			if (cheapest == null)
+				cheapest = leaf;
+			else {
+				if (leaf.costBenefit < cheapest.costBenefit)
+					cheapest = leaf;
+			}
+		}
+        //Debug.Log("cheapest one was " + cheapest.action + " with cost of " + cheapest.costBenefit);
 
-        // // get its node and work back through the parents
-		// List<FrameworkEvent> result = new List<FrameworkEvent> ();
-		// Node n = cheapest;
-		// while (n != null) {
-		// 	if (n.action != null) {
-		// 		result.Insert(0, n.action); // insert the action in the front
-		// 	}
-		// 	n = n.parent;
-		// }
+        // get its node and work back through the parents
+		List<FrameworkEvent> result = new List<FrameworkEvent> ();
+		Node n = cheapest;
+		while (n != null) {
+			if (n.action != null) {
+                //Debug.Log("adding " + n.action + " to the queue");
+				result.Insert(result.Count, n.action); // insert the action at the back
+			}
+			n = n.parent;
+		}
 
         Queue<FrameworkEvent> plan = new Queue<FrameworkEvent>();
-		foreach (FrameworkEvent e in leaves) {
+		foreach (FrameworkEvent e in result) {
 			plan.Enqueue(e);
 		}
         return plan;
     }
 
-    bool buildBackwardGraph(Node goal, List<FrameworkEvent> leaves, List<FrameworkEvent> availActions, List<GameState.State> worldState, FrameworkCompanionLogic agent){
+    //goal->current graph (backwards)
+    bool buildBackwardGraph(Node currentNode, List<Node> leaves, List<FrameworkEvent> availActions, List<GameState.State> worldState, FrameworkCompanionLogic agent){
         bool foundOne = false;
-        Debug.Log("available actions:");
-        ListIt(availActions);
-        Debug.Log("goal state:");
-        ListIt(goal.state);
-        List<FrameworkEvent> usableActions = getUsableActions(availActions,goal.state);
-        foreach (FrameworkEvent action in usableActions){
+        // Debug.Log("available actions:");
+        // ListIt(availActions);
+        // Debug.Log("goal state:");
+        // ListIt(currentNode.state);
+        List<FrameworkEvent> usableActions = getUsableActions(availActions,currentNode.state);
+        foreach (FrameworkEvent action in usableActions){//just add the cost in here... so that action closest to currentworldstate has best benefit/lowest cost
             if (GameState.CompareStates(action.Preconditions,worldState)){
-                Debug.Log(action + " can be performed right now! so adding it to leaves");
-                leaves.Add(action);
+                currentNode.action = action;
+                //currentNode.costBenefit = calculateBenefit(agent)/calculateCost(agent,currentNode.action);
+                //Debug.Log(action + " can be performed right now! so adding it to leaves");
+                leaves.Add(currentNode);
                 foundOne = true;
             } else {
-                Debug.Log(action + " could not be performed but looking at next action we can perform that meets its preconditions");
-                float costAfterMotive = calculateCost(agent,action);
+                //Debug.Log(action + " could not be performed but looking at child actions we can perform to meet MY preconditions");
                 //make new node representing the world state required to run this action
-                Node childNode = new Node(goal, goal.runningCost + costAfterMotive, action.Preconditions, action);
+                Node childNode = new Node(currentNode, 0, action.Preconditions, null);
                 //if new node is possible in current world state, then that is the action we need to do
-                bool found = buildBackwardGraph(childNode,leaves,availActions,worldState,agent);
+                bool found = buildBackwardGraph(childNode,leaves,listSubset(availActions,action),worldState,agent);
                 if (found){
+                    //##why would i ever need to know the cost of this chippokochin that needs its child to run anyway?
+                    //currentNode.costBenefit = calculateBenefit(agent)/(calculateCost(agent,action) + calculateCost(agent,childNode.action));
+                    currentNode.action = action;
                     foundOne = true;
                 }
             }
@@ -89,31 +107,32 @@ public class FrameworkPlanner : MonoBehaviour
         return foundOne;
     }
 
-    bool buildGraph(Node parent, List<Node> leaves, List<FrameworkEvent> availActions, List<GameState.State> goal, FrameworkCompanionLogic agent){
-        bool foundOne = false;
-        List<FrameworkEvent> usableActions = getUsableActions(availActions,parent.state);
-        ListIt(usableActions);
-        foreach (FrameworkEvent u in usableActions){
-            Debug.Log(u);
-            if (GameState.CompareStates(u.Preconditions,parent.state)){
-                float costAfterMotive = calculateCost(agent,u);
-                //need to insert cost of moving to X here somewhere
-                Node newNode = new Node(parent, parent.runningCost + costAfterMotive, combineStates(parent.state,u.Effects), u);
+    // current->goal graph. Not using this cuz exponentially more calculations
+    // bool buildGraph(Node parent, List<Node> leaves, List<FrameworkEvent> availActions, List<GameState.State> goal, FrameworkCompanionLogic agent){
+    //     bool foundOne = false;
+    //     List<FrameworkEvent> usableActions = getUsableActions(availActions,parent.state);
+    //     ListIt(usableActions);
+    //     foreach (FrameworkEvent u in usableActions){
+    //         Debug.Log(u);
+    //         if (GameState.CompareStates(u.Preconditions,parent.state)){
+    //             float costAfterMotive = calculateCost(agent,u);
+    //             //need to insert cost of moving to X here somewhere
+    //             Node newNode = new Node(parent, parent.runningCost + costAfterMotive, combineStates(parent.state,u.Effects), u);
 
-                if (newNode.state == goal || GameState.CompareStates(goal,newNode.state)){
-                    leaves.Add(newNode);
-                    foundOne = true;
-                } else {
-                    // test all the remaining actions and branch out the tree
-					List<FrameworkEvent> subset = actionSubset(getUsableActions(agent.availableActions,newNode.state), u);
-					bool found = buildGraph(newNode, leaves, subset, goal, agent);
-					if (found)
-						foundOne = true;
-                }
-            }
-        }
-        return foundOne;
-    }
+    //             if (newNode.state == goal || GameState.CompareStates(goal,newNode.state)){
+    //                 leaves.Add(newNode);
+    //                 foundOne = true;
+    //             } else {
+    //                 // test all the remaining actions and branch out the tree
+	// 				List<FrameworkEvent> subset = actionSubset(getUsableActions(agent.availableActions,newNode.state), u);
+	// 				bool found = buildGraph(newNode, leaves, subset, goal, agent);
+	// 				if (found)
+	// 					foundOne = true;
+    //             }
+    //         }
+    //     }
+    //     return foundOne;
+    // }
 
     List<FrameworkEvent> getUsableActions(List<FrameworkEvent> actions, List<GameState.State> state){
         List<FrameworkEvent> usableActions = new List<FrameworkEvent>();
@@ -125,8 +144,8 @@ public class FrameworkPlanner : MonoBehaviour
         return usableActions;
     }
 
-    public static void ListIt<T>(List<T> rist){
-        foreach (T state in rist){
+    public static void ListIt<T>(List<T> list){
+        foreach (T state in list){
             Debug.Log(state);
         }
     }
@@ -138,18 +157,42 @@ public class FrameworkPlanner : MonoBehaviour
     }
 
     float calculateCost(FrameworkCompanionLogic agent,FrameworkEvent action){
+        //float benefit = Mathf.Max(agent.motiveReproduction,Mathf.Max(agent.motiveAttack,agent.motiveHarvest));
+        return action.EstimateActionCost(agent);
+        //return benefit/cost;
         //need to include movement cost in here somewhere
-        float repro = action.motiveReproduction - agent.motiveReproduction;
-        float harvest = action.motiveHarvest - agent.motiveHarvest;
-        float attack = action.motiveReproduction - agent.motiveReproduction;
-        return Mathf.Min(repro,Mathf.Min(harvest,attack));
+        // float repro = action.motiveReproduction - agent.motiveReproduction;
+        // float harvest = action.motiveHarvest - agent.motiveHarvest;
+        // float attack = action.motiveReproduction - agent.motiveReproduction;
+        // return Mathf.Min(repro,Mathf.Min(harvest,attack));
     }
 
-    List<FrameworkEvent> actionSubset(List<FrameworkEvent> currentList, FrameworkEvent currentAction){
-        List<FrameworkEvent> newList = new List<FrameworkEvent>();
-        foreach (FrameworkEvent e in currentList){
-            if (e != currentAction){
-                newList.Add(e);
+    float calculateBenefit(FrameworkCompanionLogic agent){
+        return Mathf.Max(agent.motiveReproduction,Mathf.Max(agent.motiveAttack,agent.motiveHarvest));
+    }
+
+    // List<FrameworkEvent> actionSubset(List<FrameworkEvent> list, FrameworkEvent item){
+    //     List<FrameworkEvent> newList = list;
+    //     newList.Remove(item);
+    //     // foreach (FrameworkEvent e in currentList){
+    //     //     if (e != currentAction){
+    //     //         newList.Add(e);
+    //     //     }
+    //     // }
+    //     return newList;
+    // }
+
+    // List<GameState.State> goalSubset (List<GameState.State> list, GameState.State item){
+    //     List<GameState.State> newList = list;
+    //     newList.Remove(item);
+    //     return newList;
+    // }
+
+    List<T> listSubset<T> (List<T> list, T removeMe) {
+        List<T> newList = new List<T>();
+        foreach (T t in list){
+            if (!t.Equals(removeMe)){
+                newList.Add(t);
             }
         }
         return newList;

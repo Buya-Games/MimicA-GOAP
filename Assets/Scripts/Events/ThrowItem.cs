@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 public class ThrowItem : FrameworkEvent
 {
-    public Vector3 ThrowTarget;
+    public Vector3 ThrowTarget;//not currently used but will be once we start throwing RELATIVE to the cow/enemy and stuff
     public ThrowItem(Vector3 mousePos, int itemLayer){
         ThrowTarget = mousePos;
         EventLayer = itemLayer;
@@ -30,11 +30,15 @@ public class ThrowItem : FrameworkEvent
         return clone;
     }
 
+    public override bool GetTarget(Creature agent){
+        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        return agent.Target != null? true : false;
+    }
+
     public override bool CheckRange(Creature agent){
-        agent.Target = agent.Cow; //not sure if this needs to be here... 
-        if (agent.HeldItem != null && ThrowTarget != Vector3.zero){
+        if (agent.Target != null){
             //agent.LookAtLocation(ThrowTarget);
-            float dist = Mathf.Abs(Vector3.Distance(agent.transform.position,ThrowTarget));
+            float dist = Mathf.Abs(Vector3.Distance(agent.Target.transform.position,agent.transform.position));
             if (dist > agent.MyStats.Range){
                 return false;
             } else {
@@ -43,6 +47,18 @@ public class ThrowItem : FrameworkEvent
         } else {
             return false;
         }
+    }
+
+    public override GameObject FindClosestObjectOfLayer(GameObject agent){
+        GameManager manager = GameObject.FindObjectOfType<GameManager>();
+        GameObject target = null;
+        if (EventLayer == 7 || EventLayer == 9){//if berry or fungus, throw it to the cow
+            target = GameObject.FindObjectOfType<Cow>().gameObject;
+        }
+        if (EventLayer == 10){//if bomb, throw it at an enemy
+            target = FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
+        }
+        return target;
     }
 
     public override bool CheckPreconditions(List<GameState.State> currentState){
@@ -62,14 +78,25 @@ public class ThrowItem : FrameworkEvent
     }
 
     public override bool PerformEvent(Creature agent){
-        float dist = Mathf.Abs(Vector3.Distance(agent.transform.position,ThrowTarget));
+        Vector3 throwHere = Vector3.zero;
+        if (agent is Player){//if its the player, then just throw where the mousePos is
+            throwHere = ThrowTarget;
+        } else { //if AI, then throw at whatever target we gaveit
+            throwHere = agent.Target.transform.position;
+        }
+        float dist = Mathf.Abs(Vector3.Distance(ThrowTarget,throwHere));//calculating throwing strength
         float throwStrength = 1;
         if (dist > agent.MyStats.Range){
             throwStrength = agent.MyStats.Range/dist; //this really only exists for the player, cuz AI companions will always try to move into their throwing range
         }
-        agent.HeldItem.GetComponent<IThrowable>().ThrowObject(ThrowTarget,throwStrength);
-        CompleteEvent(agent);
-        return true;
+        if (agent.HeldItem != null){
+            agent.HeldItem.GetComponent<IThrowable>().ThrowObject(throwHere,throwStrength);
+            CompleteEvent(agent);
+            return true;
+        } else {
+            Debug.Log("couldn't complete event cuz " + agent + "'s HeldItem was null");
+            return false;
+        }
     }
     protected override bool CompleteEvent(Creature agent){
         agent.Target = null;

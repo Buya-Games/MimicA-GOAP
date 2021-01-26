@@ -28,12 +28,32 @@ public class PickupItem : FrameworkEvent
         return clone;
     }
 
+    public override bool GetTarget(Creature agent){
+        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        return agent.Target != null? true : false;
+    }
+
     public override bool CheckRange(Creature agent){
-        if (agent.Target != null && agent.TargetDist < EventRange){
+        if (agent.Target != null && GetDist(agent.Target,agent.gameObject) < EventRange){
             return true;
         } else {
             return false;
         }
+    }
+
+    public override GameObject FindClosestObjectOfLayer(GameObject agent){
+        GameManager manager = GameObject.FindObjectOfType<GameManager>();
+        GameObject target = null;
+        if (EventLayer == 7){
+            target = FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
+        }
+        if (EventLayer == 9){
+            target = FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
+        }
+        if (EventLayer == 10){
+            target = FindClosestObjectInList(manager.spawner.ActiveBombs,agent.gameObject);
+        }
+        return target;
     }
 
     public override bool CheckPreconditions(List<GameState.State> currentState){

@@ -8,18 +8,21 @@ public class FrameworkCompanionLogic : Creature
     //1) at outset will listen for possibleEvents
     //2) returns getDecision when need to figure out what to do
     [SerializeField] FrameworkEvent currentEvent;
+    FrameworkPlanner planner;
     Queue<FrameworkEvent> toDo = new Queue<FrameworkEvent>();
     Player player;
     public IEnumerator currentCoroutine;
     public bool learning;
     Rigidbody rb;
     float eventMaxTime = 10; //don't spend more than 10 seconds on any given decision
-    Queue<GameState.State> MyGoal = new Queue<GameState.State>();
-    public List<FrameworkEvent> queuedActions = new List<FrameworkEvent>();
+    Queue<GameState.State> MyGoals = new Queue<GameState.State>();
+    Queue<GameState.State> MySecondaryGoals = new Queue<GameState.State>();
+    int learningActions = 6;//# of player actions that creature will observe to learn, then start mimicing
 
     protected override void Start(){
         base.Start();
         player = GameObject.FindObjectOfType<Player>();
+        planner = FindObjectOfType<FrameworkPlanner>();
         rb = GetComponent<Rigidbody>();
         manager.spawner.ActiveCompanions.Add(this);
         learning = true;
@@ -29,76 +32,69 @@ public class FrameworkCompanionLogic : Creature
     }
 
     void Learn(){
-        if (availableActions.Count<4){//listen until 10 actions
+        if (availableActions.Count<learningActions){//listen until X actions
             availableActions.Add(player.CurrentEvent.Clone());
             motiveAttack+=player.CurrentEvent.motiveAttack;
             motiveHarvest+=player.CurrentEvent.motiveHarvest;
             motiveReproduction+=player.CurrentEvent.motiveReproduction;
         }
-        if (availableActions.Count >= 4){//after 10, we will setup our lifetime goals and stop listening
+        if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
             SetGoals();
             learning = false;
             player.OnTeach -= Learn;//turning off listener
             player.CheckForStudents();//telling player to stop teaching unless other students
             GetPlan();
         }
-        
-        // if (toDo.Count<1){
-        //     toDo.Enqueue(player.CurrentEvent.Clone());
-        //     Debug.Log("learned " + player.CurrentEvent);
-        //     if (currentEvent == null){
-        //         GetDecision();
-        //     }
-        // }
     }
 
     void SetGoals(){
-        MyGoal.Clear();
+        MyGoals.Clear();
         if (motiveAttack>motiveHarvest){//i'm sure more elegant way to do this, but just grinding thru it guh
             if (motiveAttack>motiveReproduction){
-                MyGoal.Enqueue(GameState.State.goalAttacked);
+                MyGoals.Enqueue(GameState.State.goalAttacked);
             } else if (motiveAttack==motiveReproduction){
-                MyGoal.Enqueue(GameState.State.goalReproduced);
-                MyGoal.Enqueue(GameState.State.goalAttacked);
+                MyGoals.Enqueue(GameState.State.goalReproduced);
+                MyGoals.Enqueue(GameState.State.goalAttacked);
             } else {
-                MyGoal.Enqueue(GameState.State.goalReproduced);
+                MyGoals.Enqueue(GameState.State.goalReproduced);
             }
         } else if (motiveAttack==motiveHarvest && motiveAttack>motiveReproduction){
-            MyGoal.Enqueue(GameState.State.goalHarvested);
-            MyGoal.Enqueue(GameState.State.goalAttacked);
+            MyGoals.Enqueue(GameState.State.goalHarvested);
+            MyGoals.Enqueue(GameState.State.goalAttacked);
         } else if (motiveHarvest>motiveReproduction){
-            MyGoal.Enqueue(GameState.State.goalHarvested);
+            MyGoals.Enqueue(GameState.State.goalHarvested);
         } else if (motiveHarvest==motiveReproduction && motiveHarvest>motiveAttack) {
-            MyGoal.Enqueue(GameState.State.goalHarvested);
-            MyGoal.Enqueue(GameState.State.goalReproduced);
+            MyGoals.Enqueue(GameState.State.goalHarvested);
+            MyGoals.Enqueue(GameState.State.goalReproduced);
         } else if (motiveHarvest==motiveReproduction && motiveHarvest==motiveAttack) {
-            MyGoal.Enqueue(GameState.State.goalHarvested);
-            MyGoal.Enqueue(GameState.State.goalReproduced);
-            MyGoal.Enqueue(GameState.State.goalAttacked);
+            MyGoals.Enqueue(GameState.State.goalHarvested);
+            MyGoals.Enqueue(GameState.State.goalReproduced);
+            MyGoals.Enqueue(GameState.State.goalAttacked);
         } else {
-            MyGoal.Enqueue(GameState.State.goalReproduced);
+            MyGoals.Enqueue(GameState.State.goalReproduced);
         }
-        Debug.Log(motiveAttack + " " + motiveHarvest + " " + motiveReproduction + ", " + MyGoal.Peek());
+        Debug.Log(motiveAttack + " " + motiveHarvest + " " + motiveReproduction + ", " + MyGoals.Peek());
     }
 
-    
-
-    List<GameState.State> GetGoalState(){
-        List<GameState.State> goalState = new List<GameState.State>();
-        goalState.Add(MyGoal.Dequeue());
-        MyGoal.Enqueue(goalState[0]);
-        return goalState;
+    List<GameState.State> ToList(Queue<GameState.State> q){
+        List<GameState.State> toList = new List<GameState.State>();
+        GameState.State s = q.Dequeue();
+        toList.Add(s);
+        q.Enqueue(s);
+        return toList;
     }
 
     public void GetPlan(){
-        FrameworkPlanner planner = FindObjectOfType<FrameworkPlanner>();
-        toDo.Clear();
-        toDo = planner.MakePlan(this,GetCurrentState(),GetGoalState());
-        // for (int i = 0;i<toDo.Count;i++){
-        //     queuedActions.Add(toDo.Dequeue());
-        // }
-        Debug.Log("we have a " + toDo.Count + " point plan!");
-        GetDecision();
+        //Debug.Log(Time.time + " running Plan");
+        toDo = planner.MakePlan(this,GetCurrentState(),ToList(MyGoals));
+
+        if (toDo == null){ //if failed to find a plan, try again in 1 second
+            Debug.Log(Time.time + ": didn't find a plan so invoking Plan again");
+            Invoke("GetPlan",1f);
+        } else {
+            Debug.Log(Time.time + " we have a " + toDo.Count + " point plan!");
+            GetDecision();
+        }
     }
 
     //returns the best action to take depending on current game state, as well as a queue of actions to perform after that
@@ -106,59 +102,35 @@ public class FrameworkCompanionLogic : Creature
     public void GetDecision(){
         currentEvent = null;
         if (toDo.Count>0){
-            Debug.Log("yup, gonna do " + toDo.Peek());
             currentEvent = toDo.Dequeue();
             PerformDecision(currentEvent);
         } else {
-            Debug.Log("oop, need a new plan");
+            //Debug.Log("oop, need a new plan");
             GetPlan();
         }
     }
 
     void PerformDecision(FrameworkEvent nextEvent){
-        if (Time.time > eventMaxTime){
+        if (Time.time > eventMaxTime){//should we really just give up? what if still moving to X?
             eventMaxTime+=Time.time;
             GetDecision();
         } else {
-            if (Target == null){
-                Debug.Log(nextEvent + " had no target, so looking for a " + nextEvent.EventLayer);
-                Target = FindClosestObjectOfLayer(nextEvent.EventLayer);
-            }
-            //Target = FindClosestObjectOfLayer(nextEvent.EventLayer);//check again if something closer popped up
-            if (Target != null){
-                //StartCoroutine(FaceTarget());//facing target
-                TargetDist = GetTargetDist(Target.transform.position);
-                Debug.Log(nextEvent + " range is " + nextEvent.EventRange + " and current TargetDist is " + TargetDist);
+            if (nextEvent.GetTarget(this)){
                 if (nextEvent.CheckRange(this)){
-                    if (nextEvent.CheckPreconditions(GetCurrentState())){
-                        if (nextEvent.PerformEvent(this)){
-                            GetDecision();
-                            Debug.Log(nextEvent + " SUCCEEDED");
-                        } else {
-                            GetDecision();
-                            Debug.Log(nextEvent + " FAILED");
-                        }
-                        toDo.Enqueue(currentEvent);
-                        //Debug.Log("Finished and requeued " + currentEvent);
-                        Invoke("GetDecision",.5f);
+                    if (nextEvent.PerformEvent(this)){
+                        //Debug.Log(nextEvent + " SUCCEEDED");
                     } else {
-                        toDo.Enqueue(currentEvent);
-                        //Debug.Log("Precheck failed and requeued " + currentEvent);
-                        Invoke("GetDecision",.5f);
+                        Debug.Log(nextEvent + " FAILED");
                     }
+                    Invoke("GetDecision",.5f);
                 } else {
-                    //StartCoroutine(FaceTarget());//facing target
                     StopAllCoroutines();
                     StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
                 }
             } else {
-                Invoke("RepeatDecision",1f);//repeat this (keep trying to find a target)
+                Invoke("GetPlan",1f);//if can't find any targets, get a new plan
             }
         }
-    }
-
-    void RepeatDecision(){
-        PerformDecision(currentEvent);
     }
 
     public void LookAtLocation(Vector3 where){
@@ -177,16 +149,24 @@ public class FrameworkCompanionLogic : Creature
             counter++;
             yield return null;
         }
-        TargetDist = GetTargetDist(Target.transform.position);
-        PerformDecision(currentEvent);
+        PostMovementChecks();
     }
 
-    Queue<FrameworkEvent> FrameWorkEventsToDo(){
-        toDo = new Queue<FrameworkEvent>();
-        return toDo;
-    }
-
-    public FrameworkEvent GetNextEvent(){
-        return toDo.Dequeue();
+    void PostMovementChecks(){
+        Queue<FrameworkEvent> quickCheck = planner.MakePlan(this,GetCurrentState(),ToList(MyGoals));
+        if (quickCheck.Peek() == currentEvent){
+            Debug.Log("yup, plan is still good so will do " + currentEvent);
+            if (currentEvent.CheckPreconditions(GetCurrentState())){
+                Debug.Log("and " + currentEvent + "prechecks are good too so will do it");
+                PerformDecision(currentEvent);
+            } else {
+                Debug.Log("can no longer perform " + currentEvent + ", finding new plan");
+                Invoke("GetPlan",0.5f); //seems can no longer perform the current event, so getting a new plan
+            }
+        } else {
+            toDo = quickCheck;
+            Debug.Log("oh plan changed from " + currentEvent + " to " + toDo.Peek());
+            GetDecision();
+        }
     }
 }

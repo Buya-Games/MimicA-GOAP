@@ -7,7 +7,7 @@ public class Creature : MonoBehaviour
     protected GameManager manager;
     public Stats MyStats;
     [HideInInspector] public GameObject Target;
-    [HideInInspector] public float TargetDist;
+    //[HideInInspector] public float TargetDist;
     [HideInInspector] public GameObject Cow;
     public GameObject HeldItem;
     [SerializeField] protected Transform melee;
@@ -65,50 +65,50 @@ public class Creature : MonoBehaviour
         melee.gameObject.SetActive(false);
     }
 
-    protected float GetTargetDist(Vector3 targetPos){
-        return Mathf.Abs(Vector3.Distance(transform.position,targetPos));
-    }
+    // protected float GetTargetDist(Vector3 targetPos){
+    //     return Mathf.Abs(Vector3.Distance(transform.position,targetPos));
+    // }
 
-    protected GameObject FindClosestObjectOfLayer(int targetLayer){
-        List<GameObject> possibleTargets = new List<GameObject>();
-        if (targetLayer == 6){
-            possibleTargets = manager.spawner.ActivesBushes;
-        }
-        if (targetLayer == 7){
-            possibleTargets = manager.spawner.ActiveBerries;
-        }
-        if (targetLayer == 8){
-            possibleTargets = manager.spawner.ActiveMushrooms;
-        }
-        if (targetLayer == 9){
-            possibleTargets = manager.spawner.ActiveFungus;
-        }
-        if (targetLayer == 10){
-            possibleTargets = manager.spawner.ActiveBombs;
-        }
-        Debug.Log("looking for closest among " + possibleTargets.Count + " targets");
+    // protected GameObject FindClosestObjectOfLayer(int targetLayer){
+    //     List<GameObject> possibleTargets = new List<GameObject>();
+    //     if (targetLayer == 6){
+    //         possibleTargets = manager.spawner.ActivesBushes;
+    //     }
+    //     if (targetLayer == 7){
+    //         possibleTargets = manager.spawner.ActiveBerries;
+    //     }
+    //     if (targetLayer == 8){
+    //         possibleTargets = manager.spawner.ActiveMushrooms;
+    //     }
+    //     if (targetLayer == 9){
+    //         possibleTargets = manager.spawner.ActiveFungus;
+    //     }
+    //     if (targetLayer == 10){
+    //         possibleTargets = manager.spawner.ActiveBombs;
+    //     }
+    //     Debug.Log("looking for closest among " + possibleTargets.Count + " targets");
     
-        GameObject closest = null;
-        float dist = Mathf.Infinity;
-        if (possibleTargets.Count>0){
-            foreach (GameObject b in possibleTargets){
-                if (b.layer != 15){ //if object not flying in mid-air
-                    //if first set it as closest
-                    if (closest == null){
-                        closest = b;
-                        dist = Mathf.Abs(Vector3.Distance(closest.transform.position, this.transform.position));
-                    } else { //else check if closer
-                        float distThis = Mathf.Abs(Vector3.Distance(b.transform.position, this.transform.position));
-                        if (distThis < dist){
-                            closest = b;
-                            dist = distThis;
-                        }
-                    }
-                }
-            }
-        }
-        return closest;
-    }
+    //     GameObject closest = null;
+    //     float dist = Mathf.Infinity;
+    //     if (possibleTargets.Count>0){
+    //         foreach (GameObject b in possibleTargets){
+    //             if (b.layer != 15){ //if object not flying in mid-air
+    //                 //if first set it as closest
+    //                 if (closest == null){
+    //                     closest = b;
+    //                     dist = Mathf.Abs(Vector3.Distance(closest.transform.position, this.transform.position));
+    //                 } else { //else check if closer
+    //                     float distThis = Mathf.Abs(Vector3.Distance(b.transform.position, this.transform.position));
+    //                     if (distThis < dist){
+    //                         closest = b;
+    //                         dist = distThis;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return closest;
+    // }
 
     protected List<GameState.State> GetCurrentState(){
         List<GameState.State> currentState = new List<GameState.State>();

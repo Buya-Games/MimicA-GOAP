@@ -11,15 +11,17 @@ public class MeleeAttack : FrameworkEvent
         Preconditions.Add(GameState.State.itemNone); 
         if (EventLayer == 6){//if attacking bush
             motiveHarvest++;
+            Preconditions.Add(GameState.State.availBush);
             Effects.Add(GameState.State.availBerry);
         }
         if (EventLayer == 8){//if attacking mushroom
             motiveReproduction++;
+            Preconditions.Add(GameState.State.availMushroom);
             Effects.Add(GameState.State.availFungus);
         }
         if (EventLayer == 11){//if attacking enemy
             motiveAttack++;
-            Cost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
+            EventCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
             Preconditions.Add(GameState.State.availEnemy);
             Effects.Add(GameState.State.goalAttacked);
         }
@@ -30,13 +32,33 @@ public class MeleeAttack : FrameworkEvent
         MeleeAttack clone = new MeleeAttack(this.EventLayer);
         return clone;
     }
-    public override bool CheckRange(Creature agent){
-        if (agent.Target != null && agent.TargetDist < EventRange){
-            return true;
 
+    public override bool GetTarget(Creature agent){
+        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        return agent.Target != null? true : false;
+    }
+
+    public override bool CheckRange(Creature agent){
+        if (agent.Target != null && GetDist(agent.Target,agent.gameObject) < EventRange){
+            return true;
         } else {
             return false;
         }
+    }
+
+    public override GameObject FindClosestObjectOfLayer(GameObject agent){
+        GameManager manager = GameObject.FindObjectOfType<GameManager>();
+        GameObject target = null;
+        if (EventLayer == 6){
+            target = FindClosestObjectInList(manager.spawner.ActivesBushes,agent.gameObject);
+        }
+        if (EventLayer == 8){
+            target = FindClosestObjectInList(manager.spawner.ActiveMushrooms,agent.gameObject);
+        }
+        if (EventLayer == 11){
+            target = FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
+        }
+        return target;
     }
 
     public override bool CheckPreconditions(List<GameState.State> currentState){

@@ -14,11 +14,12 @@ public class Spawner : MonoBehaviour
     Queue<GameObject> enemyQueue = new Queue<GameObject>();
     Queue<GameObject> berryQueue = new Queue<GameObject>();
     Queue<GameObject> bombQueue = new Queue<GameObject>();
-    [HideInInspector]public List<GameObject> ActivesBushes =  new List<GameObject>();
-    [HideInInspector]public List<GameObject> ActiveBerries =  new List<GameObject>();
-    [HideInInspector]public List<GameObject> ActiveBombs =  new List<GameObject>();
-    [HideInInspector]public List<GameObject> ActiveMushrooms =  new List<GameObject>();
-    [HideInInspector]public List<GameObject> ActiveFungus =  new List<GameObject>();
+    public List<GameObject> ActivesBushes =  new List<GameObject>();
+    public List<GameObject> ActiveBerries =  new List<GameObject>();
+    public List<GameObject> ActiveBombs =  new List<GameObject>();
+    public List<GameObject> ActiveMushrooms =  new List<GameObject>();
+    public List<GameObject> ActiveFungus =  new List<GameObject>();
+    public List<GameObject> ActiveEnemies =  new List<GameObject>();
     [HideInInspector]public List<FrameworkCompanionLogic> ActiveCompanions =  new List<FrameworkCompanionLogic>();
 
     void Awake(){

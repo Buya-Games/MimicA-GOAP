@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator SpawnBushes(){
         int counter = 0;
-        while (counter < 100){
+        while (counter < 1000){
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
             SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);

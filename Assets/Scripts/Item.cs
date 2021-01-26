@@ -57,11 +57,11 @@ public class Item : MonoBehaviour, IThrowable
         height = (transform.position - where).sqrMagnitude/10; 
         float disY = where.y - transform.position.y;
         Vector3 disXZ = new Vector3(where.x - transform.position.x, 0, where.z - transform.position.z);
-        float x = (height / disXZ.magnitude) * 2;
+        float x = (height / disXZ.magnitude);// * 2;
 
         Vector3 velY = Vector3.up * Mathf.Sqrt(-2 * gravity * x);
         Vector3 velXZ = disXZ / (Mathf.Sqrt(-2*x/gravity) + Mathf.Sqrt(2*(disY-x)/gravity));
-        velXZ *= throwStrength;
+        //velXZ *= throwStrength;
         return velXZ + velY;
     }
 
@@ -73,6 +73,9 @@ public class Item : MonoBehaviour, IThrowable
         if (col.gameObject.layer == 13){ //if player or companion
             Player creature = col.gameObject.GetComponent<Player>();
             if (creature.HeldItem == null){
+                if (!flying){
+                    FlyingOrPickedUp();
+                }
                 creature.HeldItem = this.gameObject;
                 Vector3 pos = creature.transform.position;
                 pos.y += 3;
