@@ -48,8 +48,14 @@ public class Item : MonoBehaviour, IThrowable
         transform.position = higherPos;
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
+
         transform.parent = null;
-        transform.localScale = Vector3.one * 0.5f;
+        if (myType == Spawner.EnvironmentType.Bomb){
+            transform.localScale = Vector3.one;
+        } else {
+            transform.localScale = Vector3.one * 0.5f;
+        }
+        
         rb.velocity = CalculateTraj(where, throwStrength);
     }
 
@@ -61,7 +67,7 @@ public class Item : MonoBehaviour, IThrowable
 
         Vector3 velY = Vector3.up * Mathf.Sqrt(-2 * gravity * x);
         Vector3 velXZ = disXZ / (Mathf.Sqrt(-2*x/gravity) + Mathf.Sqrt(2*(disY-x)/gravity));
-        //velXZ *= throwStrength;
+        velXZ *= throwStrength;
         return velXZ + velY;
     }
 
@@ -80,9 +86,14 @@ public class Item : MonoBehaviour, IThrowable
                 Vector3 pos = creature.transform.position;
                 pos.y += 3;
                 transform.position = pos;
-                transform.SetParent(creature.transform);
                 transform.rotation = Quaternion.identity;
-                transform.localScale = new Vector3(0.5f,0.25f,0.5f);
+
+                transform.SetParent(creature.transform);
+                if (myType == Spawner.EnvironmentType.Bomb){
+                    transform.localScale = new Vector3(1,0.5f,1f);
+                } else {
+                    transform.localScale = new Vector3(.5f,0.25f,.5f);
+                }
                 GetComponent<Rigidbody>().isKinematic = true;
                 creature.PickupItem(this);
             }

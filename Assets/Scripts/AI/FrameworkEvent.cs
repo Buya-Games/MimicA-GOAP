@@ -11,30 +11,6 @@ public abstract class FrameworkEvent
     public float EventCost = 1f;
     public float motiveReproduction, motiveHarvest, motiveAttack;//counts toward the 3 possible creature goals
     public float EventRange;
-    protected GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent){
-        GameObject closest = null;
-        float dist = Mathf.Infinity;
-        if (objects.Count>0){
-            foreach (GameObject b in objects){
-                //if first, set it as closest
-                if (closest == null){
-                    closest = b;
-                    dist = GetDist(b,agent);
-                } else { //else check if closer
-                    float distThis = GetDist(b,agent);
-                    if (distThis < dist){
-                        closest = b;
-                        dist = distThis;
-                    }
-                }
-            }
-        }
-        return closest;
-    }
-
-    protected float GetDist(GameObject target, GameObject agent){
-        return Mathf.Abs(Vector3.Distance(target.transform.position, agent.transform.position));
-    }
 
     public float EstimateActionCost(Creature agent){
         float cost = 0;
@@ -43,7 +19,7 @@ public abstract class FrameworkEvent
         GameObject estimatedClosestObj = FindClosestObjectOfLayer(agent.gameObject);
 
         if (estimatedClosestObj != null){
-            cost += GetDist(estimatedClosestObj,agent.gameObject);
+            cost += Tools.GetDist(estimatedClosestObj,agent.gameObject);
         } else {
             cost += 10; //flat value use for estimate
         }

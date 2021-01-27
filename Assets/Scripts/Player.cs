@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Player : Creature
+public class Player : Goblin
 {
     PlayerControl control;
     public event Action OnTeach;
@@ -20,6 +20,7 @@ public class Player : Creature
     //Start is called before first frame update
     protected override void Start(){
         base.Start();
+        Init();
         control.moveSpeed = MyStats.Speed;
     }
 
@@ -74,8 +75,8 @@ public class Player : Creature
     //checks if any companions still teachable
     public void CheckForStudents(){
         bool anyoneLearning = false;
-        foreach (FrameworkCompanionLogic c in manager.spawner.ActiveCompanions){
-            if (c.learning){
+        foreach (GameObject b in manager.spawner.ActiveBuddies){
+            if (b.GetComponent<Buddy>().learning){
                 anyoneLearning = true;
             }
         }

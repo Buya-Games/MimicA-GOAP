@@ -6,7 +6,7 @@ public class Spawner : MonoBehaviour
 {
     public enum EnvironmentType {Tree, Bush, Mushroom, Fungus, Berry, Bomb}
     GameManager manager;
-    [SerializeField] GameObject treePrefab, bushPrefab, mushroomPrefab, companionPrefab, enemyPrefab, berryPrefab, bombPrefab, fungusPrefab;
+    [SerializeField] GameObject treePrefab, bushPrefab, mushroomPrefab, buddyPrefab, enemyPrefab, berryPrefab, bombPrefab, fungusPrefab;
     Queue<GameObject> treeQueue = new Queue<GameObject>();
     Queue<GameObject> mushroomQueue = new Queue<GameObject>();
     Queue<GameObject> fungusQueue = new Queue<GameObject>();
@@ -20,7 +20,7 @@ public class Spawner : MonoBehaviour
     public List<GameObject> ActiveMushrooms =  new List<GameObject>();
     public List<GameObject> ActiveFungus =  new List<GameObject>();
     public List<GameObject> ActiveEnemies =  new List<GameObject>();
-    [HideInInspector]public List<FrameworkCompanionLogic> ActiveCompanions =  new List<FrameworkCompanionLogic>();
+    [HideInInspector]public List<GameObject> ActiveBuddies =  new List<GameObject>();
 
     void Awake(){
         manager = GetComponent<GameManager>();
@@ -66,15 +66,31 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    public void SpawnCompanion(Vector3 spawnPos){
-        GameObject newCompanion = Instantiate(companionPrefab);
-        spawnPos.z-=2;
-        newCompanion.transform.position = spawnPos;
-        ActiveCompanions.Add(newCompanion.GetComponent<FrameworkCompanionLogic>());
+    public void SpawnCreature(Vector3 spawnPos, bool enemy = false){
+        if (!enemy){//if not enemy, spawn a buddy
+            GameObject newBuddy = Instantiate(buddyPrefab);
+            spawnPos.z-=2;
+            newBuddy.transform.position = spawnPos;
+            ActiveBuddies.Add(newBuddy);
+            manager.CurrentState.Add(GameState.State.availBuddy);
+        } else {
+            GameObject newEnemy = Instantiate(enemyPrefab);
+            newEnemy.transform.position = spawnPos;
+            ActiveEnemies.Add(newEnemy);
+            manager.CurrentState.Add(GameState.State.availEnemy);
+        }
     }
 
-    public void DespawnCompanion(GameObject who){
-        ActiveCompanions.Remove(who.GetComponent<FrameworkCompanionLogic>());
+    public void DespawnCreature(GameObject who){
+        if (who.GetComponent<Buddy>() != null){ //if its a buddy ## DOES THIS WORK??
+            Debug.Log("despawned a buddy successfully");
+            ActiveBuddies.Remove(who);
+            manager.CurrentState.Remove(GameState.State.availBuddy);
+        } else {
+            Debug.Log("despawned an enemy successfully");
+            ActiveEnemies.Remove(who);
+            manager.CurrentState.Remove(GameState.State.availEnemy);
+        }
         Destroy(who);//should I make this into a queue to avoid creating/destroying all the time?
     }
 

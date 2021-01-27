@@ -489,9 +489,9 @@ GameObject:
   - component: {fileID: 2013080351615717401}
   - component: {fileID: 2013080351615717400}
   - component: {fileID: 2013080351615717403}
-  - component: {fileID: 2013080351615717402}
+  - component: {fileID: 1996187797281631622}
   m_Layer: 12
-  m_Name: Companion
+  m_Name: Buddy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -591,7 +591,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 1
---- !u!114 &2013080351615717402
+--- !u!114 &1996187797281631622
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -600,7 +600,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2013080351615717405}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5e7a7561f0ae2a41ad1ffa6a0460a12, type: 3}
+  m_Script: {fileID: 11500000, guid: 0bddee9182027464b8bdbbcb65d19b3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   MyStats:
@@ -611,11 +611,10 @@ MonoBehaviour:
     FoodHarvestSkill: 0
     BombHarvestSkill: 0
   Target: {fileID: 0}
-  TargetDist: 0
-  Cow: {fileID: 0}
   HeldItem: {fileID: 0}
   melee: {fileID: 2013080350883017174}
+  Health: 10
+  learning: 0
   motiveReproduction: 0
   motiveHarvest: 0
   motiveAttack: 0
-  learning: 0

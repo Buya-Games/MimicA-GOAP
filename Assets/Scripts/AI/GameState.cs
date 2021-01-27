@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
+
 //Holds all possible game world states
+[System.Serializable]
 public class GameState
 {
     public enum State {
@@ -11,13 +12,15 @@ public class GameState
         availBerry, 
         availFungus, 
         availBomb, 
-        availBush, 
+        availBush,
         availMushroom, 
-        availEnemy, 
+        availEnemy,
+        availBuddy,
         availCow, 
         goalAttacked,
         goalReproduced,
-        goalHarvested
+        goalHarvested,
+        goalCowAttacked
     }
 
     public static bool CompareStates(List<State> compareThis, List<State> againstThis){

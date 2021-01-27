@@ -25,14 +25,14 @@ public class PlayerControl : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)){
             player.Interact();
         }
-        if (Input.GetKeyDown(KeyCode.T)){
-            FindObjectOfType<Spawner>().SpawnCompanion(transform.position);
-        }
-        if (Input.GetKeyDown(KeyCode.B)){
-            Vector3 spawnPos = transform.position;
-            spawnPos.z+=5;
-            FindObjectOfType<Spawner>().SpawnEnvironment(spawnPos,Spawner.EnvironmentType.Berry);
-        }
+        // if (Input.GetKeyDown(KeyCode.T)){
+        //     FindObjectOfType<Spawner>().SpawnCreature(transform.position);
+        // }
+        // if (Input.GetKeyDown(KeyCode.B)){
+        //     Vector3 spawnPos = transform.position;
+        //     spawnPos.z+=5;
+        //     FindObjectOfType<Spawner>().SpawnEnvironment(spawnPos,Spawner.EnvironmentType.Berry);
+        // }
     }
 
     // FixedUpdate is called once per physics frame (everytime physics is re-calculated)

@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
-public class FrameworkPlanner : MonoBehaviour
+public class GOAPPlan : MonoBehaviour
 {
 
     protected class Node {
@@ -21,11 +20,10 @@ public class FrameworkPlanner : MonoBehaviour
 	}
     
     public Queue<FrameworkEvent> MakePlan(
-        FrameworkCompanionLogic agent, 
+        Creature agent, 
         List<GameState.State> worldState, 
         List<GameState.State> goals)
     {
-        //List<Node> leaves = new List<Node>();
         List<Node> leaves = new List<Node>();
         Node goalNode = new Node(null,0,goals,null);
         bool success = buildBackwardGraph(goalNode, leaves, agent.availableActions, worldState, agent);
@@ -76,7 +74,7 @@ public class FrameworkPlanner : MonoBehaviour
     }
 
     //goal->current graph (backwards)
-    bool buildBackwardGraph(Node currentNode, List<Node> leaves, List<FrameworkEvent> availActions, List<GameState.State> worldState, FrameworkCompanionLogic agent){
+    bool buildBackwardGraph(Node currentNode, List<Node> leaves, List<FrameworkEvent> availActions, List<GameState.State> worldState, Creature agent){
         bool foundOne = false;
         // Debug.Log("available actions:");
         // ListIt(availActions);
@@ -95,7 +93,7 @@ public class FrameworkPlanner : MonoBehaviour
                 //make new node representing the world state required to run this action
                 Node childNode = new Node(currentNode, 0, action.Preconditions, null);
                 //if new node is possible in current world state, then that is the action we need to do
-                bool found = buildBackwardGraph(childNode,leaves,listSubset(availActions,action),worldState,agent);
+                bool found = buildBackwardGraph(childNode,leaves,Tools.ListSubset(availActions,action),worldState,agent);
                 if (found){
                     //##why would i ever need to know the cost of this chippokochin that needs its child to run anyway?
                     //currentNode.costBenefit = calculateBenefit(agent)/(calculateCost(agent,action) + calculateCost(agent,childNode.action));
@@ -144,19 +142,13 @@ public class FrameworkPlanner : MonoBehaviour
         return usableActions;
     }
 
-    public static void ListIt<T>(List<T> list){
-        foreach (T state in list){
-            Debug.Log(state);
-        }
-    }
-
     List<GameState.State> combineStates(List<GameState.State> stateA, List<GameState.State> stateB){
         stateA.AddRange(stateB);
         //List<FrameworkGameStateVector.GameState> result = stateA.Union(stateB).ToList();
         return stateA;
     }
 
-    float calculateCost(FrameworkCompanionLogic agent,FrameworkEvent action){
+    float calculateCost(Buddy agent,FrameworkEvent action){
         //float benefit = Mathf.Max(agent.motiveReproduction,Mathf.Max(agent.motiveAttack,agent.motiveHarvest));
         return action.EstimateActionCost(agent);
         //return benefit/cost;
@@ -167,7 +159,7 @@ public class FrameworkPlanner : MonoBehaviour
         // return Mathf.Min(repro,Mathf.Min(harvest,attack));
     }
 
-    float calculateBenefit(FrameworkCompanionLogic agent){
+    float calculateBenefit(Buddy agent){
         return Mathf.Max(agent.motiveReproduction,Mathf.Max(agent.motiveAttack,agent.motiveHarvest));
     }
 
@@ -188,13 +180,5 @@ public class FrameworkPlanner : MonoBehaviour
     //     return newList;
     // }
 
-    List<T> listSubset<T> (List<T> list, T removeMe) {
-        List<T> newList = new List<T>();
-        foreach (T t in list){
-            if (!t.Equals(removeMe)){
-                newList.Add(t);
-            }
-        }
-        return newList;
-    }
+    
 }

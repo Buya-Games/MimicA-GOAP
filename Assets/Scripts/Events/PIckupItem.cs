@@ -34,7 +34,7 @@ public class PickupItem : FrameworkEvent
     }
 
     public override bool CheckRange(Creature agent){
-        if (agent.Target != null && GetDist(agent.Target,agent.gameObject) < EventRange){
+        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < EventRange){
             return true;
         } else {
             return false;
@@ -45,13 +45,13 @@ public class PickupItem : FrameworkEvent
         GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
         if (EventLayer == 7){
-            target = FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
         }
         if (EventLayer == 9){
-            target = FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
         }
         if (EventLayer == 10){
-            target = FindClosestObjectInList(manager.spawner.ActiveBombs,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBombs,agent.gameObject);
         }
         return target;
     }

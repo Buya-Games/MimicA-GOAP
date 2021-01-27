@@ -25,6 +25,17 @@ public class MeleeAttack : FrameworkEvent
             Preconditions.Add(GameState.State.availEnemy);
             Effects.Add(GameState.State.goalAttacked);
         }
+        // if (EventLayer == 12){//if attacking buddy
+        //     motiveAttack++;
+        //     EventCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
+        //     Preconditions.Add(GameState.State.availEnemy);
+        //     Effects.Add(GameState.State.goalAttacked);
+        // }
+        if (EventLayer == 14){//if attacking cow
+            motiveAttack++;
+            //Preconditions.Add(GameState.State.availCow);
+            Effects.Add(GameState.State.goalCowAttacked);
+        }
         Effects.Add(GameState.State.itemNone);
     }
 
@@ -33,30 +44,39 @@ public class MeleeAttack : FrameworkEvent
         return clone;
     }
 
-    public override bool GetTarget(Creature agent){
-        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
-        return agent.Target != null? true : false;
-    }
-
     public override bool CheckRange(Creature agent){
-        if (agent.Target != null && GetDist(agent.Target,agent.gameObject) < EventRange){
+        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < EventRange){
             return true;
         } else {
             return false;
         }
     }
 
+    public override bool GetTarget(Creature agent){
+        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        return agent.Target != null? true : false;
+    }
+
     public override GameObject FindClosestObjectOfLayer(GameObject agent){
         GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
         if (EventLayer == 6){
-            target = FindClosestObjectInList(manager.spawner.ActivesBushes,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActivesBushes,agent.gameObject);
         }
         if (EventLayer == 8){
-            target = FindClosestObjectInList(manager.spawner.ActiveMushrooms,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveMushrooms,agent.gameObject);
         }
         if (EventLayer == 11){
-            target = FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
+        }
+        if (EventLayer == 12){
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBuddies,agent.gameObject);
+        }
+        if (EventLayer == 13){//player
+            target = Tools.FindClosestObjectOfLayer(13,agent);
+        }
+        if (EventLayer == 14){//cow
+            target = Tools.FindClosestObjectOfLayer(14,agent);
         }
         return target;
     }
@@ -88,9 +108,10 @@ public class MeleeAttack : FrameworkEvent
             GameObject.FindObjectOfType<Spawner>().SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Fungus);
             GameObject.FindObjectOfType<Spawner>().DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Mushroom);
         }
-        if (EventLayer == 11){//if attacking Enemy
-            agent.Target.GetComponent<Enemy>().TakeHit(BaseDamage);
+        if (EventLayer == 11 || EventLayer == 12 || EventLayer == 13 || EventLayer == 14){//if attacking a creature or the cow
+            agent.Target.GetComponent<IHittable>().TakeHit(agent.gameObject,BaseDamage);
         }
+        
         agent.Swing();
         CompleteEvent(agent);
         return true;

@@ -2,13 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Cow : MonoBehaviour
+public class Cow : MonoBehaviour, IHittable
 {
     GameManager manager;
     [SerializeField] Transform poopPos;
+    [HideInInspector]public int health = 10;
+    Rigidbody rb;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
+        rb = GetComponent<Rigidbody>();
+    }
+
+    public void TakeHit(GameObject attacker, float damage){
+        Vector3 dir = (transform.position - attacker.transform.position).normalized; //take hit in direction opposite to attacker
+        dir.y = 0;
+        rb.AddForce(dir * 300);
+
+        // Health-=damage;
+        // if (Health <= 0){
+        //     Die();
+        // }
     }
 
     void OnCollisionEnter(Collision col){

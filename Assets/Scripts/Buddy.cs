@@ -2,29 +2,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FrameworkCompanionLogic : Creature
+//this sits on every AI companion and
+//1) at outset will watch player to learn goals and actions
+//2) after X actions, will use GOAPPlan to dynamically create action plans to meet goals
+public class Buddy : Goblin
 {
-    //this sits on every companion and
-    //1) at outset will listen for possibleEvents
-    //2) returns getDecision when need to figure out what to do
+    
     [SerializeField] FrameworkEvent currentEvent;
-    FrameworkPlanner planner;
-    Queue<FrameworkEvent> toDo = new Queue<FrameworkEvent>();
+    
     Player player;
-    public IEnumerator currentCoroutine;
-    public bool learning;
-    Rigidbody rb;
+    [HideInInspector]public bool learning;
+    
     float eventMaxTime = 10; //don't spend more than 10 seconds on any given decision
     Queue<GameState.State> MyGoals = new Queue<GameState.State>();
-    Queue<GameState.State> MySecondaryGoals = new Queue<GameState.State>();
-    int learningActions = 6;//# of player actions that creature will observe to learn, then start mimicing
+    Queue<FrameworkEvent> toDo = new Queue<FrameworkEvent>();
+    int learningActions = 5;//# of player actions that creature will observe to learn, then start mimicing
+    [HideInInspector] public float motiveReproduction, motiveHarvest, motiveAttack;//the 3 possible goals of a creature
 
+    protected override void Awake(){
+        base.Awake();
+    }
     protected override void Start(){
         base.Start();
+        Init();
         player = GameObject.FindObjectOfType<Player>();
-        planner = FindObjectOfType<FrameworkPlanner>();
-        rb = GetComponent<Rigidbody>();
-        manager.spawner.ActiveCompanions.Add(this);
+        manager.spawner.ActiveBuddies.Add(this.gameObject);//##REMOVE THIS AFTER YOU FINISH TESTING AND GAME STARTS WITH 0 BUDDIES
         learning = true;
         player.CheckForStudents();
         player.OnTeach += Learn;//tells companion to listen everytime PlayerControl uses OnTeach, and in those cases to run Learn
@@ -89,10 +91,10 @@ public class FrameworkCompanionLogic : Creature
         toDo = planner.MakePlan(this,GetCurrentState(),ToList(MyGoals));
 
         if (toDo == null){ //if failed to find a plan, try again in 1 second
-            Debug.Log(Time.time + ": didn't find a plan so invoking Plan again");
+            //Debug.Log(Time.time + ": didn't find a plan so invoking Plan again");
             Invoke("GetPlan",1f);
         } else {
-            Debug.Log(Time.time + " we have a " + toDo.Count + " point plan!");
+            //Debug.Log(Time.time + " we have a " + toDo.Count + " point plan!");
             GetDecision();
         }
     }
@@ -117,6 +119,7 @@ public class FrameworkCompanionLogic : Creature
         } else {
             if (nextEvent.GetTarget(this)){
                 if (nextEvent.CheckRange(this)){
+                    StartCoroutine(FaceTarget((Target.transform.position - transform.position).normalized));
                     if (nextEvent.PerformEvent(this)){
                         //Debug.Log(nextEvent + " SUCCEEDED");
                     } else {
@@ -133,7 +136,7 @@ public class FrameworkCompanionLogic : Creature
         }
     }
 
-    public void LookAtLocation(Vector3 where){
+    void LookAtLocation(Vector3 where){
         StartCoroutine(FaceTarget(where));
     }
 
@@ -142,6 +145,7 @@ public class FrameworkCompanionLogic : Creature
         // if (rotCheck.y > 5 || rotCheck.y < -5){//this is probably so stupidly expensive
         //     StartCoroutine(FaceTarget(Target.transform.position));
         // }
+        StartCoroutine(FaceTarget(dir));
         int counter = 0;
         rb.velocity = Vector3.zero;
         while (counter < 50){
@@ -154,18 +158,18 @@ public class FrameworkCompanionLogic : Creature
 
     void PostMovementChecks(){
         Queue<FrameworkEvent> quickCheck = planner.MakePlan(this,GetCurrentState(),ToList(MyGoals));
-        if (quickCheck.Peek() == currentEvent){
-            Debug.Log("yup, plan is still good so will do " + currentEvent);
+        if (currentEvent != null && quickCheck.Peek() == currentEvent){
+            //Debug.Log("yup, plan is still good so will do " + currentEvent);
             if (currentEvent.CheckPreconditions(GetCurrentState())){
-                Debug.Log("and " + currentEvent + "prechecks are good too so will do it");
+                //Debug.Log("and " + currentEvent + "prechecks are good too so will do it");
                 PerformDecision(currentEvent);
             } else {
-                Debug.Log("can no longer perform " + currentEvent + ", finding new plan");
+                //Debug.Log("can no longer perform " + currentEvent + ", finding new plan");
                 Invoke("GetPlan",0.5f); //seems can no longer perform the current event, so getting a new plan
             }
         } else {
             toDo = quickCheck;
-            Debug.Log("oh plan changed from " + currentEvent + " to " + toDo.Peek());
+            //Debug.Log("oh plan changed from " + currentEvent + " to " + toDo.Peek());
             GetDecision();
         }
     }

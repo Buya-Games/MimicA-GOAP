@@ -56,7 +56,7 @@ public class ThrowItem : FrameworkEvent
             target = GameObject.FindObjectOfType<Cow>().gameObject;
         }
         if (EventLayer == 10){//if bomb, throw it at an enemy
-            target = FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
         }
         return target;
     }
@@ -84,7 +84,8 @@ public class ThrowItem : FrameworkEvent
         } else { //if AI, then throw at whatever target we gaveit
             throwHere = agent.Target.transform.position;
         }
-        float dist = Mathf.Abs(Vector3.Distance(ThrowTarget,throwHere));//calculating throwing strength
+        float dist = Mathf.Abs(Vector3.Distance(agent.transform.position,throwHere));//calculating throwing strength
+        Debug.Log(dist);
         float throwStrength = 1;
         if (dist > agent.MyStats.Range){
             throwStrength = agent.MyStats.Range/dist; //this really only exists for the player, cuz AI companions will always try to move into their throwing range

@@ -4,11 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    FrameworkGameData gameData;
-    [HideInInspector]public int Food, Bombs;
-    [HideInInspector]public List<Enemy> ActiveEnemies = new List<Enemy>();
-    [HideInInspector]public List<Human> ActiveHumans = new List<Human>(); //includes player and companions
-    [HideInInspector]public List<Human> ActiveCompanions = new List<Human>(); //includes player and companions
     PlayerControl player;
     [HideInInspector] public Spawner spawner;
     int collectedFungus;
@@ -16,16 +11,14 @@ public class GameManager : MonoBehaviour
 
     //Awake is called before Start
     void Awake(){
-        gameData = GetComponent<FrameworkGameData>();
         player = FindObjectOfType<PlayerControl>();
         spawner = GetComponent<Spawner>();
     }
 
     //Start is called before first frame
     void Start(){
-        ActiveHumans.Add(player.GetComponent<Human>());
-        StartCoroutine(SpawnBushes());
-        spawner.SpawnCompanion(player.transform.position);
+        StartCoroutine(SpawnStuff());
+        spawner.SpawnCreature(player.transform.position);
         //SpawnEnvironment(5, Spawner.EnvironmentType.Tree);
         //SpawnEnvironment(10, Spawner.EnvironmentType.Bush);
         //SpawnEnvironment(3, Spawner.EnvironmentType.Rock);
@@ -33,16 +26,32 @@ public class GameManager : MonoBehaviour
 
     void SpawnEnvironment(int howMany, Spawner.EnvironmentType type){
         for (int i = 0;i<howMany;i++){
-            int posNeg = Random.Range(0,2)*2-1;
-            Vector3 spawnPos = new Vector3(Random.Range(0,20)*posNeg,0,player.transform.position.z + Random.Range(5,25));
+            int posNegX = Random.Range(0,2)*2-1;
+            int posNegZ = Random.Range(0,2)*2-1;
+            Vector3 spawnPos = new Vector3(Random.Range(5,20)*posNegX,0,Random.Range(5,20)*posNegZ);//player.transform.position.z + Random.Range(5,25));
             //Vector3 spawnPos = new Vector3(Random.Range(15,50)*posNeg,0,player.transform.position.z + Random.Range(5,20));
             spawner.SpawnEnvironment(spawnPos, type);
         }
     }
 
-    IEnumerator SpawnBushes(){
+    void SpawnEnemy(int howMany){
+        for (int i = 0;i<howMany;i++){
+            int posNegX = Random.Range(0,2)*2-1;
+            int posNegZ = Random.Range(0,2)*2-1;
+            Vector3 spawnPos = new Vector3(Random.Range(5,20)*posNegX,0,Random.Range(5,20)*posNegZ);//player.transform.position.z + Random.Range(5,25));
+            //Vector3 spawnPos = new Vector3(Random.Range(15,50)*posNeg,0,player.transform.position.z + Random.Range(5,20));
+            spawner.SpawnCreature(spawnPos, true);
+        }
+    }
+
+    IEnumerator SpawnStuff(){
         int counter = 0;
+        int enemyCounter = 10;
         while (counter < 1000){
+            if (counter > enemyCounter){
+                enemyCounter+=Random.Range(1,10);
+                SpawnEnemy(1);
+            }
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
             SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
@@ -56,7 +65,7 @@ public class GameManager : MonoBehaviour
             collectedFungus-=10;
             Vector3 spawnPos = player.transform.position;
             spawnPos.z-=5;
-            FindObjectOfType<Spawner>().SpawnCompanion(spawnPos); //a new companion will be created by the player
+            FindObjectOfType<Spawner>().SpawnCreature(spawnPos); //a new companion will be created by the player
         }
     }
 
