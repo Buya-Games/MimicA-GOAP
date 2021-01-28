@@ -20,7 +20,9 @@ public class GameState
         goalAttacked,
         goalReproduced,
         goalHarvested,
-        goalCowAttacked
+        goalCowAttacked,
+        goalFollowPlayer,
+        goalEat
     }
 
     public static bool CompareStates(List<State> compareThis, List<State> againstThis){

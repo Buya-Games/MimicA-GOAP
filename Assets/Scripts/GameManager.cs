@@ -8,29 +8,26 @@ public class GameManager : MonoBehaviour
     [HideInInspector] public Spawner spawner;
     int collectedFungus;
     public List<GameState.State> CurrentState = new List<GameState.State>();
+    [HideInInspector] public ParticleManager particles;
+    [HideInInspector] public Cow cow;
 
     //Awake is called before Start
     void Awake(){
         player = FindObjectOfType<PlayerControl>();
         spawner = GetComponent<Spawner>();
+        particles = GetComponent<ParticleManager>();
+        cow = FindObjectOfType<Cow>();
     }
 
     //Start is called before first frame
     void Start(){
         StartCoroutine(SpawnStuff());
         spawner.SpawnCreature(player.transform.position);
-        //SpawnEnvironment(5, Spawner.EnvironmentType.Tree);
-        //SpawnEnvironment(10, Spawner.EnvironmentType.Bush);
-        //SpawnEnvironment(3, Spawner.EnvironmentType.Rock);
     }
 
     void SpawnEnvironment(int howMany, Spawner.EnvironmentType type){
         for (int i = 0;i<howMany;i++){
-            int posNegX = Random.Range(0,2)*2-1;
-            int posNegZ = Random.Range(0,2)*2-1;
-            Vector3 spawnPos = new Vector3(Random.Range(5,20)*posNegX,0,Random.Range(5,20)*posNegZ);//player.transform.position.z + Random.Range(5,25));
-            //Vector3 spawnPos = new Vector3(Random.Range(15,50)*posNeg,0,player.transform.position.z + Random.Range(5,20));
-            spawner.SpawnEnvironment(spawnPos, type);
+            spawner.SpawnEnvironment(spawner.EmptyLocation(), type);
         }
     }
 
@@ -38,8 +35,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0;i<howMany;i++){
             int posNegX = Random.Range(0,2)*2-1;
             int posNegZ = Random.Range(0,2)*2-1;
-            Vector3 spawnPos = new Vector3(Random.Range(5,20)*posNegX,0,Random.Range(5,20)*posNegZ);//player.transform.position.z + Random.Range(5,25));
-            //Vector3 spawnPos = new Vector3(Random.Range(15,50)*posNeg,0,player.transform.position.z + Random.Range(5,20));
+            Vector3 spawnPos = cow.transform.position + new Vector3(Random.Range(15,25)*posNegX,0,Random.Range(15,20)*posNegZ);
             spawner.SpawnCreature(spawnPos, true);
         }
     }
@@ -49,20 +45,20 @@ public class GameManager : MonoBehaviour
         int enemyCounter = 10;
         while (counter < 1000){
             if (counter > enemyCounter){
-                enemyCounter+=Random.Range(1,10);
+                enemyCounter+=Random.Range(5,15);
                 SpawnEnemy(1);
             }
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
-            SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
+            //SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
             yield return new WaitForSeconds(3);
         }
     }
 
     public void CollectFungus(){
         collectedFungus++;
-        if (collectedFungus>10){ //if you collect 10 fungus
-            collectedFungus-=10;
+        if (collectedFungus>2){ //if you collect 10 fungus
+            collectedFungus-=2;
             Vector3 spawnPos = player.transform.position;
             spawnPos.z-=5;
             FindObjectOfType<Spawner>().SpawnCreature(spawnPos); //a new companion will be created by the player

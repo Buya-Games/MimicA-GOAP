@@ -21,6 +21,7 @@ public class Spawner : MonoBehaviour
     public List<GameObject> ActiveFungus =  new List<GameObject>();
     public List<GameObject> ActiveEnemies =  new List<GameObject>();
     [HideInInspector]public List<GameObject> ActiveBuddies =  new List<GameObject>();
+    [SerializeField] LayerMask spawnCheckLM;
 
     void Awake(){
         manager = GetComponent<GameManager>();
@@ -67,18 +68,20 @@ public class Spawner : MonoBehaviour
     }
 
     public void SpawnCreature(Vector3 spawnPos, bool enemy = false){
+        GameObject newCreature = null;
         if (!enemy){//if not enemy, spawn a buddy
-            GameObject newBuddy = Instantiate(buddyPrefab);
+            newCreature = Instantiate(buddyPrefab);
             spawnPos.z-=2;
-            newBuddy.transform.position = spawnPos;
-            ActiveBuddies.Add(newBuddy);
+            newCreature.transform.position = spawnPos;
+            ActiveBuddies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availBuddy);
         } else {
-            GameObject newEnemy = Instantiate(enemyPrefab);
-            newEnemy.transform.position = spawnPos;
-            ActiveEnemies.Add(newEnemy);
+            newCreature = Instantiate(enemyPrefab);
+            newCreature.transform.position = spawnPos;
+            ActiveEnemies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availEnemy);
         }
+        newCreature.GetComponent<Creature>().Init();
     }
 
     public void DespawnCreature(GameObject who){
@@ -87,7 +90,6 @@ public class Spawner : MonoBehaviour
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
         } else {
-            Debug.Log("despawned an enemy successfully");
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
         }
@@ -135,37 +137,6 @@ public class Spawner : MonoBehaviour
             newItem.transform.SetParent(transform);
         }
         useList.Add(newItem);
-
-        // if (type == EnvironmentType.Tree){
-        //     if (treeQueue.Count > 0){
-        //         newItem = treeQueue.Dequeue();
-        //     } else {
-        //         newItem = Instantiate(treePrefab);
-        //         newItem.transform.SetParent(transform);
-        //     }
-        //     newItem.AddComponent<Resource>();
-        // } else if (type == EnvironmentType.Bush){
-        //     if (bushQueue.Count > 0){
-        //         newItem = bushQueue.Dequeue();
-        //     } else {
-        //         newItem = Instantiate(bushPrefab);
-        //         newItem.transform.SetParent(transform);
-        //     }
-        // } else if (type == EnvironmentType.Rock){
-        //     if (rockQueue.Count > 0){
-        //         newItem = rockQueue.Dequeue();
-        //     } else {
-        //         newItem = Instantiate(rockPrefab);
-        //         newItem.transform.SetParent(transform);
-        //     }
-        // } else if (type == EnvironmentType.Berry){
-        //     if (berryQueue.Count > 0){
-        //         newItem = rockQueue.Dequeue();
-        //     } else {
-        //         newItem = Instantiate(rockPrefab);
-        //         newItem.transform.SetParent(transform);
-        //     }
-        // }
 
         newItem.transform.position = spawnPos;
         Vector3 randoRot = newItem.transform.rotation.eulerAngles;
@@ -242,5 +213,37 @@ public class Spawner : MonoBehaviour
                 manager.CurrentState.Add(GameState.State.availBomb);
             }
         }
+    }
+    public Vector3 EmptyLocation(){
+        int posNegX = Random.Range(0,2)*2-1;
+        int posNegZ = Random.Range(0,2)*2-1;
+        Vector3 pos = manager.cow.transform.position + new Vector3(Random.Range(0,25)*posNegX,0,Random.Range(0,20)*posNegZ);
+        while (!CheckIfLocationClear(pos)){
+            int posNegX2 = Random.Range(0,2)*2-1;
+            int posNegZ2 = Random.Range(0,2)*2-1;
+            pos = manager.cow.transform.position + new Vector3(Random.Range(0,25)*posNegX,0,Random.Range(0,20)*posNegZ);
+        }
+        return pos;
+    }
+
+    public Vector3 EmptyNearbyLocation(Vector3 nearby){
+        int x = 10; 
+        int z = 10;
+        int posNegX = Random.Range(0,2)*2-1;
+        int posNegZ = Random.Range(0,2)*2-1;
+        Vector3 pos = nearby + new Vector3(Random.Range(0,x)*posNegX,0,Random.Range(0,z)*posNegZ);
+        while (!CheckIfLocationClear(pos)){
+            x++;z++;
+            int posNegX2 = Random.Range(0,2)*2-1;
+            int posNegZ2 = Random.Range(0,2)*2-1;
+            pos = nearby + new Vector3(Random.Range(0,x)*posNegX,0,Random.Range(0,z)*posNegZ);
+        }
+        Debug.Log("had to look " + (x-10).ToString() + "times to find an open spot");
+        return pos;
+    }
+
+    bool CheckIfLocationClear(Vector3 where){
+        Collider[] nearbyObjects = Physics.OverlapSphere(where,2,spawnCheckLM);
+        return (nearbyObjects.Length > 0) ? false : true;
     }
 }

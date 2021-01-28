@@ -11,6 +11,7 @@ public class PlayerControl : MonoBehaviour
     Rigidbody rb;
     [HideInInspector] public float moveSpeed;
     [SerializeField] Transform head;
+    [SerializeField] LayerMask throwingLM;
 
     // Awake is called before Start so I use it to initialize all the core stuff
     void Awake(){
@@ -56,6 +57,16 @@ public class PlayerControl : MonoBehaviour
         } else {
             return Vector3.zero;
         }
+    }
+
+    public int ThrowingTarget(Vector3 pos){ //looks at where mouse is to figure out what you're trying to throw at (cow, enemy, random spot)
+        int targetLayer = 0;
+        Collider[] nearbyObjects = Physics.OverlapSphere(pos,2,throwingLM);//check surroundings for stuff
+        if (nearbyObjects.Length>0){
+            GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,pos);
+            targetLayer = closest.layer;
+        }
+        return targetLayer;
     }
 
     public void MoveMouse(){

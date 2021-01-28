@@ -1,8 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//just various useful tools stored in one place
 public static class Tools
 {
+    public static float GetDist(GameObject target, GameObject agent){
+        return Mathf.Abs(Vector3.Distance(target.transform.position, agent.transform.position));
+    }
+
+    public static float GetDistVector3(Vector3 target, Vector3 agent){
+        return Mathf.Abs(Vector3.Distance(target, agent));
+    }
 
     public static GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent){
         GameObject closest = null;
@@ -17,6 +25,27 @@ public static class Tools
                     float distThis = GetDist(b,agent);
                     if (distThis < dist){
                         closest = b;
+                        dist = distThis;
+                    }
+                }
+            }
+        }
+        return closest;
+    }
+
+    public static GameObject FindClosestColliderInGroup(Collider[] objects, Vector3 agent){
+        GameObject closest = null;
+        float dist = Mathf.Infinity;
+        if (objects.Length>0){
+            foreach (Collider b in objects){
+                //if first, set it as closest
+                if (closest == null){
+                    closest = b.gameObject;
+                    dist = GetDistVector3(b.transform.position,agent);
+                } else { //else check if closer
+                    float distThis = GetDistVector3(b.transform.position,agent);
+                    if (distThis < dist){
+                        closest = b.gameObject;
                         dist = distThis;
                     }
                 }
@@ -74,10 +103,6 @@ public static class Tools
             }
         }
         return closest;
-    }
-
-    public static float GetDist(GameObject target, GameObject agent){
-        return Mathf.Abs(Vector3.Distance(target.transform.position, agent.transform.position));
     }
 
     public static List<T> ListSubset<T> (List<T> list, T removeMe) {

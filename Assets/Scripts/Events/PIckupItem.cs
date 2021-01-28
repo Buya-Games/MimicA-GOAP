@@ -3,7 +3,7 @@ using System.Collections.Generic;
 public class PickupItem : FrameworkEvent
 {
     public PickupItem(int itemLayer){
-        EventRange = 2;
+        EventRange = 2; //distance necessary to pickup an item
         EventLayer = itemLayer;
         Preconditions.Add(GameState.State.itemNone);
         if (EventLayer == 7){
@@ -74,13 +74,14 @@ public class PickupItem : FrameworkEvent
 
     public override bool PerformEvent(Creature agent){
         agent.HeldItem = agent.Target;
-        Vector3 pos = agent.transform.position;
-        pos.y += 3;
-        agent.Target.transform.position = pos;
-        agent.Target.transform.SetParent(agent.transform);
-        agent.Target.transform.rotation = Quaternion.identity;
-        agent.Target.transform.localScale = new Vector3(0.5f,0.25f,0.5f);
-        agent.Target.GetComponent<Rigidbody>().isKinematic = true;
+        agent.Target.GetComponent<Item>().PickUp(agent.transform);
+        // Vector3 pos = agent.transform.position;
+        // pos.y += 3;
+        // agent.Target.transform.position = pos;
+        // agent.Target.transform.SetParent(agent.transform);
+        // agent.Target.transform.rotation = Quaternion.identity;
+        // agent.Target.transform.localScale = new Vector3(0.5f,0.25f,0.5f);
+        // agent.Target.GetComponent<Rigidbody>().isKinematic = true;
         CompleteEvent(agent);
         return true;
     }

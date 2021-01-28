@@ -21,6 +21,7 @@ public class Player : Goblin
     protected override void Start(){
         base.Start();
         Init();
+        MyStats.Speed = 4;
         control.moveSpeed = MyStats.Speed;
     }
 
@@ -28,7 +29,7 @@ public class Player : Goblin
         if (HeldItem != null){
             ThrowItem();
         } else {
-            Collider[] nearbyObjects = Physics.OverlapSphere(transform.position,2,interactLM);//for player, I just look at surrounding environment. For AI, use FindClosestObjectOfLayer
+            Collider[] nearbyObjects = Physics.OverlapSphere(transform.position,2,interactLM);//check surroundings for stuff
             if (nearbyObjects.Length>0){ 
                 Target = nearbyObjects[0].gameObject;//i only use the first object of an array which I believe is random, but that's fine I think?
                 MeleeAttack();
@@ -61,13 +62,12 @@ public class Player : Goblin
     }
 
     public void ThrowItem(){
-        ThrowItem throwItem = new ThrowItem(control.MousePos(),HeldItem.layer);
+        Vector3 mousePos = control.MousePos();
+        ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
         CurrentEvent = throwItem;
-        if (throwItem.CheckPreconditions(GetCurrentState())){
-            if (throwItem.PerformEvent(this)){
-                if (teaching){
-                    OnTeach();
-                }
+        if (throwItem.PerformEvent(this)){
+            if (teaching){
+                OnTeach();
             }
         }
     }

@@ -6,7 +6,7 @@ public class MeleeAttack : FrameworkEvent
     // public System.Type TargetType;
 
     public MeleeAttack(int targetLayer){
-        EventRange = 3f;
+        EventRange = 3f;//distance necessary to melee someone
         EventLayer = targetLayer;
         Preconditions.Add(GameState.State.itemNone); 
         if (EventLayer == 6){//if attacking bush
@@ -100,18 +100,20 @@ public class MeleeAttack : FrameworkEvent
         //TargetLayer = agent.Target.gameObject.layer;
         // TargetType = agent.Target.GetType();
 
+        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         if (EventLayer == 6){//if harvesting Bush
-            GameObject.FindObjectOfType<Spawner>().SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Berry);
-            GameObject.FindObjectOfType<Spawner>().DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Bush);
+            manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Berry);
+            manager.spawner.DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Bush);
+            manager.particles.DestroyingBush(agent.Target.transform.position);
         }
         if (EventLayer == 8){//if harvesting Mushroom
-            GameObject.FindObjectOfType<Spawner>().SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Fungus);
-            GameObject.FindObjectOfType<Spawner>().DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Mushroom);
+            manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Fungus);
+            manager.spawner.DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Mushroom);
+            manager.particles.DestroyingMushroom(agent.Target.transform.position);
         }
         if (EventLayer == 11 || EventLayer == 12 || EventLayer == 13 || EventLayer == 14){//if attacking a creature or the cow
             agent.Target.GetComponent<IHittable>().TakeHit(agent.gameObject,BaseDamage);
         }
-        
         agent.Swing();
         CompleteEvent(agent);
         return true;
