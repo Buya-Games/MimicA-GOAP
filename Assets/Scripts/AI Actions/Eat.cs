@@ -35,8 +35,13 @@ public class Eat : FrameworkEvent
     }
 
     public override bool PerformEvent(Creature agent){
+        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         if (agent.HeldItem != null){
-            agent.HeldItem.GetComponent<IThrowable>().ThrowObject(Vector3.zero,0,true);
+            manager.particles.EatingBerry(agent.HeldItem.transform.position);
+            manager.spawner.DespawnEnvironment(agent.HeldItem,Spawner.EnvironmentType.Berry);
+            agent.Eat();
+
+            //agent.HeldItem.GetComponent<IThrowable>().ThrowObject(Vector3.zero,0,true);
             agent.HeldItem = null;
             agent.Target = null;
         }

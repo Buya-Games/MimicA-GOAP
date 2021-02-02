@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : Creature
+public class Enemy : CreatureLogic
 {
     protected override void Awake(){
         base.Awake();
@@ -10,9 +10,8 @@ public class Enemy : Creature
 
     public override void Init(){
         base.Init();
-        MyStats.Speed = 1;
 
-        availableActions.Add(new MeleeAttack(14));//attacking cow
+        availableActions.Add(new MeleeAttack(14,1));//attacking cow
 
         SetGoals();
         GetPlan();

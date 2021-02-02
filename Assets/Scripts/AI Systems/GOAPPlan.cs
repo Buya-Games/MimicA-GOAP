@@ -22,7 +22,7 @@ public class GOAPPlan : MonoBehaviour
 	}
     
     public Queue<FrameworkEvent> MakePlan(
-        Creature agent, 
+        CreatureLogic agent, 
         List<GameState.State> worldState, 
         List<GameState.State> goals)
     {
@@ -46,27 +46,27 @@ public class GOAPPlan : MonoBehaviour
         }
 
         Node cheapest = null;
-        // if (debug) {Debug.Log("length length " + leaves.Count);}
-        // for (int i = 0;i<leaves.Count;i++){
-        //     if (cheapest == null){
-        //         cheapest = leaves[i];
-        //         if(debug){Debug.Log("cheapest set to " + cheapest.action);}
-        //     }
-        //     if(debug){Debug.Log("next up " + leaves[i].action + "( " + leaves[i].costBenefit + ") vs cheapest " + cheapest.action + " (" + cheapest.costBenefit + ")");}
-        //     if (leaves[i].costBenefit < cheapest.costBenefit){
-        //         cheapest = leaves[i];
-        //     }
-        // }
-		foreach (Node leaf in leaves) {
-			if (cheapest == null)
-				cheapest = leaf;
+        if (debug) {Debug.Log("length length " + leaves.Count);}
+        for (int i = 0;i<leaves.Count;i++){
+            if (cheapest == null){
+                cheapest = leaves[i];
                 if(debug){Debug.Log("cheapest set to " + cheapest.action);}
-			else {
-				if (leaf.costBenefit < cheapest.costBenefit)
-                    if(debug){Debug.Log("new cheapest is " + leaf.action + "( " + leaf.costBenefit + "), old was " + cheapest.action + " (" + cheapest.costBenefit + ")");}
-					cheapest = leaf;
-			}
-		}
+            }
+            if(debug){Debug.Log("next up " + leaves[i].action + "( " + leaves[i].costBenefit + ") vs cheapest " + cheapest.action + " (" + cheapest.costBenefit + ")");}
+            if (leaves[i].costBenefit < cheapest.costBenefit){
+                cheapest = leaves[i];
+            }
+        }
+		// foreach (Node leaf in leaves) {
+		// 	if (cheapest == null)
+		// 		cheapest = leaf;
+        //         if(debug){Debug.Log("cheapest set to " + cheapest.action);}
+		// 	else {
+		// 		if (leaf.costBenefit < cheapest.costBenefit)
+        //             if(debug){Debug.Log("new cheapest is " + leaf.action + "( " + leaf.costBenefit + "), old was " + cheapest.action + " (" + cheapest.costBenefit + ")");}
+		// 			cheapest = leaf;
+		// 	}
+		// }
 
         // get its node and work back through the parents
 		List<FrameworkEvent> result = new List<FrameworkEvent> ();

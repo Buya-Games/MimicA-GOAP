@@ -14,23 +14,24 @@ public static class Tools
 
     public static GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent){
         GameObject closest = null;
-        float dist = Mathf.Infinity;
+        float dist = 5;//start with 5
         if (objects.Count>0){
-            foreach (GameObject b in objects){
-                //if first, set it as closest
-                if (closest == null){
-                    closest = b;
-                    dist = GetDist(b,agent);
-                } else { //else check if closer
-                    float distThis = GetDist(b,agent);
-                    if (distThis < dist){
+            while (closest == null && dist < 50){//nullCheck(closest)
+                // if (dist >= 100) {Debug.Log(dist);}
+                foreach (GameObject b in objects){
+                    float thisDist = GetDist(b,agent);
+                    if (thisDist < dist){
                         closest = b;
-                        dist = distThis;
                     }
                 }
+                dist+=10;
             }
         }
         return closest;
+    }
+
+    static bool nullCheck(GameObject checkMe){
+        return (checkMe == null) ? true : false;
     }
 
     public static GameObject FindClosestColliderInGroup(Collider[] objects, Vector3 agent){
@@ -70,7 +71,7 @@ public static class Tools
             useList = spawner.ActiveFungus;
         }
         if (layer == 10){
-            useList = spawner.ActiveBombs;
+            useList = spawner.ActiveBerryPoop;
         }
         if (layer == 11){
             useList = spawner.ActiveEnemies;
@@ -83,6 +84,9 @@ public static class Tools
         }
         if (layer == 14){
             return GameObject.FindObjectOfType<Cow>().gameObject;
+        }
+        if (layer == 16){
+            useList = spawner.ActiveFungusPoop;
         }
 
         GameObject closest = null;

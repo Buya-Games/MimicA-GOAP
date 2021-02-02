@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Player : Goblin
+public class Player : Creature
 {
     PlayerControl control;
     public event Action OnTeach;
     public FrameworkEvent CurrentEvent;
     [SerializeField] LayerMask interactLM;
     bool teaching = false; //set by companions to true when they're born (and false after 10 turns)
+    public float bobHeight;
+    public float bobMax, bobMin;
 
     // Awake is called before Start so I use it to initialize all the core stuff
     protected override void Awake(){
         base.Awake();
         control = GetComponent<PlayerControl>();
+        bobMin = 5;
     }
 
     //Start is called before first frame update
@@ -22,7 +25,19 @@ public class Player : Goblin
         base.Start();
         Init();
         MyStats.Speed = 4;
+        bobSpeed = 15;
         control.moveSpeed = MyStats.Speed;
+    }
+
+    protected override void Update(){
+        base.Update();
+        bobHeight = visibleMesh.transform.localPosition.y * 6;
+        if (bobHeight > bobMax){
+            bobMax = bobHeight;
+        }
+        if (bobHeight < bobMin){
+            bobMin = bobHeight;
+        }
     }
 
     public void Interact(){
@@ -40,7 +55,7 @@ public class Player : Goblin
     }
 
     public void MeleeAttack(){
-        MeleeAttack melee = new MeleeAttack(Target.gameObject.layer);
+        MeleeAttack melee = new MeleeAttack(Target.gameObject.layer, bobHeight);
         CurrentEvent = melee;//prior event should be destroyed by GC
         if (melee.CheckPreconditions(GetCurrentState())){
             if (melee.PerformEvent(this)){
@@ -51,9 +66,9 @@ public class Player : Goblin
         }
     }
     
-    public void PickupItem(IThrowable item){
-        Target = item.ThisGameObject();
-        PickupItem pickup = new PickupItem(Target.gameObject.layer);
+    public override void PickUp(IThrowable item){
+        base.PickUp(item);
+        PickupItem pickup = new PickupItem(item.ThisGameObject().layer);
         CurrentEvent = pickup;
         if (teaching){
             OnTeach();
@@ -63,9 +78,15 @@ public class Player : Goblin
 
     public void ThrowItem(){
         Vector3 mousePos = control.MousePos();
-        ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
-        CurrentEvent = throwItem;
-        if (throwItem.PerformEvent(this)){
+        int targetLayer = control.ThrowingTarget(mousePos);
+        if (targetLayer == 13 && HeldItem.layer == 7){//throwing to self
+            Eat eat = new Eat();
+            CurrentEvent = eat;
+        } else {
+            ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
+            CurrentEvent = throwItem;
+        }
+        if (CurrentEvent.PerformEvent(this)){
             if (teaching){
                 OnTeach();
             }

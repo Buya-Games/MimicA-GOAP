@@ -7,35 +7,26 @@ using TMPro;
 public class Creature : MonoBehaviour, IHittable
 {
     protected GameManager manager;
-    protected Rigidbody rb;
-    protected GOAPPlan planner;
+    Rigidbody rb;
     public Stats MyStats;
     public GameObject Target;
     public GameObject HeldItem;
-    [SerializeField] protected Transform melee;//melee attacking "arm"
+    [SerializeField] Transform melee;//melee attacking "arm"
+    [SerializeField] MeshRenderer healthBar; //i dunno why I made healthbar as a 3D cube. This adjusts the value
+    MaterialPropertyBlock matBlock;
+    Transform mainCamera;
     [HideInInspector] public float health = 10;
-    [SerializeField] protected float stamina;
     string myName;
-    public List<FrameworkEvent> availableActions = new List<FrameworkEvent>();
-    protected Queue<GameState.State> myGoals = new Queue<GameState.State>();
-    protected Queue<FrameworkEvent> toDo = new Queue<FrameworkEvent>();
-    protected FrameworkEvent currentEvent;
     [SerializeField] protected TMP_Text myText;
-    float eventMaxTime = 10; //don't spend more than 10 seconds on any given decision
-
-    [System.Serializable]
-    public class Stats {
-        public float Strength;//melee strength
-        public float Speed;//movement speed
-        public float Range;//distance you can throw shit
-        public float Accuracy;//subtract this from RangeAttack.RangeRadius to determine where bomb will and around target
-        public float FoodHarvestSkill, BombHarvestSkill;
-    }
+    public Transform visibleMesh;
+    protected float bobSpeed;
 
     protected virtual void Awake(){
         manager = FindObjectOfType<GameManager>();
         rb = GetComponent<Rigidbody>();
-        planner = FindObjectOfType<GOAPPlan>();
+        healthBar = healthBar.GetComponent<MeshRenderer>();
+        matBlock = new MaterialPropertyBlock();
+        mainCamera = Camera.main.transform;
     }
 
     protected virtual void Start(){
@@ -43,26 +34,21 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     public virtual void Init(){
-        health = 10;
-        stamina = 10;
+        health = 100;
         SetStats();
         myName = NameGenerator.CreateRandomName();
         gameObject.name = myName;
 
-        //give everyone basic skills to eat
-        availableActions.Add(new Eat());//eat berry
-        availableActions.Add(new MeleeAttack(6));//harvest berries from bushes
-        availableActions.Add(new PickupItem(7));//harvest berries from bushes
+        bobSpeed = MyStats.Speed * 7;
     }
 
     void SetStats(){
         MyStats = new Stats();
         MyStats.Strength = 1;
-        MyStats.Speed = 2;
+        MyStats.Speed = Random.Range(1.9f,2.1f);//just to give everything a bit variability
         MyStats.Range = 10;
         MyStats.Accuracy = 1;
-        MyStats.FoodHarvestSkill = 1;
-        MyStats.BombHarvestSkill = 1;
+        MyStats.HarvestSkill = 1;
     }
 
     protected List<GameState.State> GetCurrentState(){
@@ -73,61 +59,35 @@ public class Creature : MonoBehaviour, IHittable
             currentState.Add(GameState.State.itemBerry);
         } else if (HeldItem.layer == 9){//if holding fungus
             currentState.Add(GameState.State.itemFungus);
-        } else if (HeldItem.layer == 10){//if holding bomb
-            currentState.Add(GameState.State.itemBomb);
+        } else if (HeldItem.layer == 10){//if holding berry poop
+            currentState.Add(GameState.State.itemBerryPoop);
+        } else if (HeldItem.layer == 16){//if holding fungus poop
+            currentState.Add(GameState.State.itemFungusPoop);
         } 
         currentState.AddRange(manager.CurrentState);
         return currentState;
     }
 
-    protected virtual void GetPlan(){
-        currentEvent = null;
-        myText.text = "";
-        toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
-        if (toDo == null){ //if failed to find a plan
-            Invoke("Idle",Random.Range(1f,2f));
-        } else {
-            GetDecision();
+    protected virtual void Update(){
+        visibleMesh.position = visibleMesh.position + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.02f;//mesh bobs up/down (collider doesn't move)
+        health-=.02f;
+        UpdateHealth();
+        if (health <= 0){
+            Die();
         }
     }
 
-    //returns the best action to take depending on current game state, as well as a queue of actions to perform after that
-    //ideally this should take the game state when deciding, instead of just randomly choosing from possibleEvents
-    protected virtual void GetDecision(){
-        currentEvent = null;
-        myText.text = "";
-
-        if (toDo != null && toDo.Count>0){
-            currentEvent = toDo.Dequeue();
-            myText.text = currentEvent.ToString();
-            PerformDecision(currentEvent);
-        } else {
-            GetPlan();
+    void UpdateHealth(){
+        if (mainCamera != null) {
+            var forward = healthBar.transform.position - mainCamera.transform.position;
+            forward.Normalize();
+            var up = Vector3.Cross(forward, mainCamera.transform.right);
+            healthBar.transform.rotation = Quaternion.LookRotation(forward, up);
         }
-    }
 
-    protected virtual void PerformDecision(FrameworkEvent nextEvent){
-        if (Time.time > eventMaxTime){//should we really just give up? what if still moving to X?
-            eventMaxTime+=Time.time;
-            GetDecision();
-        } else {
-            if (nextEvent.GetTarget(this)){
-                if (nextEvent.CheckRange(this)){
-                    StartCoroutine(FaceTarget((Target.transform.position - transform.position).normalized));
-                    if (nextEvent.PerformEvent(this)){
-                        //Debug.Log(nextEvent + " SUCCEEDED");
-                    } else {
-                        Debug.Log(nextEvent + " FAILED");
-                    }
-                    Invoke("GetDecision",Random.Range(0.4f,.6f));
-                } else {
-                    StopAllCoroutines();
-                    StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
-                }
-            } else {
-                Invoke("GetPlan",Random.Range(0.8f,1.2f));//if can't find any targets, get a new plan
-            }
-        }
+        healthBar.GetPropertyBlock(matBlock);
+        matBlock.SetFloat("_Fill", Mathf.Clamp(health/100,0,1));
+        healthBar.SetPropertyBlock(matBlock);
     }
 
     public void Swing(){
@@ -135,24 +95,21 @@ public class Creature : MonoBehaviour, IHittable
         StartCoroutine(GhettoAnimations.AnimSwing(melee));
     }
 
-    protected List<GameState.State> HungryCheck(){
-        List<GameState.State> whatToDo = new List<GameState.State>();
-        if (stamina<5){
-            // if (stamina<-10){
-            //     Die();
-            //     return null;
-            // }
-            whatToDo.Add(GameState.State.goalEat);
-        } else {
-            GameState.State goal = myGoals.Dequeue();
-            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal
-            myGoals.Enqueue(goal);
+    public virtual void PickUp(IThrowable item){
+        if (HeldItem == null){
+            HeldItem = item.ThisGameObject();
         }
-        return whatToDo;
+    }
+
+    protected void DropItem(){
+        if (HeldItem != null){
+            HeldItem.GetComponent<Item>().Drop();
+            HeldItem = null;
+        }
     }
 
     public void Eat(){
-        stamina+=20;
+        health = Mathf.Clamp(health + 50,50,100);
         HeldItem=null;
     }
 
@@ -161,10 +118,10 @@ public class Creature : MonoBehaviour, IHittable
         dir.y = 0;
         rb.AddForce(dir * 600);
         
-        health-=damage;
-        if (health <= 0){
-            Die();
-        }
+        // health-=damage;
+        // if (health <= 0){
+        //     Die();
+        // }
     }
 
     protected void Idle(){
@@ -173,22 +130,19 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     void Die(){
+        StopAllCoroutines();
         Debug.Log(myName + " has died");
         manager.spawner.DespawnCreature(this.gameObject);
     }
 
     protected IEnumerator FaceTarget(Vector3 dir, float turnSpeed = .06f){
-        // Vector3 dir = (lookLocation - transform.position).normalized;
-        // if (dir != Vector3.up){
-            //Debug.Log(dir);
-            Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x+.001f,0,dir.z));
-            int counter = 0;
-            while (counter<50){
-                transform.rotation = Quaternion.Slerp(transform.rotation,rot,turnSpeed);
-                counter++;
-                yield return null;
-            }
-        //}
+        Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x+.001f,0,dir.z));
+        int counter = 0;
+        while (counter<50){
+            transform.rotation = Quaternion.Slerp(transform.rotation,rot,turnSpeed);
+            counter++;
+            yield return null;
+        }
     }
 
     protected IEnumerator Movement(Vector3 dir){
@@ -196,26 +150,39 @@ public class Creature : MonoBehaviour, IHittable
         int counter = 0;
         rb.velocity = Vector3.zero;
         while (counter < 100){
-            stamina-=0.01f;
             rb.MovePosition(rb.position + dir * Time.fixedDeltaTime * MyStats.Speed);
             counter++;
+
+            // health-=.02f;
+            // UpdateHealth();
+            // if (health <= 0){
+            //     Die();
+            // }
+
             yield return null;
         }
         PostMovementChecks();
     }
 
     protected virtual void PostMovementChecks(){
-        Queue<FrameworkEvent> quickCheck = planner.MakePlan(this,GetCurrentState(),HungryCheck());
-        if (quickCheck != null && currentEvent != null && quickCheck.Peek() == currentEvent){ //checks if currentstate results in same currentevent
-            if (currentEvent.CheckPreconditions(GetCurrentState())){//checks that currentevent can still be performed
-                PerformDecision(currentEvent);//keeps performing currentevent
-            } else {
-                Invoke("GetPlan",Random.Range(0.4f,.6f)); //seems can no longer perform the currentevent, so getting a new plan
-            }
-        } else {
-            toDo = quickCheck;//seems there's a new better plan available, so abandon existing plan
-            Invoke("GetDecision",Random.Range(0.4f,.6f));
+        if (visibleMesh.transform.position.y < 0){
+            Vector3 rePos = visibleMesh.transform.position;
+            rePos.y = 0;
+            visibleMesh.transform.position = rePos;
+        } else if (visibleMesh.transform.position.y < 0){
+            Vector3 rePos = visibleMesh.transform.position;
+            rePos.y = 0.4f;
+            visibleMesh.transform.position = rePos;
         }
+    }
+
+    [System.Serializable]
+    public class Stats {
+        public float Strength;//melee strength
+        public float Speed;//movement speed
+        public float Range;//distance you can throw shit
+        public float Accuracy;//subtract this from RangeAttack.RangeRadius to determine where bomb will and around target
+        public float HarvestSkill;
     }
 
 }

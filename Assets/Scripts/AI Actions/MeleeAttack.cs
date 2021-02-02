@@ -2,12 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 public class MeleeAttack : FrameworkEvent
 {
-    static float BaseDamage = 1f;
-    // public System.Type TargetType;
+    float baseSkill = 0;
 
-    public MeleeAttack(int targetLayer){
+    public MeleeAttack(int targetLayer, float playerAbility){
         EventRange = 3f;//distance necessary to melee someone
         EventLayer = targetLayer;
+        baseSkill = playerAbility;//player performance during training sets the action's base effectiveness
         Preconditions.Add(GameState.State.itemNone); 
         if (EventLayer == 6){//if attacking bush
             motiveHarvest++;
@@ -25,12 +25,12 @@ public class MeleeAttack : FrameworkEvent
             Preconditions.Add(GameState.State.availEnemy);
             Effects.Add(GameState.State.goalAttacked);
         }
-        // if (EventLayer == 12){//if attacking buddy
-        //     motiveAttack++;
-        //     EventCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
-        //     Preconditions.Add(GameState.State.availEnemy);
-        //     Effects.Add(GameState.State.goalAttacked);
-        // }
+        if (EventLayer == 12){//if attacking buddy (for enemies)
+            motiveAttack++;
+            EventCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
+            Preconditions.Add(GameState.State.availEnemy);
+            Effects.Add(GameState.State.goalAttacked);
+        }
         if (EventLayer == 14){//if attacking cow
             motiveAttack++;
             //Preconditions.Add(GameState.State.availCow);
@@ -40,7 +40,7 @@ public class MeleeAttack : FrameworkEvent
     }
 
     public override FrameworkEvent Clone(){
-        MeleeAttack clone = new MeleeAttack(this.EventLayer);
+        MeleeAttack clone = new MeleeAttack(this.EventLayer, this.baseSkill);
         return clone;
     }
 
@@ -97,22 +97,44 @@ public class MeleeAttack : FrameworkEvent
     }
 
     public override bool PerformEvent(Creature agent){
-        //TargetLayer = agent.Target.gameObject.layer;
-        // TargetType = agent.Target.GetType();
+        int hitStrength = 0;
+        if (agent is Player){
+            Debug.Log(baseSkill);
+            if (baseSkill < 1.3f){
+                hitStrength = 2;
+            } else {
+                hitStrength = 1;
+            }
+            //hitStrength = (int)baseSkill;
+        } else {
+            float s = baseSkill * Random.Range(0.8f,1.2f);
+            if (s < 1.5f){
+                hitStrength = 2;
+            } else {
+                hitStrength = 1;
+            }
+            //hitStrength = (int)(baseSkill * Random.Range(0.8f,1.2f));
+        }
+        
 
         GameManager manager = GameObject.FindObjectOfType<GameManager>();
         if (EventLayer == 6){//if harvesting Bush
-            manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Berry);
+            for (int i = 0;i<hitStrength;i++){
+                manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Berry);
+            }
             manager.spawner.DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Bush);
             manager.particles.DestroyingBush(agent.Target.transform.position);
+            
         }
         if (EventLayer == 8){//if harvesting Mushroom
-            manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Fungus);
+            for (int i = 0;i<hitStrength;i++){
+                manager.spawner.SpawnEnvironment(agent.Target.transform.position,Spawner.EnvironmentType.Fungus);
+            }
             manager.spawner.DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Mushroom);
             manager.particles.DestroyingMushroom(agent.Target.transform.position);
         }
         if (EventLayer == 11 || EventLayer == 12 || EventLayer == 13 || EventLayer == 14){//if attacking a creature or the cow
-            agent.Target.GetComponent<IHittable>().TakeHit(agent.gameObject,BaseDamage);
+            agent.Target.GetComponent<IHittable>().TakeHit(agent.gameObject,hitStrength);
         }
         agent.Swing();
         CompleteEvent(agent);

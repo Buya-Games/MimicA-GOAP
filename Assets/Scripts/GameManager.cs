@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public List<GameState.State> CurrentState = new List<GameState.State>();
     [HideInInspector] public ParticleManager particles;
     [HideInInspector] public Cow cow;
+    public bool debug;
 
     //Awake is called before Start
     void Awake(){
@@ -44,41 +45,22 @@ public class GameManager : MonoBehaviour
         int counter = 0;
         int enemyCounter = 10;
         while (counter < 1000){
-            if (counter > enemyCounter){
-                enemyCounter+=Random.Range(5,15);
-                SpawnEnemy(1);
-            }
+            // if (counter > enemyCounter){
+            //     enemyCounter+=Random.Range(5,15);
+            //     SpawnEnemy(1);
+            // }
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
-            //SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
-            yield return new WaitForSeconds(3);
+            SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
+            yield return new WaitForSeconds(Random.Range(15,30));
         }
     }
 
-    public void CollectFungus(){
-        collectedFungus++;
-        if (collectedFungus>2){ //if you collect 10 fungus
-            collectedFungus-=2;
-            Vector3 spawnPos = player.transform.position;
-            spawnPos.z-=5;
-            FindObjectOfType<Spawner>().SpawnCreature(spawnPos); //a new companion will be created by the player
+    public void GameOver(bool win = true){
+        if (win){
+            Debug.Log("you win!");
+        } else {
+            Debug.Log("you lost");
         }
     }
-
-    // public void UpdateBombs(int howMany){
-    //     Bombs+=howMany;
-    //     if (Bombs < 3){
-    //         gameData.CurrentState.isLowAmmo = true;
-    //     } else {
-    //         gameData.CurrentState.isLowAmmo = false;
-    //     }   
-    // }
-    // public void UpdateFood(int howMany){
-    //     Food+=howMany;
-    //     if (Food < 10){
-    //         gameData.CurrentState.isLowFood = true;
-    //     } else {
-    //         gameData.CurrentState.isLowFood = false;
-    //     }   
-    // }
 }

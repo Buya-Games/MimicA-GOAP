@@ -26,14 +26,8 @@ public class PlayerControl : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)){
             player.Interact();
         }
-        // if (Input.GetKeyDown(KeyCode.T)){
-        //     FindObjectOfType<Spawner>().SpawnCreature(transform.position);
-        // }
-        // if (Input.GetKeyDown(KeyCode.B)){
-        //     Vector3 spawnPos = transform.position;
-        //     spawnPos.z+=5;
-        //     FindObjectOfType<Spawner>().SpawnEnvironment(spawnPos,Spawner.EnvironmentType.Berry);
-        // }
+        // bobHeight = Mathf.Sin(Time.time * 4);//just making the figure bob up and down
+        // visibleMesh.position = visibleMesh.position + transform.up * bobHeight;
     }
 
     // FixedUpdate is called once per physics frame (everytime physics is re-calculated)
@@ -43,6 +37,7 @@ public class PlayerControl : MonoBehaviour
             rb.MovePosition(rb.position + keybInputDirection * Time.fixedDeltaTime * moveSpeed);
             Quaternion rot = Quaternion.LookRotation(keybInputDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation,rot,Time.fixedDeltaTime * 10);
+            //player.health-=0.04f;
         }
         if (lookTarget != Vector3.zero){
             LookAtTarget();
@@ -79,7 +74,6 @@ public class PlayerControl : MonoBehaviour
             lookTarget = transform.forward * 100;
         }
     }
-
     void LookAtTarget(){
         Vector3 lookDir = (lookTarget - head.transform.position);
         Quaternion lookRot = Quaternion.LookRotation(new Vector3(lookDir.x,0,lookDir.z));

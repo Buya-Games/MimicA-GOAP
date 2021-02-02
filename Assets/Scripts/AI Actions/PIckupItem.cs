@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 public class PickupItem : FrameworkEvent
 {
-    public PickupItem(int itemLayer){
-        EventRange = 2; //distance necessary to pickup an item
+    public PickupItem(int itemLayer){ 
+        EventRange = 3; //distance necessary to pickup an item
         EventLayer = itemLayer;
         Preconditions.Add(GameState.State.itemNone);
         if (EventLayer == 7){
@@ -17,9 +17,16 @@ public class PickupItem : FrameworkEvent
             motiveReproduction++;
         }
         if (EventLayer == 10){
-            Preconditions.Add(GameState.State.availBomb);
-            Effects.Add(GameState.State.itemBomb);
-            motiveAttack++;
+            Preconditions.Add(GameState.State.availBerryPoop);
+            Effects.Add(GameState.State.itemBerryPoop);
+            // motiveHarvest++;
+            // motiveAttack++;
+        }
+        if (EventLayer == 16){
+            Preconditions.Add(GameState.State.availFungusPoop);
+            Effects.Add(GameState.State.itemFungusPoop);
+            // motiveReproduction++;
+            // motiveAttack++;
         }
     }
 
@@ -30,7 +37,13 @@ public class PickupItem : FrameworkEvent
 
     public override bool GetTarget(Creature agent){
         agent.Target = FindClosestObjectOfLayer(agent.gameObject);
-        return agent.Target != null? true : false;
+        if (agent.Target != null){
+            return true;
+        } else {
+            Debug.Log("couldn't find eventlayer " + EventLayer);
+            return false;
+        }
+        //return agent.Target != null? true : false;
     }
 
     public override bool CheckRange(Creature agent){
@@ -51,7 +64,10 @@ public class PickupItem : FrameworkEvent
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
         }
         if (EventLayer == 10){
-            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBombs,agent.gameObject);
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerryPoop,agent.gameObject);
+        }
+        if (EventLayer == 16){
+            target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungusPoop,agent.gameObject);
         }
         return target;
     }
@@ -73,15 +89,7 @@ public class PickupItem : FrameworkEvent
     }
 
     public override bool PerformEvent(Creature agent){
-        agent.HeldItem = agent.Target;
-        agent.Target.GetComponent<Item>().PickUp(agent.transform);
-        // Vector3 pos = agent.transform.position;
-        // pos.y += 3;
-        // agent.Target.transform.position = pos;
-        // agent.Target.transform.SetParent(agent.transform);
-        // agent.Target.transform.rotation = Quaternion.identity;
-        // agent.Target.transform.localScale = new Vector3(0.5f,0.25f,0.5f);
-        // agent.Target.GetComponent<Rigidbody>().isKinematic = true;
+        agent.Target.GetComponent<Item>().PickUp(agent);
         CompleteEvent(agent);
         return true;
     }

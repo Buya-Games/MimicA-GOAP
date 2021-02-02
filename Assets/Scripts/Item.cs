@@ -9,10 +9,9 @@ public class Item : MonoBehaviour, IThrowable
     float gravity;
     [SerializeField] float height;
     Spawner.EnvironmentType myType;
-    protected bool flying;
+    protected bool flyingOrPickedUp;
     Spawner spawner;
     Vector3 origScale;
-    bool feeding = false;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
@@ -31,7 +30,10 @@ public class Item : MonoBehaviour, IThrowable
             myType = Spawner.EnvironmentType.Fungus;
         }
         if (gameObject.layer == 10){
-            myType = Spawner.EnvironmentType.Bomb;
+            myType = Spawner.EnvironmentType.BerryPoop;
+        }
+        if (gameObject.layer == 16){
+            myType = Spawner.EnvironmentType.FungusPoop;
         }
     }
 
@@ -40,32 +42,42 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     public void FlyingOrPickedUp(){
-        flying = true;
+        flyingOrPickedUp = true;
         spawner.RemoveFlyingObject(gameObject,myType);
     }
 
-    public void PickUp(Transform agent){
-        Vector3 pos = agent.position;
+    public void PickUp(Creature agent){
+        flyingOrPickedUp = true;
+        Vector3 pos = agent.visibleMesh.position;
         pos.y += 3;
         transform.position = pos;
         transform.rotation = Quaternion.identity;
         rb.isKinematic = true;
 
-        transform.SetParent(agent);
-        Vector3 newScale = transform.localScale;
+        transform.SetParent(agent.visibleMesh);
+        Vector3 newScale = transform.localScale;//just adjusting scale cuz player/buddy scale isn't uniform
         newScale.x/=agent.transform.localScale.x;
-        //newScale.y/=agent.transform.localScale.y;
         newScale.z/=agent.transform.localScale.z;
         transform.localScale = newScale;
+        agent.PickUp(this);
+    }
+
+    public void Drop(){
+        flyingOrPickedUp = false;
+        rb.velocity = Vector3.zero;
+        rb.isKinematic = false;
+
+        transform.parent = null;
+        transform.localScale = origScale;
     }
 
     public void ThrowObject(Vector3 where, float throwStrength, bool forFeeding = false){
-        if (!flying){
+        if (!flyingOrPickedUp){
             FlyingOrPickedUp();
         }
-        if (forFeeding){
-            feeding = true;
-        }
+        // if (forFeeding){
+        //     feeding = true;
+        // }
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
         transform.position = higherPos;
@@ -74,14 +86,10 @@ public class Item : MonoBehaviour, IThrowable
 
         transform.parent = null;
         transform.localScale = origScale;
-        // if (myType == Spawner.EnvironmentType.Bomb){
-        //     transform.localScale = Vector3.one;
-        // } else {
-        //     transform.localScale = Vector3.one * 0.5f;
-        // }
-        if (!feeding){
+        //if (!feeding){
+            higherPos.y = 5;
             rb.velocity = CalculateTraj(where, throwStrength);
-        }
+        //}
     }
 
     Vector3 CalculateTraj(Vector3 where, float throwStrength){
@@ -97,30 +105,28 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     protected virtual void OnCollisionEnter(Collision col){
-        if (flying){
-            if (myType == Spawner.EnvironmentType.Bomb){
+        if (flyingOrPickedUp){
+            if (myType == Spawner.EnvironmentType.BerryPoop || myType == Spawner.EnvironmentType.FungusPoop){
                 BombBoom();
             }
-            flying = false;
+            flyingOrPickedUp = false;
             spawner.RemoveFlyingObject(gameObject,myType,true);
         }
-        if (feeding){
-            manager.particles.EatingBerry(transform.position);
-            manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.Berry);
-            feeding = false;
-            if (col.gameObject.layer == 12){
-                col.gameObject.GetComponent<Creature>().Eat();
-            }
-        }
+        // if (feeding){ 
+        //     manager.particles.EatingBerry(transform.position);
+        //     manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.Berry);
+        //     feeding = false;
+        //     if (col.gameObject.layer == 12 || col.gameObject.layer == 13){
+        //         col.gameObject.GetComponent<Creature>().Eat();
+        //     }
+        // } else 
         if (col.gameObject.layer == 13){ //if player
             Player player = col.gameObject.GetComponent<Player>();
             if (player.HeldItem == null){
-                if (!flying){
+                if (!flyingOrPickedUp){
                     FlyingOrPickedUp();
                 }
-                player.HeldItem = this.gameObject;
-                PickUp(player.transform);
-                player.PickupItem(this);
+                PickUp(player);
             }
         }
     }
@@ -138,7 +144,7 @@ public class Item : MonoBehaviour, IThrowable
                 dist = 1 / dist; ///perfect will be like .5, so work from there to calculate the damage?
                 Enemy enemy = nearbyObject.GetComponent<Enemy>();
                 if (enemy != null){
-                    enemy.TakeHit(gameObject,10);
+                    enemy.TakeHit(gameObject,100);
                     enemyHit = true;
                 }
             }
@@ -146,8 +152,19 @@ public class Item : MonoBehaviour, IThrowable
         if (!enemyHit){
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = .25f;
-            manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Mushroom);
+            if (myType == Spawner.EnvironmentType.BerryPoop){
+                manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Bush);
+            }
+            if (myType == Spawner.EnvironmentType.FungusPoop){
+                manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Mushroom);
+            }
         }
-        manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.Bomb);
+        if (myType == Spawner.EnvironmentType.BerryPoop){
+            manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
+        }
+        if (myType == Spawner.EnvironmentType.FungusPoop){
+            manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
+
+        }
     }
 }

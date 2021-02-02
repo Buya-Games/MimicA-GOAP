@@ -6,7 +6,7 @@ using TMPro;
 //this sits on every AI companion and
 //1) at outset will watch player to learn goals and actions
 //2) after X actions, will use GOAPPlan to dynamically create action plans to meet goals
-public class Buddy : Goblin
+public class Buddy : CreatureLogic
 {
     Player player;
     [HideInInspector]public bool learning;
@@ -16,7 +16,7 @@ public class Buddy : Goblin
     protected override void Start(){
         base.Start();
         player = GameObject.FindObjectOfType<Player>();
-        manager.spawner.ActiveBuddies.Add(this.gameObject);//##REMOVE THIS AFTER YOU FINISH TESTING AND GAME STARTS WITH 0 BUDDIES
+        //manager.spawner.ActiveBuddies.Add(this.gameObject);//##REMOVE THIS AFTER YOU FINISH TESTING AND GAME STARTS WITH 0 BUDDIES
         learning = true;
         player.CheckForStudents();
         player.OnTeach += Learn;//tells companion to listen everytime PlayerControl uses OnTeach, and in those cases to run Learn
@@ -36,19 +36,35 @@ public class Buddy : Goblin
 
     void Learn(){
         if (availableActions.Count<learningActions){//listen until X actions
-            availableActions.Add(player.CurrentEvent.Clone());
-            motiveAttack+=player.CurrentEvent.motiveAttack;
-            motiveHarvest+=player.CurrentEvent.motiveHarvest;
-            motiveReproduction+=player.CurrentEvent.motiveReproduction;
+            if (!IsDupeAction(player.CurrentEvent)){
+                availableActions.Add(player.CurrentEvent.Clone());
+                motiveAttack+=player.CurrentEvent.motiveAttack;
+                motiveHarvest+=player.CurrentEvent.motiveHarvest;
+                motiveReproduction+=player.CurrentEvent.motiveReproduction;
+                Debug.Log(availableActions.Count + ", added " + player.CurrentEvent);
+            }
         }
         if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
             SetGoals();
+            Debug.Log("removing: " + availableActions[0]);
             availableActions.Remove(availableActions[0]);//removing the Follow basic action
             learning = false;
-            player.OnTeach -= Learn;//turning off listener
+            player.OnTeach -= Learn;//turning off learning listener
             player.CheckForStudents();//telling player to stop teaching unless other students
             GetPlan();
         }
+    }
+
+    bool IsDupeAction(FrameworkEvent newAction){//checks if I know this already
+        foreach (var act in availableActions){
+            if (newAction.GetType() == act.GetType()){
+                if (act.EventLayer == newAction.EventLayer && act.EventLayer2 == newAction.EventLayer2){
+                    learningActions--;//buddy taught a dupe, expending a learning opportunity
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     void SetGoals(){

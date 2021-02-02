@@ -4,6 +4,7 @@ public class Follow : FrameworkEvent
 {
     Transform player;
     public Follow(){
+        EventCost = 500;//they should prioritze eating over following me to survive
         EventRange = 5; //minimum distance required to satisfy following state
         player = GameObject.FindObjectOfType<Player>().transform;
         Effects.Add(GameState.State.goalFollowPlayer);

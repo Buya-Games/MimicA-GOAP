@@ -3,35 +3,47 @@ using System.Collections.Generic;
 public class ThrowItem : FrameworkEvent
 {
     GameObject throwPos;//obj for virtually tracking positions
-    bool feeding = false;//used when throwing something to self to feed self
     public ThrowItem(Vector3 mousePos, int itemLayer, int targetLayer){
         throwPos = new GameObject();
         throwPos.transform.position = mousePos;
         EventLayer = itemLayer;
         EventLayer2 = targetLayer;
-        if (itemLayer == 7){
+        if (itemLayer == 7){//if holding a berry
             Preconditions.Add(GameState.State.itemBerry);
-            if (targetLayer == 14){
+            if (targetLayer == 14){//and targeting the cow
                 Effects.Add(GameState.State.goalHarvested);
                 motiveHarvest++;
             }
-            if (targetLayer == 13){
-                feeding = true;
-                Effects.Add(GameState.State.goalEat);
-            }
+            // if (targetLayer == 13){//and targeting self
+            //     //feeding = true;
+            //     Effects.Add(GameState.State.goalEat);
+            // }
         }
-        if (itemLayer == 9){
+        if (itemLayer == 9){//if holding fungus
             Preconditions.Add(GameState.State.itemFungus);
             Effects.Add(GameState.State.goalReproduced);
             motiveReproduction++;
         }
-        if (itemLayer == 10){
-            Preconditions.Add(GameState.State.itemBomb);
-            if (targetLayer == 0){
-                Effects.Add(GameState.State.goalReproduced);
+        if (itemLayer == 10){//if holding berry poop
+            Preconditions.Add(GameState.State.itemBerryPoop);
+            if (targetLayer == 0){//and targeting ground
+                
+                Effects.Add(GameState.State.availBush);
+                motiveHarvest++;
+            }
+            if (targetLayer == 11){//and targeting enemy
+                Preconditions.Add(GameState.State.availEnemy);
+                Effects.Add(GameState.State.goalAttacked);
+                motiveAttack++;
+            }
+        }
+        if (itemLayer == 16){//if holding fungus poop
+            Preconditions.Add(GameState.State.itemFungusPoop);
+            if (targetLayer == 0){//and targeting ground
+                Effects.Add(GameState.State.availMushroom);
                 motiveReproduction++;
             }
-            if (targetLayer == 11){
+            if (targetLayer == 11){//and targeting enemy
                 Preconditions.Add(GameState.State.availEnemy);
                 Effects.Add(GameState.State.goalAttacked);
                 motiveAttack++;
@@ -46,7 +58,9 @@ public class ThrowItem : FrameworkEvent
     }
 
     public override bool GetTarget(Creature agent){
-        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        if (agent.Target == null){
+            agent.Target = FindClosestObjectOfLayer(agent.gameObject);
+        }
         return agent.Target != null? true : false;
     }
 
@@ -66,16 +80,16 @@ public class ThrowItem : FrameworkEvent
             if (EventLayer2 == 14){//and target is cow
                 target = GameObject.FindObjectOfType<Cow>().gameObject;
             }
-            if (EventLayer2 == 13){//and target is player/buddy
-                target = agent.gameObject;
-            }
+            // if (EventLayer2 == 13){//and target is player/buddy
+            //     target = agent.gameObject;
+            // }
         }
         if (EventLayer == 9){//if fungus, throw it to the cow
             target = GameObject.FindObjectOfType<Cow>().gameObject;
         }
-        if (EventLayer == 10){//if bomb
+        if (EventLayer == 10 || EventLayer == 16){//if poop
             if (EventLayer2 == 0){//and target is null
-                throwPos.transform.position = manager.spawner.EmptyNearbyLocation(agent.transform.position);//throw at some random open area
+                throwPos.transform.position = manager.spawner.EmptyNearbyLocation(agent.transform.position,5,10);//throw at some random open area
                 target = throwPos;
             }
             if (EventLayer2 == 11){//and target is enemy
@@ -97,6 +111,9 @@ public class ThrowItem : FrameworkEvent
         Vector3 throwHere = Vector3.zero;
         if (agent is Player || EventLayer2 == 0){//if its the player, then just throw where the mousePos is
             throwHere = throwPos.transform.position;
+            if (agent is Player){
+                GameObject.Destroy(throwPos); //just doing some memory cleanup cuz Unity doesn't seem to catch this in GC
+            }
         } else { //if AI, then throw at whatever target we gave it
             throwHere = agent.Target.transform.position;
         }
@@ -108,7 +125,7 @@ public class ThrowItem : FrameworkEvent
         }
 
         if (agent.HeldItem != null){
-            agent.HeldItem.GetComponent<IThrowable>().ThrowObject(throwHere,throwStrength, feeding);
+            agent.HeldItem.GetComponent<IThrowable>().ThrowObject(throwHere,throwStrength);
             CompleteEvent(agent);
             return true;
         } else {
