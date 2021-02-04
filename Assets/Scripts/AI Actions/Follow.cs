@@ -1,16 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
-public class Follow : FrameworkEvent
+public class Follow : GOAPAct
 {
     Transform player;
     public Follow(){
-        EventCost = 500;//they should prioritze eating over following me to survive
-        EventRange = 5; //minimum distance required to satisfy following state
+        //EventCost = 500;//lowering priority
+        eventRange = Random.Range(3,6); //minimum distance required to satisfy following state
         player = GameObject.FindObjectOfType<Player>().transform;
+        Preconditions.Add(GameState.State.playerAlive);
         Effects.Add(GameState.State.goalFollowPlayer);
     }
 
-    public override FrameworkEvent Clone(){
+    public override GOAPAct Clone(){
         Follow clone = new Follow();
         return clone;
     }
@@ -21,23 +22,15 @@ public class Follow : FrameworkEvent
     }
 
     public override bool CheckRange(Creature agent){
-        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < EventRange){
+        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < eventRange){
             return true;
         } else {
             return false;
         }
     }
 
-    public override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
         return null;
-    }
-
-    public override bool CheckPreconditions(List<GameState.State> currentState){
-        return true;
-    }
-
-    public override bool CheckEffects(List<GameState.State> goalState){
-        return true;
     }
 
     public override bool PerformEvent(Creature agent){

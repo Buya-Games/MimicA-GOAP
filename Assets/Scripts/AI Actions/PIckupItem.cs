@@ -1,28 +1,28 @@
 using UnityEngine;
 using System.Collections.Generic;
-public class PickupItem : FrameworkEvent
+public class PickupItem : GOAPAct
 {
     public PickupItem(int itemLayer){ 
-        EventRange = 3; //distance necessary to pickup an item
-        EventLayer = itemLayer;
+        eventRange = 3; //distance necessary to pickup an item
+        ActionLayer = itemLayer;
         Preconditions.Add(GameState.State.itemNone);
-        if (EventLayer == 7){
+        if (ActionLayer == 7){
             Preconditions.Add(GameState.State.availBerry);
             Effects.Add(GameState.State.itemBerry);
             motiveHarvest++;
         }
-        if (EventLayer == 9){
+        if (ActionLayer == 9){
             Preconditions.Add(GameState.State.availFungus);
             Effects.Add(GameState.State.itemFungus);
             motiveReproduction++;
         }
-        if (EventLayer == 10){
+        if (ActionLayer == 10){
             Preconditions.Add(GameState.State.availBerryPoop);
             Effects.Add(GameState.State.itemBerryPoop);
             // motiveHarvest++;
             // motiveAttack++;
         }
-        if (EventLayer == 16){
+        if (ActionLayer == 16){
             Preconditions.Add(GameState.State.availFungusPoop);
             Effects.Add(GameState.State.itemFungusPoop);
             // motiveReproduction++;
@@ -30,8 +30,8 @@ public class PickupItem : FrameworkEvent
         }
     }
 
-    public override FrameworkEvent Clone(){
-        PickupItem clone = new PickupItem(this.EventLayer);
+    public override GOAPAct Clone(){
+        PickupItem clone = new PickupItem(this.ActionLayer);
         return clone;
     }
 
@@ -40,52 +40,36 @@ public class PickupItem : FrameworkEvent
         if (agent.Target != null){
             return true;
         } else {
-            Debug.Log("couldn't find eventlayer " + EventLayer);
+            Debug.Log("couldn't find eventlayer " + ActionLayer);
             return false;
         }
         //return agent.Target != null? true : false;
     }
 
     public override bool CheckRange(Creature agent){
-        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < EventRange){
+        if (agent.Target != null && Tools.GetDist(agent.Target,agent.gameObject) < eventRange){
             return true;
         } else {
             return false;
         }
     }
 
-    public override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
         GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
-        if (EventLayer == 7){
+        if (ActionLayer == 7){
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
         }
-        if (EventLayer == 9){
+        if (ActionLayer == 9){
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
         }
-        if (EventLayer == 10){
+        if (ActionLayer == 10){
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerryPoop,agent.gameObject);
         }
-        if (EventLayer == 16){
+        if (ActionLayer == 16){
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungusPoop,agent.gameObject);
         }
         return target;
-    }
-
-    public override bool CheckPreconditions(List<GameState.State> currentState){
-        if (GameState.CompareStates(Preconditions,currentState)){// && agent.Target != null){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public override bool CheckEffects(List<GameState.State> goalState){
-        if (GameState.CompareStates(goalState,Effects)){//inverted from above
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public override bool PerformEvent(Creature agent){

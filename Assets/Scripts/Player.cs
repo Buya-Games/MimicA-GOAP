@@ -7,7 +7,7 @@ public class Player : Creature
 {
     PlayerControl control;
     public event Action OnTeach;
-    public FrameworkEvent CurrentEvent;
+    public GOAPAct CurrentEvent;
     [SerializeField] LayerMask interactLM;
     bool teaching = false; //set by companions to true when they're born (and false after 10 turns)
     public float bobHeight;
@@ -24,19 +24,29 @@ public class Player : Creature
     protected override void Start(){
         base.Start();
         Init();
-        MyStats.Speed = 4;
-        bobSpeed = 15;
+        MyStats.Speed = 6;
+        bobSpeed = 14;
         control.moveSpeed = MyStats.Speed;
+        myName = myName + " (Player)";
+        gameObject.name = myName;
     }
 
     protected override void Update(){
         base.Update();
-        bobHeight = visibleMesh.transform.localPosition.y * 6;
+        bobHeight = visibleMesh.transform.localPosition.y * 5;
         if (bobHeight > bobMax){
             bobMax = bobHeight;
         }
         if (bobHeight < bobMin){
             bobMin = bobHeight;
+        }
+        if (visibleMesh.localPosition.y > .7f || visibleMesh.position.y < 0){
+            visibleMesh.localPosition = new Vector3(0,0.25f,0);
+        }
+        if (HeldItem != null){
+            control.mouseHighlight = true;
+        } else {
+            control.mouseHighlight = false;
         }
     }
 

@@ -4,6 +4,7 @@ using UnityEngine;
 //just various useful tools stored in one place
 public static class Tools
 {
+    static float maxDistance = 100;
     public static float GetDist(GameObject target, GameObject agent){
         return Mathf.Abs(Vector3.Distance(target.transform.position, agent.transform.position));
     }
@@ -14,9 +15,9 @@ public static class Tools
 
     public static GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent){
         GameObject closest = null;
-        float dist = 5;//start with 5
         if (objects.Count>0){
-            while (closest == null && dist < 50){//nullCheck(closest)
+            float dist = 5;//starting distance to search through
+            while (closest == null && dist < maxDistance){
                 // if (dist >= 100) {Debug.Log(dist);}
                 foreach (GameObject b in objects){
                     float thisDist = GetDist(b,agent);
@@ -30,9 +31,42 @@ public static class Tools
         return closest;
     }
 
-    static bool nullCheck(GameObject checkMe){
-        return (checkMe == null) ? true : false;
+    public static List<GameObject> FindOnlyNearbyObjects(List<GameObject> objects, GameObject agent){
+        List<GameObject> closest = new List<GameObject>();
+        if (objects.Count>0){
+            float dist = 5;//starting distance to search through
+            while (closest == null && dist < maxDistance){
+                // if (dist >= 100) {Debug.Log(dist);}
+                foreach (GameObject b in objects){
+                    float thisDist = GetDist(b,agent);
+                    if (thisDist < dist){
+                        closest.Add(b);
+                    }
+                }
+                dist+=10;
+            }
+        }
+        return closest;
     }
+
+    public static GameObject FindWeakestAndClosestCreature(List<GameObject> objects, GameObject agent){
+        if (objects.Contains(agent)){//don't throw to yourself
+            objects.Remove(agent);
+        }
+        GameObject weakest = null;
+        if (objects.Count>0){
+            float closestAndLowest = Mathf.Infinity;//starting distance to search through
+            foreach (GameObject c in objects){
+                float thisDist = GetDist(c.gameObject,agent);
+                thisDist+=c.GetComponent<Creature>().health;
+                if (thisDist < closestAndLowest){
+                    weakest = c;
+                }
+            }
+        }
+        return weakest;
+    }
+
 
     public static GameObject FindClosestColliderInGroup(Collider[] objects, Vector3 agent){
         GameObject closest = null;
@@ -119,15 +153,28 @@ public static class Tools
         return newList;
     }
 
-    public static void PrintList<T>(List<T> list){
+    public static List<T> CopyList<T> (List<T> copyThis){
+        List<T> newList = new List<T>();
+        foreach (T t in copyThis){
+            newList.Add(t);
+        }
+        return newList;
+    }
+
+    public static void PrintList<T>(string preface1, string preface2, List<T> list){
         foreach (T item in list){
-            Debug.Log(item);
+            Debug.Log("[" + preface1 + "] " + preface2 + ": " + item);
         }
     }
 
-    public static void PrintQueue<T>(Queue<T> q){
+    public static void PrintQueue<T>(string preface1, string preface2, Queue<T> q){
         foreach (T item in q){
-            Debug.Log(item);
+            Debug.Log("[" + preface1 + "] " + preface2 + ": " + item);
         }
     }
+
+    public static bool ContainsLayer(this LayerMask mask, int layer)
+     {
+         return mask == (mask | (1 << layer));
+     }
 }

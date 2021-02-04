@@ -12,6 +12,10 @@ public class PlayerControl : MonoBehaviour
     [HideInInspector] public float moveSpeed;
     [SerializeField] Transform head;
     [SerializeField] LayerMask throwingLM;
+    [HideInInspector] public bool mouseHighlight;
+    MeshRenderer highlightedObject;
+    Material highlightedObjectdefaultMat;
+    [SerializeField] Material highlightMat;
 
     // Awake is called before Start so I use it to initialize all the core stuff
     void Awake(){
@@ -70,10 +74,46 @@ public class PlayerControl : MonoBehaviour
 
         if (Physics.Raycast (ray, out hit, 100)){
             lookTarget = hit.point;
+
+            if (highlightedObject != null && !Tools.ContainsLayer(throwingLM,hit.transform.gameObject.layer)){
+                ClearHighlight();
+            }
+            if (mouseHighlight){
+                MouseHighlight(hit.point);
+            }
         } else {
+            if (highlightedObject != null){
+                ClearHighlight();
+            }
             lookTarget = transform.forward * 100;
         }
     }
+
+    void MouseHighlight(Vector3 mousePos){
+        Collider[] nearbyObjects = Physics.OverlapSphere(mousePos,1,throwingLM);//check surroundings for stuff
+        if (nearbyObjects.Length>0){
+            GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,mousePos);
+            if (closest != null){
+                if (highlightedObject != null && closest != highlightedObject){
+                    highlightedObject.material = highlightedObjectdefaultMat;
+                }
+                highlightedObject = closest.GetComponent<MeshRenderer>();
+                if (highlightedObject == null){
+                    highlightedObject = closest.GetComponentInChildren<MeshRenderer>();
+                }
+                if (highlightedObject != null){
+                    highlightedObjectdefaultMat = highlightedObject.material;
+                    highlightedObject.material = highlightMat;
+                }
+            }
+        }
+    }
+
+    void ClearHighlight(){
+        highlightedObject.material = highlightedObjectdefaultMat;
+        highlightedObject = null;
+    }
+
     void LookAtTarget(){
         Vector3 lookDir = (lookTarget - head.transform.position);
         Quaternion lookRot = Quaternion.LookRotation(new Vector3(lookDir.x,0,lookDir.z));

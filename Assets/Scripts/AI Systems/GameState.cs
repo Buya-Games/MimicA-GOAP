@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class GameState
 {
     public enum State {
+        playerAlive,
         itemNone, 
         itemBerry, 
         itemFungus, 
@@ -34,5 +35,10 @@ public class GameState
             }
         }
         return true;
+    }
+
+    public static List<GameState.State> CombineStates(List<GameState.State> stateA, List<GameState.State> stateB){
+        stateA.AddRange(stateB);//doesn't check for dupes
+        return stateA;
     }
 }

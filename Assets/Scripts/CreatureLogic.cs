@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class CreatureLogic : Creature
 {
-    public List<FrameworkEvent> availableActions = new List<FrameworkEvent>();
+    public List<GOAPAct> availableActions = new List<GOAPAct>();
     protected Queue<GameState.State> myGoals = new Queue<GameState.State>();
-    protected Queue<FrameworkEvent> toDo = new Queue<FrameworkEvent>();
-    protected FrameworkEvent currentEvent;
+    protected Queue<GOAPAct> toDo = new Queue<GOAPAct>();
+    public GOAPAct CurrentAction;//should be protected not public, but just using when player dead and buddies learn from each other
     float eventMaxTime = 5; //don't spend more than 5 seconds on any given decision
     float breakTime = .5f;//amount of time between decisions and stuff
     GOAPPlan planner;
+    //Eat eatAction;
 
     protected override void Awake() {
         base.Awake();
@@ -23,15 +24,29 @@ public class CreatureLogic : Creature
         availableActions.Add(new Eat());//eat berry
         availableActions.Add(new MeleeAttack(6,1));//harvest berries from bushes
         availableActions.Add(new PickupItem(7));//pickup berries from ground
+
+        // availableActions.Add(new MeleeAttack(8,1));
+        // availableActions.Add(new PickupItem(9));
+        // availableActions.Add(new PickupItem(10));
+        // availableActions.Add(new PickupItem(16));
+        // availableActions.Add(new ThrowItem(Vector3.zero,7,14));
+        // availableActions.Add(new ThrowItem(Vector3.zero,9,14));
+        // availableActions.Add(new ThrowItem(Vector3.zero,10,0));
+        // availableActions.Add(new ThrowItem(Vector3.zero,16,0));
     }
 
     protected virtual void GetPlan(){
-        currentEvent = null;
+        CurrentAction = null;
         myText.text = "";
         toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
-        if (toDo == null){ //if failed to find a plan
+        if (toDo == null || toDo.Count == 0){ //if failed to find a plan or plan has no moves
+            if(manager.debug){Debug.Log("toDo was null");}
+            if (HeldItem != null){//if holding item is preventing you finding a path or actions, let's try dropping the item
+                DropItem();
+            }
             Invoke("Idle",breakTime * Random.Range(1f,2f));
         } else {
+            if(manager.debug){Debug.Log(toDo.Peek());}
             GetDecision();
         }
     }
@@ -39,12 +54,17 @@ public class CreatureLogic : Creature
     //returns the best action to take depending on current game state, as well as a queue of actions to perform after that
     //ideally this should take the game state when deciding, instead of just randomly choosing from possibleEvents
     protected virtual void GetDecision(){
-        currentEvent = null;
+        CurrentAction = null;
         myText.text = "";
 
-        if (toDo != null && toDo.Count>0){
-            currentEvent = toDo.Dequeue();
-            myText.text = currentEvent.ToString();
+        if (Target != null && !Target.activeSelf){//if somehow target became inactive, set it to null
+            if (manager.debug){Debug.Log("target set to null");}
+            Target = null;
+        }
+
+        if (toDo != null && toDo.Count>0){//if we still got things we wanna peform
+            CurrentAction = toDo.Dequeue();
+            myText.text = CurrentAction.ToString();
             PerformDecision();
         } else {
             GetPlan();
@@ -57,25 +77,25 @@ public class CreatureLogic : Creature
             eventMaxTime+=Time.time;
             GetDecision();
         } else {
-            if (currentEvent != null){ 
-                if (currentEvent.GetTarget(this)){ 
-                    if (currentEvent.CheckPreconditions(GetCurrentState())){//checks that currentevent can still be performed
-                        if (currentEvent.CheckRange(this)){
+            if (CurrentAction != null){ 
+                if (CurrentAction.GetTarget(this)){
+                    if (CurrentAction.CheckPreconditions(GetCurrentState())){//checks that currentevent can still be performed
+                        if (CurrentAction.CheckRange(this)){
                             StartCoroutine(FaceTarget((Target.transform.position - transform.position).normalized));
-                            if (currentEvent.PerformEvent(this)){
+                            if (CurrentAction.PerformEvent(this)){
                                 //Debug.Log(nextEvent + " SUCCEEDED");
                             } else {
-                                Debug.Log(currentEvent + " FAILED");
+                                Debug.Log(CurrentAction + " FAILED");
                             }
                             Invoke("GetDecision",breakTime * Random.Range(0.4f,.6f));
                         } else {
                             StopAllCoroutines();
                             StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
                         }
-                    } else { if(manager.debug){Debug.Log(currentEvent + ": failed precheck");}
-                        Invoke("GetPlan",breakTime * Random.Range(0.8f,1.2f));//if can't find any targets, get a new plan
+                    } else { if(manager.debug){Debug.Log(CurrentAction + ": failed precheck");}
+                        Invoke("GetPlan",breakTime * Random.Range(0.8f,1.2f));//if can't perform this action anymore,  get a new plan
                     }
-                } else { if(manager.debug){Debug.Log(currentEvent + ": no targets");}
+                } else { if(manager.debug){Debug.Log(CurrentAction + ": no targets");}
                     Invoke("GetPlan",breakTime * Random.Range(0.8f,1.2f));//if can't find any targets, get a new plan
                 }
             } else { if(manager.debug){Debug.Log("no event");}
@@ -86,12 +106,17 @@ public class CreatureLogic : Creature
 
     protected List<GameState.State> HungryCheck(){
         List<GameState.State> whatToDo = new List<GameState.State>();
-        if (health<50){
+        if (health<50){//if hungry, start eating
             if (HeldItem != null){
+                // if (!HeldItem.activeSelf){
+                //     Debug.Log("check if item held by " + gameObject.name + " is part of ActiveBerries,ActiveFungus, etc");
+                //     Debug.Break();
+                //     //DropItem();
+                // }
                 DropItem();
             }
             whatToDo.Add(GameState.State.goalEat);
-        } else {
+        } else { //carry on with your goals
             GameState.State goal = myGoals.Dequeue();
             whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal
             myGoals.Enqueue(goal);
@@ -101,17 +126,20 @@ public class CreatureLogic : Creature
 
     protected override void PostMovementChecks(){
         base.PostMovementChecks();
-        if (currentEvent != null && currentEvent.CheckPreconditions(GetCurrentState()) && !currentEvent.CheckRange(this)){
-            if (Target != null){//checks that we still perform it but out of range
+        //check if plan has changed. This is stupidly expensive but I dunno how else to make them dynamically adapt to world changes
+        Queue<GOAPAct> checkPlan = planner.MakePlan(this,GetCurrentState(),HungryCheck());
+        if (checkPlan != null && checkPlan.Count > 0 && checkPlan.Peek() == CurrentAction){
+            //checks that action/goals/target haven't changed, but that we still out of range so need to keep moving
+            if (CurrentAction.CheckPreconditions(GetCurrentState()) && !CurrentAction.CheckRange(this) && Target != null){
                 StopAllCoroutines();
                 StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
             } else {
                 Invoke("PerformDecision",breakTime * .2f);
             }
         } else {
-            Invoke("PerformDecision",breakTime * .2f);
+            toDo = checkPlan;
+            if (manager.debug){Debug.Log("plan changed");}
+            Invoke("GetDecision",breakTime * .4f);
         }
     }
-
-
 }

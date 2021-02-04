@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    PlayerControl player;
+    public PlayerControl player;
     [HideInInspector] public Spawner spawner;
     int collectedFungus;
-    public List<GameState.State> CurrentState = new List<GameState.State>();
+    [SerializeField] public List<GameState.State> CurrentState = new List<GameState.State>();
     [HideInInspector] public ParticleManager particles;
     [HideInInspector] public Cow cow;
     public bool debug;
@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
         spawner = GetComponent<Spawner>();
         particles = GetComponent<ParticleManager>();
         cow = FindObjectOfType<Cow>();
+        CurrentState.Add(GameState.State.playerAlive);
     }
 
     //Start is called before first frame
@@ -43,7 +44,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator SpawnStuff(){
         int counter = 0;
-        int enemyCounter = 10;
+        //int enemyCounter = 10;
         while (counter < 1000){
             // if (counter > enemyCounter){
             //     enemyCounter+=Random.Range(5,15);
@@ -52,7 +53,7 @@ public class GameManager : MonoBehaviour
             counter++;
             SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
             SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
-            yield return new WaitForSeconds(Random.Range(15,30));
+            yield return new WaitForSeconds(Random.Range(15,25));
         }
     }
 

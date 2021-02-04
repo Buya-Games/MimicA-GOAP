@@ -1,20 +1,20 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+// using UnityEngine;
+// using System.Collections;
+// using System.Collections.Generic;
 
-public interface IGOAP {
+// public interface IGOAP {
 
-	HashSet<KeyValuePair<string, object>> getWorldState();
+// 	HashSet<KeyValuePair<string, object>> getWorldState();
 
-	HashSet<KeyValuePair<string, object>> createGoalState();
+// 	HashSet<KeyValuePair<string, object>> createGoalState();
 
-	void planFailed(HashSet<KeyValuePair<string, object>> failedGoal);
+// 	void planFailed(HashSet<KeyValuePair<string, object>> failedGoal);
 
-	void planFound(HashSet<KeyValuePair<string, object>> goal, Queue<GOAPAction> actions);
+// 	void planFound(HashSet<KeyValuePair<string, object>> goal, Queue<GOAPAct> actions);
 
-	void actionsFinished();
+// 	void actionsFinished();
 
-	void planAborted(GOAPAction aborter);
+// 	void planAborted(GOAPAct aborter);
 
-	bool moveAgent(GOAPAction nextAction);
-}
+// 	bool moveAgent(GOAPAct nextAction);
+// }

@@ -506,8 +506,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1, z: 5}
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
-  - {fileID: 5867921415406553049}
   - {fileID: 5706112570802484988}
+  - {fileID: 5867921415406553049}
   - {fileID: 2489039095944136556}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -563,7 +563,6 @@ MonoBehaviour:
   HeldItem: {fileID: 0}
   melee: {fileID: 116421762096105379}
   healthBar: {fileID: 6450004816159890767}
-  mainCamera: {fileID: 0}
   health: 10
   myText: {fileID: 2565595559974854805}
   visibleMesh: {fileID: 5706112570802484988}
@@ -680,7 +679,7 @@ Transform:
   - {fileID: 116421761175920175}
   - {fileID: 116421762096105379}
   m_Father: {fileID: 116421762541017637}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &5706112570802484990
 MeshFilter:
@@ -761,7 +760,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 116421762541017637}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

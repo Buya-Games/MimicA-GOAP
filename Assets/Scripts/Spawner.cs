@@ -58,7 +58,7 @@ public class Spawner : MonoBehaviour
             newCreature.transform.position = spawnPos;
             ActiveBuddies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availBuddy);
-            playerPopulation.text = "Goblin Population: " + (ActiveBuddies.Count + 1).ToString();
+            playerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
         } else {
             newCreature = Instantiate(enemyPrefab);
             newCreature.transform.position = spawnPos;
@@ -73,9 +73,11 @@ public class Spawner : MonoBehaviour
         if (who.GetComponent<Buddy>() != null){ //if its a buddy
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
+            playerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
         } else { //if its an enemy
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
+            enemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
         Destroy(who);//should I make this into a queue to avoid creating/destroying all the time?
     }
@@ -182,7 +184,7 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    public void RemoveFlyingObject(GameObject item, EnvironmentType type, bool add = false){
+    public void ThrowOrPickUpObject(GameObject item, EnvironmentType type, bool add = false){
         if (add){
             if (type == EnvironmentType.Fungus && !ActiveFungus.Contains(item)){
                 ActiveFungus.Add(item);
@@ -239,7 +241,7 @@ public class Spawner : MonoBehaviour
     }
 
     bool CheckIfLocationClear(Vector3 where){
-        Collider[] nearbyObjects = Physics.OverlapSphere(where,2,spawnCheckLM);
+        Collider[] nearbyObjects = Physics.OverlapSphere(where,1,spawnCheckLM);
         return (nearbyObjects.Length > 0) ? false : true;
     }
 }

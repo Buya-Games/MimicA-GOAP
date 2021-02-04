@@ -34,10 +34,32 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void RandomWalk(){
-        StartCoroutine(MovingAround(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
+        StartCoroutine(MoveNearPlayer());
+        //StartCoroutine(MovingAround(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
+        //StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
+        //StartCoroutine(MovingAround(manager.spawner.EmptyNearbyLocation(manager.player.transform.position,5,15)));
+    }
+
+    IEnumerator MoveNearPlayer(){
+        Vector3 target;
+        if (manager.player != null){
+            target = manager.player.transform.position + new Vector3(Random.Range(-10f,10f),0,Random.Range(-10,10f));
+        } else {
+            target = new Vector3(Random.Range(-10f,10f),0,Random.Range(-10,10f));
+        }
+        Vector3 dir = (target - transform.position).normalized;
+        StartCoroutine(FaceTarget(dir));
+        int counter = Random.Range(500,1000);
+        while (counter>0){
+            transform.position = transform.position + dir * (Time.fixedDeltaTime * .5f);
+            counter--;
+            yield return null;
+        }
+        RandomWalk();
     }
 
     IEnumerator MovingAround(Vector3 dir){
+        dir.Normalize();
         StartCoroutine(FaceTarget(dir));
         int counter = Random.Range(500,1000);
         while (counter>0){
@@ -51,8 +73,8 @@ public class Cow : MonoBehaviour, IHittable
     protected IEnumerator FaceTarget(Vector3 dir, float turnSpeed = .01f){
         Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x,0,dir.z));
         int counter = 0;
-        while (counter<150){
-            transform.rotation = Quaternion.Slerp(transform.rotation,rot,turnSpeed);
+        while (counter<250){
+            transform.rotation = Quaternion.Lerp(transform.rotation,rot,turnSpeed);
             UpdateBars();
             counter++;
             yield return null;
@@ -85,6 +107,7 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void EatFungus(GameObject fungus){
+        manager.spawner.ThrowOrPickUpObject(fungus,Spawner.EnvironmentType.Fungus,true);
         manager.spawner.DespawnEnvironment(fungus,Spawner.EnvironmentType.Fungus);
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.FungusPoop);
         manager.particles.EatingFungus(fungus.transform.position);
@@ -101,6 +124,7 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void EatBerry(GameObject berry){
+        manager.spawner.ThrowOrPickUpObject(berry,Spawner.EnvironmentType.Berry,true);
         manager.spawner.DespawnEnvironment(berry,Spawner.EnvironmentType.Berry);
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.BerryPoop);
         manager.particles.EatingBerry(berry.transform.position);

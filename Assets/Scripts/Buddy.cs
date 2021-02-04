@@ -16,11 +16,23 @@ public class Buddy : CreatureLogic
     protected override void Start(){
         base.Start();
         player = GameObject.FindObjectOfType<Player>();
-        //manager.spawner.ActiveBuddies.Add(this.gameObject);//##REMOVE THIS AFTER YOU FINISH TESTING AND GAME STARTS WITH 0 BUDDIES
-        learning = true;
-        player.CheckForStudents();
-        player.OnTeach += Learn;//tells companion to listen everytime PlayerControl uses OnTeach, and in those cases to run Learn
-        //i could implement interfaces on this, but I think this is fine since it's just like a dozen FrameworkEvents to learn
+        if (player != null){
+            learning = true;
+            player.CheckForStudents();
+            //tells companion to listen everytime PlayerControl uses OnTeach, and in those cases to run Learn
+            //i could implement interfaces on this, but I think this is fine since it's just like a dozen FrameworkEvents to learn
+            player.OnTeach += Learn;
+        } else {
+            LearnRandomSkills();
+        }
+    }
+
+    void LearnRandomSkills(){
+        while (availableActions.Count<learningActions){
+            foreach (GameObject buddy in manager.spawner.ActiveBuddies){
+                availableActions.Add(buddy.GetComponent<CreatureLogic>().CurrentAction);//will lead to many dupes if only 1 other buddy alive
+            }
+        }
     }
 
     public override void Init(){ 
@@ -32,6 +44,8 @@ public class Buddy : CreatureLogic
         availableActions.Insert(0,new Follow());//follow player)
         // availableActions.Add(new ThrowItem(Vector3.zero,7,13));//eat berries to survive
         GetPlan();
+        learningActions = availableActions.Count + 5;
+        Debug.Log(learningActions);
     }
 
     void Learn(){
@@ -55,10 +69,10 @@ public class Buddy : CreatureLogic
         }
     }
 
-    bool IsDupeAction(FrameworkEvent newAction){//checks if I know this already
+    bool IsDupeAction(GOAPAct newAction){//checks if I know this already
         foreach (var act in availableActions){
             if (newAction.GetType() == act.GetType()){
-                if (act.EventLayer == newAction.EventLayer && act.EventLayer2 == newAction.EventLayer2){
+                if (act.ActionLayer == newAction.ActionLayer && act.ActionLayer2 == newAction.ActionLayer2){
                     learningActions--;//buddy taught a dupe, expending a learning opportunity
                     return true;
                 }

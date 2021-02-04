@@ -111,7 +111,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8381474816976442922}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -282,7 +282,7 @@ Transform:
   - {fileID: 8381474816446608473}
   - {fileID: 8381474816497006571}
   m_Father: {fileID: 8381474816976442922}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &8052188854106660520
 MeshFilter:
@@ -360,7 +360,7 @@ Transform:
   m_GameObject: {fileID: 8381474815979550316}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.2, y: 0.18, z: 0.517}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 8381474816446608473}
   m_RootOrder: 1
@@ -506,7 +506,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8381474816497006571}
-  - component: {fileID: 8381474816497006570}
   m_Layer: 12
   m_Name: Melee Pivot
   m_TagString: Untagged
@@ -529,25 +528,6 @@ Transform:
   m_Father: {fileID: 8052188854106660522}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &8381474816497006570
-Animator:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8381474816497006564}
-  m_Enabled: 0
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: f00a8d8caa78d0e4b93159e6fe7db93a, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &8381474816976442912
 GameObject:
   m_ObjectHideFlags: 0
@@ -578,8 +558,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
-  - {fileID: 8052188853308194970}
   - {fileID: 8052188854106660522}
+  - {fileID: 8052188853308194970}
   - {fileID: 3793202204284471423}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -635,7 +615,6 @@ MonoBehaviour:
   HeldItem: {fileID: 0}
   melee: {fileID: 8381474816497006571}
   healthBar: {fileID: 4977795884040347414}
-  mainCamera: {fileID: 0}
   health: 10
   myText: {fileID: 8052188853308194965}
   visibleMesh: {fileID: 8052188854106660522}
@@ -670,7 +649,7 @@ Transform:
   m_GameObject: {fileID: 8381474817028950997}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.2, y: 0.18, z: 0.5170001}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children: []
   m_Father: {fileID: 8381474816446608473}
   m_RootOrder: 0
@@ -868,7 +847,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.42528725, g: 0, b: 1, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 0}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}

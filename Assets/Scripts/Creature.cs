@@ -16,7 +16,7 @@ public class Creature : MonoBehaviour, IHittable
     MaterialPropertyBlock matBlock;
     Transform mainCamera;
     [HideInInspector] public float health = 10;
-    string myName;
+    protected string myName;
     [SerializeField] protected TMP_Text myText;
     public Transform visibleMesh;
     protected float bobSpeed;
@@ -69,8 +69,8 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected virtual void Update(){
-        visibleMesh.position = visibleMesh.position + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.02f;//mesh bobs up/down (collider doesn't move)
-        health-=.02f;
+        visibleMesh.localPosition = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
+        health-=.015f;
         UpdateHealth();
         if (health <= 0){
             Die();
@@ -101,7 +101,7 @@ public class Creature : MonoBehaviour, IHittable
         }
     }
 
-    protected void DropItem(){
+    public void DropItem(){
         if (HeldItem != null){
             HeldItem.GetComponent<Item>().Drop();
             HeldItem = null;
@@ -165,15 +165,20 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected virtual void PostMovementChecks(){
-        if (visibleMesh.transform.position.y < 0){
-            Vector3 rePos = visibleMesh.transform.position;
-            rePos.y = 0;
-            visibleMesh.transform.position = rePos;
-        } else if (visibleMesh.transform.position.y < 0){
-            Vector3 rePos = visibleMesh.transform.position;
-            rePos.y = 0.4f;
-            visibleMesh.transform.position = rePos;
+        //sometimes the bobbing clips thru floor/goes too high, so just resetting if it does
+        if (visibleMesh.localPosition.y > .7f || visibleMesh.position.y < 0){
+            visibleMesh.localPosition = new Vector3(0,0.25f,0);
         }
+        // if (visibleMesh.transform.position.y < 0){
+        //     Vector3 rePos = visibleMesh.transform.position;
+        //     rePos.y = 0;
+        //     visibleMesh.transform.position = rePos;
+        // } else if (visibleMesh.transform.position.y < 0){
+        //     Vector3 rePos = visibleMesh.transform.position;
+        //     rePos.y = 0.4f;
+        //     visibleMesh.transform.position = rePos;
+        // }
+        
     }
 
     [System.Serializable]
