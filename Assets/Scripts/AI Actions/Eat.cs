@@ -28,13 +28,8 @@ public class Eat: GOAPAct
     }
 
     public override bool PerformEvent(Creature agent){
-        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         if (agent.HeldItem != null){
-            manager.particles.EatingBerry(agent.HeldItem.transform.position);
-            manager.spawner.ThrowOrPickUpObject(agent.HeldItem,Spawner.EnvironmentType.Berry,true);
-            manager.spawner.DespawnEnvironment(agent.HeldItem,Spawner.EnvironmentType.Berry);
             agent.Eat();
-            CompleteEvent(agent);
             return true;
         } else {
             return false;
@@ -42,9 +37,6 @@ public class Eat: GOAPAct
         
     }
     protected override bool CompleteEvent(Creature agent){
-        //agent.HeldItem.GetComponent<IThrowable>().ThrowObject(Vector3.zero,0,true);
-        agent.HeldItem = null;
-        agent.Target = null;
         return true;
     }
 }

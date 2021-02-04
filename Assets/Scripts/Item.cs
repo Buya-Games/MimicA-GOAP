@@ -4,19 +4,17 @@ using UnityEngine;
 
 public class Item : MonoBehaviour, IThrowable
 {
-    protected GameManager manager;
-    protected Rigidbody rb;
+    GameManager manager;
+    Rigidbody rb;
     float gravity;
-    [SerializeField] float height;
+    float height = 5;
     Spawner.EnvironmentType myType;
-    protected bool notStationary;
-    Spawner spawner;
+    bool stationary = true;
     Vector3 origScale;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
         rb = GetComponent<Rigidbody>();
-        spawner = FindObjectOfType<Spawner>();
         gravity = Physics.gravity.y;
         origScale = transform.localScale;
         SetType();
@@ -41,13 +39,9 @@ public class Item : MonoBehaviour, IThrowable
         return this.gameObject;
     }
 
-    public void FlyingOrPickedUp(){
-        notStationary = true;
-        spawner.ThrowOrPickUpObject(gameObject,myType);
-    }
-
     public void PickUp(Creature agent){
-        notStationary = true;
+        stationary = false;
+        manager.spawner.ThrowOrPickUpObject(gameObject,myType);
         Vector3 pos = agent.visibleMesh.position;
         pos.y += 3;
         transform.position = pos;
@@ -63,8 +57,8 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     public void Drop(){
-        notStationary = false;
-        spawner.ThrowOrPickUpObject(gameObject,myType,true);
+        stationary = true;
+        manager.spawner.ThrowOrPickUpObject(gameObject,myType,true);
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
 
@@ -72,28 +66,26 @@ public class Item : MonoBehaviour, IThrowable
         transform.localScale = origScale;
     }
 
-    public void ThrowObject(Vector3 where, float throwStrength, bool forFeeding = false){
-        if (!notStationary){
-            FlyingOrPickedUp();
+    public void ThrowObject(Vector3 where, float throwStrength){
+        if (stationary){
+            stationary = false;
+            manager.spawner.ThrowOrPickUpObject(gameObject,myType);
         }
-        // if (forFeeding){
-        //     feeding = true;
-        // }
+
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
         transform.position = higherPos;
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
-
         transform.parent = null;
         transform.localScale = origScale;
-        //if (!feeding){
-            higherPos.y = 5;
-            rb.velocity = CalculateTraj(where, throwStrength);
-        //}
+        Vector3 traj = CalculateTrajectory(where,throwStrength);
+        if (!float.IsNaN(traj.x)){//##spits out weird number if target is in same position, so just checking for that exception
+            rb.velocity = CalculateTrajectory(where, throwStrength);
+        }
     }
 
-    Vector3 CalculateTraj(Vector3 where, float throwStrength){
+    Vector3 CalculateTrajectory(Vector3 where, float throwStrength){
         height = (transform.position - where).sqrMagnitude/10; 
         float disY = where.y - transform.position.y;
         Vector3 disXZ = new Vector3(where.x - transform.position.x, 0, where.z - transform.position.z);
@@ -106,17 +98,14 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     protected virtual void OnCollisionEnter(Collision col){
-        if (notStationary && col.gameObject.layer == 11){
+        if (!stationary && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
+            Drop();
             if (myType == Spawner.EnvironmentType.BerryPoop || myType == Spawner.EnvironmentType.FungusPoop){
                 BombBoom();
             }
-            notStationary = false;
-            spawner.ThrowOrPickUpObject(gameObject,myType,true);
         }
-        if (notStationary && col.gameObject.layer == 4){
-            notStationary = false;
-            spawner.ThrowOrPickUpObject(gameObject,myType,true);
-
+        if (!stationary && col.gameObject.layer == 4){
+            Drop();
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = 0f;
             if (myType == Spawner.EnvironmentType.BerryPoop){
@@ -133,30 +122,21 @@ public class Item : MonoBehaviour, IThrowable
         if (col.gameObject.layer == 13){ //if player
             Player player = col.gameObject.GetComponent<Player>();
             if (player.HeldItem == null){
-                if (!notStationary){
-                    FlyingOrPickedUp();
-                }
                 PickUp(player);
             } else {
-                //dont know why but sometimes item gets stuck
-                //so check if its still one of the children
+                //dont know why but sometimes item gets stuck so check if its still one of the children
                 Item itemCheck = player.GetComponentInChildren<Item>();
-                if (itemCheck == null){ //if not, then player has no item
-                    Debug.Log("faker");
+                if (itemCheck == null){ //if not a child, then player has no item
                     player.HeldItem = null;
-                    if (!notStationary){
-                        FlyingOrPickedUp();
-                    }
-                    PickUp(player);
+                    Drop();
                 }
             }
         }
     }
 
     void BombBoom(){
-        manager.particles.BombExplosion(transform.position);
-
         Collider[] colliders = Physics.OverlapSphere(transform.position,3f);
+
         bool enemyHit = false;
         foreach (Collider nearbyObject in colliders){
             Rigidbody rb = nearbyObject.GetComponent<Rigidbody>();
@@ -171,17 +151,8 @@ public class Item : MonoBehaviour, IThrowable
                 }
             }
         }
-        // if (!enemyHit){
-        //     Vector3 spawnPoint = transform.position;
-        //     spawnPoint.y = .25f;
-        //     if (myType == Spawner.EnvironmentType.BerryPoop){
-        //         manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Bush);
-        //     }
-        //     if (myType == Spawner.EnvironmentType.FungusPoop){
-        //         manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Mushroom);
-        //     }
-        // }
         if (enemyHit){
+            manager.particles.BombExplosion(transform.position);
             if (myType == Spawner.EnvironmentType.BerryPoop){
             manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
             }

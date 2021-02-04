@@ -107,7 +107,7 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void EatFungus(GameObject fungus){
-        manager.spawner.ThrowOrPickUpObject(fungus,Spawner.EnvironmentType.Fungus,true);
+        fungus.GetComponent<Item>().Drop();
         manager.spawner.DespawnEnvironment(fungus,Spawner.EnvironmentType.Fungus);
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.FungusPoop);
         manager.particles.EatingFungus(fungus.transform.position);
@@ -124,7 +124,7 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void EatBerry(GameObject berry){
-        manager.spawner.ThrowOrPickUpObject(berry,Spawner.EnvironmentType.Berry,true);
+        berry.GetComponent<Item>().Drop();
         manager.spawner.DespawnEnvironment(berry,Spawner.EnvironmentType.Berry);
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.BerryPoop);
         manager.particles.EatingBerry(berry.transform.position);

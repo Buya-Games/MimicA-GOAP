@@ -12,6 +12,7 @@ public class Enemy : CreatureLogic
         base.Init();
 
         availableActions.Add(new MeleeAttack(14,1));//attacking cow
+        AddCoreSkills();
 
         SetGoals();
         GetPlan();

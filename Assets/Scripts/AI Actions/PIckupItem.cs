@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 public class PickupItem : GOAPAct
 {
-    public PickupItem(int itemLayer){ 
+    public PickupItem(int itemLayer){
+        Init(); 
         eventRange = 3; //distance necessary to pickup an item
         ActionLayer = itemLayer;
         Preconditions.Add(GameState.State.itemNone);
@@ -19,14 +20,14 @@ public class PickupItem : GOAPAct
         if (ActionLayer == 10){
             Preconditions.Add(GameState.State.availBerryPoop);
             Effects.Add(GameState.State.itemBerryPoop);
-            // motiveHarvest++;
-            // motiveAttack++;
+            motiveHarvest++;
+            motiveAttack++;
         }
         if (ActionLayer == 16){
             Preconditions.Add(GameState.State.availFungusPoop);
             Effects.Add(GameState.State.itemFungusPoop);
-            // motiveReproduction++;
-            // motiveAttack++;
+            motiveReproduction++;
+            motiveAttack++;
         }
     }
 
@@ -55,7 +56,6 @@ public class PickupItem : GOAPAct
     }
 
     protected override GameObject FindClosestObjectOfLayer(GameObject agent){
-        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
         if (ActionLayer == 7){
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
@@ -78,7 +78,6 @@ public class PickupItem : GOAPAct
         return true;
     }
     protected override bool CompleteEvent(Creature agent){
-        agent.Target.GetComponent<Item>().FlyingOrPickedUp();
         agent.Target = null;
         return true;
     }

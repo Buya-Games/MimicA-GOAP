@@ -5,7 +5,7 @@ using TMPro;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] TMP_Text playerPopulation, enemyPopulation;
+    
     public enum EnvironmentType {Tree, Bush, Mushroom, Fungus, Berry, BerryPoop, FungusPoop}
     GameManager manager;
     [SerializeField] GameObject treePrefab, bushPrefab, mushroomPrefab, buddyPrefab, enemyPrefab, berryPrefab, berryPooprefab, fungusPrefab, fungusPoopPrefab;
@@ -58,26 +58,31 @@ public class Spawner : MonoBehaviour
             newCreature.transform.position = spawnPos;
             ActiveBuddies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availBuddy);
-            playerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
+            manager.ui.textPlayerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
         } else {
             newCreature = Instantiate(enemyPrefab);
             newCreature.transform.position = spawnPos;
             ActiveEnemies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availEnemy);
-            enemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
+            manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
-        newCreature.GetComponent<Creature>().Init();
+        Debug.Log("active buddies" + ActiveBuddies.Count);
+        if (ActiveBuddies.Count >= 4){
+            manager.PlayerDeath();
+        }
     }
+
+    
 
     public void DespawnCreature(GameObject who){
         if (who.GetComponent<Buddy>() != null){ //if its a buddy
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
-            playerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
+            manager.ui.textPlayerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
         } else { //if its an enemy
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
-            enemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
+            manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
         Destroy(who);//should I make this into a queue to avoid creating/destroying all the time?
     }
@@ -153,8 +158,6 @@ public class Spawner : MonoBehaviour
     }
 
     public void DespawnEnvironment(GameObject item, EnvironmentType type){
-        item.SetActive(false);
-        item.transform.SetParent(transform);
         if (type == EnvironmentType.Tree){
             treeQueue.Enqueue(item);
         } else if (type == EnvironmentType.Bush){
@@ -182,6 +185,8 @@ public class Spawner : MonoBehaviour
             ActiveFungusPoop.Remove(item);
             manager.CurrentState.Remove(GameState.State.availFungusPoop);
         }
+        item.SetActive(false);
+        item.transform.SetParent(transform);
     }
 
     public void ThrowOrPickUpObject(GameObject item, EnvironmentType type, bool add = false){

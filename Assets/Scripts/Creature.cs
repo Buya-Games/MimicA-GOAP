@@ -27,9 +27,6 @@ public class Creature : MonoBehaviour, IHittable
         healthBar = healthBar.GetComponent<MeshRenderer>();
         matBlock = new MaterialPropertyBlock();
         mainCamera = Camera.main.transform;
-    }
-
-    protected virtual void Start(){
         melee.gameObject.SetActive(false);
     }
 
@@ -69,6 +66,9 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected virtual void Update(){
+        // Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
+        // bobPos.y = Mathf.Clamp(bobPos.y,0,1);
+
         visibleMesh.localPosition = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
         health-=.015f;
         UpdateHealth();
@@ -110,7 +110,10 @@ public class Creature : MonoBehaviour, IHittable
 
     public void Eat(){
         health = Mathf.Clamp(health + 50,50,100);
-        HeldItem=null;
+        HeldItem.GetComponent<Item>().Drop();//not using DropItem cuz it causes a conflict.... it's a turd i know i need to clean it up
+        manager.particles.EatingBerry(HeldItem.transform.position);
+        manager.spawner.DespawnEnvironment(HeldItem,Spawner.EnvironmentType.Berry);
+        HeldItem = null;
     }
 
     public void TakeHit(GameObject attacker, float damage){
@@ -166,8 +169,19 @@ public class Creature : MonoBehaviour, IHittable
 
     protected virtual void PostMovementChecks(){
         //sometimes the bobbing clips thru floor/goes too high, so just resetting if it does
-        if (visibleMesh.localPosition.y > .7f || visibleMesh.position.y < 0){
+        if (visibleMesh.localPosition.y > .7f || visibleMesh.localPosition.y < 0){
             visibleMesh.localPosition = new Vector3(0,0.25f,0);
+        }
+        //i dont know why this happens sometimes, but AI gets stuck with deactivated items as its HeldItem or Target
+        if (HeldItem != null){
+            if (!HeldItem.activeSelf){
+                HeldItem = null;
+            }
+        }
+        if (Target != null){
+            if (!Target.activeSelf){
+                Target = null;
+            }
         }
         // if (visibleMesh.transform.position.y < 0){
         //     Vector3 rePos = visibleMesh.transform.position;

@@ -51,8 +51,14 @@ public class GOAPPlan : MonoBehaviour
             if (debug) {Tools.PrintList(agent.name, "POSSIBLE SECONDARY ACTIONS", possibleActions);}
             bool lastResort = false;
             foreach (GOAPAct action in possibleActions){
-                //if (GameState.CompareStates(action.Preconditions,worldState)){//if it can be performed in the current world state
+                float alignmentBonus = checkGoalAlignment((Buddy)agent,action);
+                if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
+                            agent.name,action,action.ActionLayer,action.ActionLayer2,alignmentBonus));}
+                if (alignmentBonus > 0){//if it's a task that at least somewhat aligns with agent's motivation
+                
                     Node secondaryActionNode = new Node(fakeParentNode, action.Cost, action.Preconditions, action);
+                    secondaryActionNode.costBenefit -= (alignmentBonus * 10);//bonus from action that aligns with motive
+
                     //additional benefit if more actions become possible after this
                     List<GOAPAct> futureActions = getPossibleActions(agent.availableActions,GameState.CombineStates(worldState,action.Effects));
                     if (futureActions.Count > 0){
@@ -60,13 +66,9 @@ public class GOAPPlan : MonoBehaviour
                             agent.name,action,action.ActionLayer,action.ActionLayer2,futureActions.Count));}
                         secondaryActionNode.costBenefit -= (futureActions.Count * 5);
                     }
-                    float alignmentBonus = checkGoalAlignment((Buddy)agent,action);
-                    if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
-                            agent.name,action,action.ActionLayer,action.ActionLayer2,alignmentBonus));}
-                    secondaryActionNode.costBenefit -= (alignmentBonus * 10);
                     leaves.Add(secondaryActionNode);
                     lastResort = true;
-                //}
+                }
             }
             if (!lastResort){
                 return null;
@@ -230,13 +232,13 @@ public class GOAPPlan : MonoBehaviour
     float checkGoalAlignment(Buddy agent, GOAPAct action){
         float alignmentScore = 0;
         if (agent.motiveReproduction > 0 && action.motiveReproduction > 0){
-            alignmentScore++;
+            alignmentScore+=agent.motiveReproduction;
         }
         if (agent.motiveHarvest > 0 && action.motiveHarvest > 0){
-            alignmentScore++;
+            alignmentScore+=agent.motiveHarvest;
         }
         if (agent.motiveAttack > 0 && action.motiveAttack > 0){
-            alignmentScore++;
+            alignmentScore+=agent.motiveAttack;
         }
         return alignmentScore;
     }

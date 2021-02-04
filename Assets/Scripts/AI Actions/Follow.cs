@@ -2,11 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 public class Follow : GOAPAct
 {
-    Transform player;
     public Follow(){
-        //EventCost = 500;//lowering priority
+        Init();
         eventRange = Random.Range(3,6); //minimum distance required to satisfy following state
-        player = GameObject.FindObjectOfType<Player>().transform;
         Preconditions.Add(GameState.State.playerAlive);
         Effects.Add(GameState.State.goalFollowPlayer);
     }
@@ -17,7 +15,7 @@ public class Follow : GOAPAct
     }
 
     public override bool GetTarget(Creature agent){
-        agent.Target = player.gameObject;
+        agent.Target = player;
         return agent.Target != null? true : false;
     }
 

@@ -5,6 +5,7 @@ public class MeleeAttack : GOAPAct
     float baseSkill = 0;
 
     public MeleeAttack(int targetLayer, float playerAbility){
+        Init();
         eventRange = 3f;//distance necessary to melee someone
         ActionLayer = targetLayer;
         baseSkill = playerAbility;//player performance during training sets the action's base effectiveness
@@ -58,7 +59,6 @@ public class MeleeAttack : GOAPAct
     }
 
     protected override GameObject FindClosestObjectOfLayer(GameObject agent){
-        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
         if (ActionLayer == 6){
             target = Tools.FindClosestObjectInList(manager.spawner.ActivesBushes,agent.gameObject);

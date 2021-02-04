@@ -21,8 +21,7 @@ public class Player : Creature
     }
 
     //Start is called before first frame update
-    protected override void Start(){
-        base.Start();
+    void Start(){
         Init();
         MyStats.Speed = 6;
         bobSpeed = 14;
@@ -40,7 +39,7 @@ public class Player : Creature
         if (bobHeight < bobMin){
             bobMin = bobHeight;
         }
-        if (visibleMesh.localPosition.y > .7f || visibleMesh.position.y < 0){
+        if (visibleMesh.localPosition.y > .7f || visibleMesh.localPosition.y < 0){
             visibleMesh.localPosition = new Vector3(0,0.25f,0);
         }
         if (HeldItem != null){

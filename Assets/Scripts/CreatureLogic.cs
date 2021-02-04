@@ -11,29 +11,26 @@ public class CreatureLogic : Creature
     float eventMaxTime = 5; //don't spend more than 5 seconds on any given decision
     float breakTime = .5f;//amount of time between decisions and stuff
     GOAPPlan planner;
-    //Eat eatAction;
+    protected Eat eatBerry;
+    protected PickupItem pickupBerry;
+    protected MeleeAttack harvestBerry;
 
     protected override void Awake() {
         base.Awake();
         planner = FindObjectOfType<GOAPPlan>();
-    }
-    public override void Init(){
-        base.Init();
 
-        //give everyone basic skills to eat
-        availableActions.Add(new Eat());//eat berry
-        availableActions.Add(new MeleeAttack(6,1));//harvest berries from bushes
-        availableActions.Add(new PickupItem(7));//pickup berries from ground
-
-        // availableActions.Add(new MeleeAttack(8,1));
-        // availableActions.Add(new PickupItem(9));
-        // availableActions.Add(new PickupItem(10));
-        // availableActions.Add(new PickupItem(16));
-        // availableActions.Add(new ThrowItem(Vector3.zero,7,14));
-        // availableActions.Add(new ThrowItem(Vector3.zero,9,14));
-        // availableActions.Add(new ThrowItem(Vector3.zero,10,0));
-        // availableActions.Add(new ThrowItem(Vector3.zero,16,0));
+        //everyone gets basic skills to eat and survive
+        eatBerry = new Eat();
+        pickupBerry = new PickupItem(7);
+        harvestBerry = new MeleeAttack(6,1);
     }
+
+    protected void AddCoreSkills(){
+        availableActions.Add(harvestBerry);//eat berry
+        availableActions.Add(pickupBerry);//harvest berries from bushes
+        availableActions.Add(eatBerry);//pickup berries from ground
+    }
+
 
     protected virtual void GetPlan(){
         CurrentAction = null;
@@ -108,18 +105,22 @@ public class CreatureLogic : Creature
         List<GameState.State> whatToDo = new List<GameState.State>();
         if (health<50){//if hungry, start eating
             if (HeldItem != null){
-                // if (!HeldItem.activeSelf){
-                //     Debug.Log("check if item held by " + gameObject.name + " is part of ActiveBerries,ActiveFungus, etc");
-                //     Debug.Break();
-                //     //DropItem();
-                // }
                 DropItem();
             }
             whatToDo.Add(GameState.State.goalEat);
+
+            //adding/removing eat cuz when they bored sometimes all they do is just keep eating
+            if (!availableActions.Contains(eatBerry)){
+                availableActions.Add(eatBerry);
+            }
         } else { //carry on with your goals
             GameState.State goal = myGoals.Dequeue();
             whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal
             myGoals.Enqueue(goal);
+
+            if (availableActions.Contains(eatBerry)){
+                availableActions.Remove(eatBerry);
+            }
         }
         return whatToDo;
     }

@@ -10,6 +10,19 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
     public float Cost = 1f;//core action + move (higher means lower priority)
     public float motiveReproduction, motiveHarvest, motiveAttack;//counts toward the 3 possible creature goals
     protected float eventRange;//used to calculate CheckRange
+    protected GameObject player,cow;
+    protected GameManager manager;
+
+    protected void Init(){
+        manager = GameObject.FindObjectOfType<GameManager>();
+        cow = GameObject.FindObjectOfType<Cow>().gameObject;
+        Player playerCheck = GameObject.FindObjectOfType<Player>();
+        if (playerCheck != null){
+            player = playerCheck.gameObject;
+        } else {
+            player = cow;//if player dies, cow replaces player. i dont actually know what will happen in this case!
+        }
+    }
     public void EstimateActionCost(Creature agent){
         Cost = 1;
         GameObject estimatedClosestObj = FindClosestObjectOfLayer(agent.gameObject);

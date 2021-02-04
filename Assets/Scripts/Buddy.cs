@@ -13,48 +13,70 @@ public class Buddy : CreatureLogic
     int learningActions = 10;//# of player actions that creature will observe to learn, then start mimicing
     public float motiveReproduction, motiveHarvest, motiveAttack;//the 3 possible goals of a creature
     
-    protected override void Start(){
-        base.Start();
+    protected override void Awake(){
+        base.Awake();
         player = GameObject.FindObjectOfType<Player>();
+    }
+
+    void Start(){
+        Init();
+    }
+
+    public override void Init(){ 
+        base.Init();
+
         if (player != null){
             learning = true;
             player.CheckForStudents();
             //tells companion to listen everytime PlayerControl uses OnTeach, and in those cases to run Learn
             //i could implement interfaces on this, but I think this is fine since it's just like a dozen FrameworkEvents to learn
             player.OnTeach += Learn;
+
+            //give them basic goal
+            myGoals.Enqueue(GameState.State.goalFollowPlayer);
+            availableActions.Insert(0,new Follow());//follow player)
+            AddCoreSkills();
+            learningActions = availableActions.Count + 7;
+            Debug.Log(myName + " availActionsCount " + availableActions.Count + ", learning " + learningActions);
         } else {
-            LearnRandomSkills();
+            Debug.Log(myName + "learning from ai");
+            //if player is dead, learn from random person
+            LearnFromAI();
         }
+        GetPlan();
+        
     }
 
-    void LearnRandomSkills(){
-        while (availableActions.Count<learningActions){
-            foreach (GameObject buddy in manager.spawner.ActiveBuddies){
-                availableActions.Add(buddy.GetComponent<CreatureLogic>().CurrentAction);//will lead to many dupes if only 1 other buddy alive
+    void LearnFromAI(){
+        availableActions.Clear();
+
+        int teacher = Random.Range(0,manager.spawner.ActiveBuddies.Count);
+        if (manager.spawner.ActiveBuddies[teacher] != null){
+            List<GOAPAct> teacherActions = manager.spawner.ActiveBuddies[teacher].GetComponent<CreatureLogic>().availableActions;
+            foreach (GOAPAct a in teacherActions){
+                if (!IsDupeAction(a)){
+                    availableActions.Add(a.Clone());
+                    //Debug.Log(string.Format("{0} learned {1}{2}-{3} from {4}",myName,a,a.ActionLayer,a.ActionLayer2,manager.spawner.ActiveBuddies[teacher]));
+                }
             }
         }
-    }
-
-    public override void Init(){ 
-        base.Init();
-
-        //give them basic goal
-        myGoals.Enqueue(GameState.State.goalFollowPlayer);
-
-        availableActions.Insert(0,new Follow());//follow player)
-        // availableActions.Add(new ThrowItem(Vector3.zero,7,13));//eat berries to survive
-        GetPlan();
-        learningActions = availableActions.Count + 5;
-        Debug.Log(learningActions);
+        while (availableActions.Count < 10){
+            teacher = Random.Range(0,manager.spawner.ActiveBuddies.Count);
+            CreatureLogic randoTeacher = manager.spawner.ActiveBuddies[teacher].GetComponent<CreatureLogic>();
+            GOAPAct a = randoTeacher.availableActions[Random.Range(0,randoTeacher.availableActions.Count)];
+            // Debug.Log(string.Format("{0} learned {1}{2}-{3} from {4}",myName,a,a.ActionLayer,a.ActionLayer2,manager.spawner.ActiveBuddies[teacher]));
+            // availableActions.Add(a);
+        }
+        SetGoals();
     }
 
     void Learn(){
         if (availableActions.Count<learningActions){//listen until X actions
             if (!IsDupeAction(player.CurrentEvent)){
                 availableActions.Add(player.CurrentEvent.Clone());
-                motiveAttack+=player.CurrentEvent.motiveAttack;
-                motiveHarvest+=player.CurrentEvent.motiveHarvest;
-                motiveReproduction+=player.CurrentEvent.motiveReproduction;
+                // motiveAttack+=player.CurrentEvent.motiveAttack;
+                // motiveHarvest+=player.CurrentEvent.motiveHarvest;
+                // motiveReproduction+=player.CurrentEvent.motiveReproduction;
                 Debug.Log(availableActions.Count + ", added " + player.CurrentEvent);
             }
         }
@@ -73,7 +95,8 @@ public class Buddy : CreatureLogic
         foreach (var act in availableActions){
             if (newAction.GetType() == act.GetType()){
                 if (act.ActionLayer == newAction.ActionLayer && act.ActionLayer2 == newAction.ActionLayer2){
-                    learningActions--;//buddy taught a dupe, expending a learning opportunity
+                    learningActions--;//buddy was taught a dupe, expending a learning opportunity
+                    Debug.Log(newAction + " was dupe");
                     return true;
                 }
             }
@@ -83,6 +106,8 @@ public class Buddy : CreatureLogic
 
     void SetGoals(){
         StopAllCoroutines();
+
+        TallyGoals();
         myGoals.Clear();
         if (motiveAttack>motiveHarvest){//i'm sure more elegant way to do this, but just grinding thru it guh
             if (motiveAttack>motiveReproduction){
@@ -109,5 +134,17 @@ public class Buddy : CreatureLogic
             myGoals.Enqueue(GameState.State.goalReproduced);
         }
         Debug.Log(motiveAttack + " " + motiveHarvest + " " + motiveReproduction + ", " + myGoals.Peek());
+    }
+
+    void TallyGoals(){
+        availableActions.Remove(harvestBerry);
+        availableActions.Remove(pickupBerry);
+        availableActions.Remove(eatBerry);
+        for (int i = 0;i<availableActions.Count;i++){
+            motiveAttack+=availableActions[i].motiveAttack;
+            motiveHarvest+=availableActions[i].motiveHarvest;
+            motiveReproduction+=availableActions[i].motiveReproduction;
+        }
+        AddCoreSkills();
     }
 }

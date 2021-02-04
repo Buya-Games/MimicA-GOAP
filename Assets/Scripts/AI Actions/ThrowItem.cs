@@ -4,6 +4,7 @@ public class ThrowItem : GOAPAct
 {
     GameObject throwTargetPos;//virtual obj for tracking throwing target
     public ThrowItem(Vector3 mousePos, int heldItemLayer, int targetedLayer){
+        Init();
         throwTargetPos = new GameObject();
         throwTargetPos.transform.position = mousePos;
         ActionLayer = heldItemLayer;
@@ -70,59 +71,38 @@ public class ThrowItem : GOAPAct
     }
 
     protected override GameObject FindClosestObjectOfLayer(GameObject agent){
-        GameManager manager = GameObject.FindObjectOfType<GameManager>();
         GameObject target = null;
         if (ActionLayer2 == 0){//target is null (ground)
             if (throwTargetPos == null){
                 throwTargetPos = new GameObject();
             }
             //throw at random open area near cow
-            throwTargetPos.transform.position = manager.spawner.EmptyNearbyLocation(GameObject.FindObjectOfType<Cow>().transform.position,0,10);
-            Debug.Log(agent.name + "tried to throw to " + throwTargetPos.transform.position);
+            throwTargetPos.transform.position = manager.spawner.EmptyNearbyLocation(cow.transform.position,0,10);
             target = throwTargetPos;
         }
         if (ActionLayer2 == 14){//target is cow
-            target = GameObject.FindObjectOfType<Cow>().gameObject;
+            target = cow;
         }
         if (ActionLayer2 == 12){//target is buddy
             target = Tools.FindWeakestAndClosestCreature(manager.spawner.ActiveBuddies,agent.gameObject);//target the nearest, weakest buddy
         }
         if (ActionLayer2 == 13){//target is player
-            target = agent.gameObject;
+            target = player;
         }
         if (ActionLayer2 == 11){//target is enemy
             target = Tools.FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
         }
-
-        // if (EventLayer == 7){//if berry
-        //     if (EventLayer2 == 14){//and target is cow
-        //         target = GameObject.FindObjectOfType<Cow>().gameObject;
-        //     }
-        //     // if (EventLayer2 == 13){//and target is player/buddy
-        //     //     target = agent.gameObject;
-        //     // }
-        // }
-        // if (EventLayer == 9){//if fungus, throw it to the cow
-        //     target = GameObject.FindObjectOfType<Cow>().gameObject;
-        // }
-        // if (EventLayer == 10 || EventLayer == 16){//if poop
-        //     if (EventLayer2 == 0){//and target is null
-        //         throwPos.transform.position = manager.spawner.EmptyNearbyLocation(agent.transform.position,5,10);//throw at some random open area
-        //         target = throwPos;
-        //     }
-        //     if (EventLayer2 == 11){//and target is enemy
-        //         target = Tools.FindClosestObjectInList(manager.spawner.ActiveEnemies,agent.gameObject);
-        //     }
-        // }
         return target;
     }
 
     public override bool PerformEvent(Creature agent){
         Vector3 throwHere = Vector3.zero;
         if (agent is Player || ActionLayer2 == 0){//if its the player, then just throw where the mousePos is
-            throwHere = throwTargetPos.transform.position;
-            if (agent is Player){
-                GameObject.Destroy(throwTargetPos); //just doing some memory cleanup cuz Unity doesn't seem to catch this in GC
+            if (throwTargetPos != null){
+                throwHere = throwTargetPos.transform.position;
+                if (agent is Player){
+                    GameObject.Destroy(throwTargetPos); //just doing some memory cleanup cuz Unity doesn't seem to catch this in GC
+                }
             }
         } else { //if AI, then throw at whatever target we gave it
             throwHere = agent.Target.transform.position;
@@ -148,7 +128,7 @@ public class ThrowItem : GOAPAct
         throwTargetPos = null;//remove this if you ever make them throw relative to cow or specific locations
         agent.Target = null;
         agent.HeldItem = null;
-        if (throwTargetPos != null){
+        if (agent.Target != throwTargetPos){
             GameObject.Destroy(throwTargetPos);
         }
         return true;
