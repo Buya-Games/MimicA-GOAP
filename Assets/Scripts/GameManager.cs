@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,6 +15,10 @@ public class GameManager : MonoBehaviour
     [HideInInspector] public Cow cow;
     public bool debug;
     [SerializeField] CinemachineVirtualCamera vcam;
+    public Gradient HeadColor;
+    [SerializeField] int playerDeathScore;
+    [HideInInspector] public bool PlayerAlive = true;
+    [SerializeField] Transform camFollow;
     
 
     //Awake is called before Start
@@ -74,29 +79,55 @@ public class GameManager : MonoBehaviour
                     spawner.ActiveBerries.Remove(berry);
                 }
             }
-            yield return new WaitForSeconds(5);
+            var targets = FindObjectsOfType<MonoBehaviour>().OfType<ITargettable>();
+            foreach (ITargettable target in targets){
+                if (target.Owner != null){
+                    CreatureLogic owner = target.Owner.GetComponent<CreatureLogic>();
+                    if (owner != null && owner.Target != target.gameObj){
+                        //Debug.Log(target + " is free from shackles of " + owner.name);
+                        target.NotTargeted();
+                    }
+                }
+            }
+            yield return new WaitForSeconds(1);
+            CheckPlayerDead();
         }
     }
 
-    IEnumerator Countdown(){
-        int counter = 10000;
-        while (counter > 0){
-            counter--;
-            ui.textTimer.text = counter.ToString();
-            yield return null;
+    public void UpdateScore(){
+        if (spawner.ActiveBuddies.Count >= playerDeathScore){
+            PlayerDeath();
+        } else {
+            ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString() + " (Player Dies at " + playerDeathScore + ")";
         }
-        Destroy(player.gameObject);
     }
 
     public void PlayerDeath(){
-        player.gameObject.SetActive(false);
-        StartCoroutine(DestroyPlayer());
-        vcam.m_Follow = cow.transform;
+        if (PlayerAlive){
+            PlayerAlive = false;
+            StartCoroutine(GhettoAnimations.FallOver(player.transform));
+            CheckPlayerDead();
+            if (CurrentState.Contains(GameState.State.playerAlive)){
+                CurrentState.Remove(GameState.State.playerAlive);
+            }
+            ui.DisplayMessage(cow.transform.position,"player died");
+        }
+        
     }
 
-    IEnumerator DestroyPlayer(){
-        yield return new WaitForSeconds(1);
-        Destroy(player.gameObject);
+    void CheckPlayerDead(){
+        if (!PlayerAlive){
+            camFollow.parent = cow.transform;
+            camFollow.localPosition = Vector3.zero;
+            // vcam.m_Follow = cow.transform;
+            // vcam.transform.position = new Vector3(0,25,-35);
+            foreach (GameObject b in spawner.ActiveBuddies){
+                Buddy buddy = b.GetComponent<Buddy>();
+                if (buddy.learning){
+                    buddy.SwitchToAILearn();
+                }
+            }
+        }
     }
 
     public void GameOver(bool win = true){

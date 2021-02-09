@@ -37,14 +37,13 @@ public class PickupItem : GOAPAct
     }
 
     public override bool GetTarget(Creature agent){
-        agent.Target = FindClosestObjectOfLayer(agent.gameObject);
-        if (agent.Target != null){
+        GameObject target = FindClosestObjectOfLayer(agent);
+        if (target != null){
+            agent.SetTarget(target);
             return true;
         } else {
-            Debug.Log("couldn't find eventlayer " + ActionLayer);
             return false;
         }
-        //return agent.Target != null? true : false;
     }
 
     public override bool CheckRange(Creature agent){
@@ -55,19 +54,45 @@ public class PickupItem : GOAPAct
         }
     }
 
-    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(Creature agent){
+        
+        //in case player already targeting object of this action's layer, pass that to the search tool
+        //(targeting an object removes it from the accessible targets list (to avoid conflicts where everyone targets same thing) so it's necessary
+        //to include it in the search tool when double-checking that plans)
+        // bool searchPlayerHeldItem = false;
+        // if (agent.Target != null && agent.Target.layer == ActionLayer){
+        //     searchPlayerHeldItem = true;   
+        // }
+
         GameObject target = null;
+        ITargettable fuck = null;
         if (ActionLayer == 7){
-            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
+            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBerries),agent.gameObject);
+            if (fuck != null){
+                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBerries),agent.gameObject).gameObj;
+            }
+            //target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerries,agent.gameObject);
         }
         if (ActionLayer == 9){
-            target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
+            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveFungus),agent.gameObject);
+            if (fuck != null){
+                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveFungus),agent.gameObject).gameObj;
+            }
+            // target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungus,agent.gameObject);
         }
         if (ActionLayer == 10){
-            target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerryPoop,agent.gameObject);
+            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBerryPoop),agent.gameObject);
+            if (fuck != null){
+                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBerryPoop),agent.gameObject).gameObj;
+            }
+            // target = Tools.FindClosestObjectInList(manager.spawner.ActiveBerryPoop,agent.gameObject);
         }
         if (ActionLayer == 16){
-            target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungusPoop,agent.gameObject);
+            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveFungusPoop),agent.gameObject);
+            if (fuck != null){
+                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveFungusPoop),agent.gameObject).gameObj;
+            }
+            // target = Tools.FindClosestObjectInList(manager.spawner.ActiveFungusPoop,agent.gameObject);
         }
         return target;
     }
@@ -78,7 +103,7 @@ public class PickupItem : GOAPAct
         return true;
     }
     protected override bool CompleteEvent(Creature agent){
-        agent.Target = null;
+        agent.ClearTarget();
         return true;
     }
 }

@@ -4,7 +4,8 @@ public class Follow : GOAPAct
 {
     public Follow(){
         Init();
-        eventRange = Random.Range(3,6); //minimum distance required to satisfy following state
+        ActionLayer = 13;
+        eventRange = Random.Range(5,8); //minimum distance required to satisfy following state
         Preconditions.Add(GameState.State.playerAlive);
         Effects.Add(GameState.State.goalFollowPlayer);
     }
@@ -27,7 +28,7 @@ public class Follow : GOAPAct
         }
     }
 
-    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(Creature agent){
         return null;
     }
 
@@ -35,6 +36,7 @@ public class Follow : GOAPAct
         return true;
     }
     protected override bool CompleteEvent(Creature agent){
+        agent.ClearTarget();
         return true;
     }
 }

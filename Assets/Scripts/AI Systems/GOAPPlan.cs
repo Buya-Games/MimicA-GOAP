@@ -240,6 +240,9 @@ public class GOAPPlan : MonoBehaviour
         if (agent.motiveAttack > 0 && action.motiveAttack > 0){
             alignmentScore+=agent.motiveAttack;
         }
+        if (agent.motiveHelper > 0 && action.motiveHelper > 0){
+            alignmentScore+=agent.motiveHelper;
+        }
         return alignmentScore;
     }
 

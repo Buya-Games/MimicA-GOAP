@@ -8,7 +8,8 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
     public List<GameState.State> Effects = new List<GameState.State>();//gameStates created by this action
     protected float coreCost = 1;//just the action itself, doesn't include movement (higher means lower priority)
     public float Cost = 1f;//core action + move (higher means lower priority)
-    public float motiveReproduction, motiveHarvest, motiveAttack;//counts toward the 3 possible creature goals
+    public float ActionSkill;
+    public float motiveReproduction, motiveHarvest, motiveAttack, motiveHelper;//counts toward the 3 possible creature goals
     protected float eventRange;//used to calculate CheckRange
     protected GameObject player,cow;
     protected GameManager manager;
@@ -25,7 +26,7 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
     }
     public void EstimateActionCost(Creature agent){
         Cost = 1;
-        GameObject estimatedClosestObj = FindClosestObjectOfLayer(agent.gameObject);
+        GameObject estimatedClosestObj = FindClosestObjectOfLayer(agent);
         if (estimatedClosestObj != null){
             Cost += Tools.GetDist(estimatedClosestObj,agent.gameObject);
         } else {
@@ -45,12 +46,14 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
         return (GameState.CompareStates(Preconditions,currentState)) ? true : false;
     }
     public bool CheckEffects(List<GameState.State> goalState){ //checking if action effects will meet requirement of state
+        // Debug.Log(string.Format("{0}{1}-{2} checking effects",this.GetType(),ActionLayer,ActionLayer2));
+        // string actionName = this.GetType().ToString() + ActionLayer + "-" + ActionLayer2;
         return (GameState.CompareStates(goalState,Effects)) ? true : false; //flipped from above
     }
     public abstract GOAPAct Clone(); //Creates copy so each creature can have own values. (Without clone, we'd be ref same obj in memory & create conflicts)
     public abstract bool GetTarget(Creature agent); //check if any targets available
     public abstract bool CheckRange(Creature agent); //checking if inRange
-    protected abstract GameObject FindClosestObjectOfLayer(GameObject agent);
+    protected abstract GameObject FindClosestObjectOfLayer(Creature agent);
     public abstract bool PerformEvent(Creature agent);//performs the event
     protected abstract bool CompleteEvent(Creature agent);//performs the event
 }

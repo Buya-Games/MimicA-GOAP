@@ -2,36 +2,55 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Item : MonoBehaviour, IThrowable
+public class Item : MonoBehaviour, IThrowable, ITargettable
 {
     GameManager manager;
     Rigidbody rb;
     float gravity;
     float height = 5;
-    Spawner.EnvironmentType myType;
-    bool stationary = true;
+    public Spawner.EnvironmentType MyType;
+    bool accessible = true;//once object is pickedup/thrown it is inaccessible until it drops
     Vector3 origScale;
+    public GameObject Owner { get; set; }
+    public GameObject gameObj { get; set; }
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
         rb = GetComponent<Rigidbody>();
         gravity = Physics.gravity.y;
         origScale = transform.localScale;
+        gameObj = gameObject;
         SetType();
     }
 
     void SetType(){
         if (gameObject.layer == 7){
-            myType = Spawner.EnvironmentType.Berry;
+            MyType = Spawner.EnvironmentType.Berry;
         }
         if (gameObject.layer == 9){
-            myType = Spawner.EnvironmentType.Fungus;
+            MyType = Spawner.EnvironmentType.Fungus;
         }
         if (gameObject.layer == 10){
-            myType = Spawner.EnvironmentType.BerryPoop;
+            MyType = Spawner.EnvironmentType.BerryPoop;
         }
         if (gameObject.layer == 16){
-            myType = Spawner.EnvironmentType.FungusPoop;
+            MyType = Spawner.EnvironmentType.FungusPoop;
+        }
+    }
+
+    public void Targeted(GameObject who){
+        if (accessible){
+            accessible = false;
+            Owner = who;
+            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
+        }
+    }
+
+    public void NotTargeted(){
+        if (!accessible){
+            accessible = true;
+            Owner = null;
+            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
         }
     }
 
@@ -40,8 +59,8 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     public void PickUp(Creature agent){
-        stationary = false;
-        manager.spawner.ThrowOrPickUpObject(gameObject,myType);
+        accessible = false;
+        //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         Vector3 pos = agent.visibleMesh.position;
         pos.y += 3;
         transform.position = pos;
@@ -57,8 +76,8 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     public void Drop(){
-        stationary = true;
-        manager.spawner.ThrowOrPickUpObject(gameObject,myType,true);
+        accessible = true;
+        //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
 
@@ -67,9 +86,9 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     public void ThrowObject(Vector3 where, float throwStrength){
-        if (stationary){
-            stationary = false;
-            manager.spawner.ThrowOrPickUpObject(gameObject,myType);
+        if (accessible){
+            accessible = false;
+            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         }
 
         Vector3 higherPos = transform.position;
@@ -98,28 +117,28 @@ public class Item : MonoBehaviour, IThrowable
     }
 
     protected virtual void OnCollisionEnter(Collision col){
-        if (!stationary && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
+        if (!accessible && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
             Drop();
-            if (myType == Spawner.EnvironmentType.BerryPoop || myType == Spawner.EnvironmentType.FungusPoop){
+            if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
                 BombBoom();
             }
         }
-        if (!stationary && col.gameObject.layer == 4){
+        if (!accessible && col.gameObject.layer == 4){//if collide with ground after it has been thrown
             Drop();
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = 0f;
-            if (myType == Spawner.EnvironmentType.BerryPoop){
+            if (MyType == Spawner.EnvironmentType.BerryPoop){
                 manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Bush);
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
                 manager.particles.BombExplosion(transform.position);
             }
-            if (myType == Spawner.EnvironmentType.FungusPoop){
+            if (MyType == Spawner.EnvironmentType.FungusPoop){
                 manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Mushroom);
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
                 manager.particles.BombExplosion(transform.position);
             }
         }
-        if (col.gameObject.layer == 13){ //if player
+        if (col.gameObject.layer == 13){//if player
             Player player = col.gameObject.GetComponent<Player>();
             if (player.HeldItem == null){
                 PickUp(player);
@@ -153,10 +172,10 @@ public class Item : MonoBehaviour, IThrowable
         }
         if (enemyHit){
             manager.particles.BombExplosion(transform.position);
-            if (myType == Spawner.EnvironmentType.BerryPoop){
+            if (MyType == Spawner.EnvironmentType.BerryPoop){
             manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
             }
-            if (myType == Spawner.EnvironmentType.FungusPoop){
+            if (MyType == Spawner.EnvironmentType.FungusPoop){
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
             }
         }

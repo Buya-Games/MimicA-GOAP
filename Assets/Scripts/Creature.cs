@@ -12,7 +12,7 @@ public class Creature : MonoBehaviour, IHittable
     public GameObject Target;
     public GameObject HeldItem;
     [SerializeField] Transform melee;//melee attacking "arm"
-    [SerializeField] MeshRenderer healthBar; //i dunno why I made healthbar as a 3D cube. This adjusts the value
+    [SerializeField] protected MeshRenderer healthBar; //healthbar is just a simple quad. we adjust its value via shader material in meshRenderer
     MaterialPropertyBlock matBlock;
     Transform mainCamera;
     [HideInInspector] public float health = 10;
@@ -20,6 +20,9 @@ public class Creature : MonoBehaviour, IHittable
     [SerializeField] protected TMP_Text myText;
     public Transform visibleMesh;
     protected float bobSpeed;
+    [SerializeField] protected Transform head;
+    public bool alive = true;
+
 
     protected virtual void Awake(){
         manager = FindObjectOfType<GameManager>();
@@ -35,6 +38,9 @@ public class Creature : MonoBehaviour, IHittable
         SetStats();
         myName = NameGenerator.CreateRandomName();
         gameObject.name = myName;
+        if (this is Buddy){
+            manager.ui.DisplayMessage(transform.position,myName + " was born!");
+        }
 
         bobSpeed = MyStats.Speed * 7;
     }
@@ -66,14 +72,15 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected virtual void Update(){
-        // Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
-        // bobPos.y = Mathf.Clamp(bobPos.y,0,1);
-
-        visibleMesh.localPosition = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
-        health-=.015f;
-        UpdateHealth();
-        if (health <= 0){
-            Die();
+        if (alive){
+            Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
+            bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
+            visibleMesh.localPosition = bobPos;
+            health-=.015f;
+            UpdateHealth();
+            if (health <= 0){
+                Die();
+            }
         }
     }
 
@@ -88,6 +95,25 @@ public class Creature : MonoBehaviour, IHittable
         healthBar.GetPropertyBlock(matBlock);
         matBlock.SetFloat("_Fill", Mathf.Clamp(health/100,0,1));
         healthBar.SetPropertyBlock(matBlock);
+    }
+
+    public void SetTarget(GameObject targetedObj){
+        if (Target != null){
+            ITargettable oldTarget = Target.GetComponent<ITargettable>();
+            if (oldTarget != null){
+                oldTarget.NotTargeted();
+            }
+        }
+
+        Target = targetedObj;
+        ITargettable newTarget = Target.GetComponent<ITargettable>();
+        if (newTarget != null){
+            newTarget.Targeted(gameObject);
+        }
+    }
+
+    public void ClearTarget(){
+        Target = null;
     }
 
     public void Swing(){
@@ -108,11 +134,22 @@ public class Creature : MonoBehaviour, IHittable
         }
     }
 
-    public void Eat(){
-        health = Mathf.Clamp(health + 50,50,100);
+    public void Eat(Spawner.EnvironmentType type){
         HeldItem.GetComponent<Item>().Drop();//not using DropItem cuz it causes a conflict.... it's a turd i know i need to clean it up
-        manager.particles.EatingBerry(HeldItem.transform.position);
-        manager.spawner.DespawnEnvironment(HeldItem,Spawner.EnvironmentType.Berry);
+        if (type == Spawner.EnvironmentType.Berry){
+            health = Mathf.Clamp(health + 50,50,100);
+            manager.particles.EatingBerry(HeldItem.transform.position);
+        }
+        if (type == Spawner.EnvironmentType.Fungus){
+            health = Mathf.Clamp(health + 25,50,100);
+            manager.particles.EatingFungus(HeldItem.transform.position);
+        }
+        if (type == Spawner.EnvironmentType.BerryPoop || type == Spawner.EnvironmentType.FungusPoop){
+            health = Mathf.Clamp(health + 10,0,100);
+            manager.particles.BombExplosion(HeldItem.transform.position);
+            
+        }
+        manager.spawner.DespawnEnvironment(HeldItem,type);
         HeldItem = null;
     }
 
@@ -120,11 +157,6 @@ public class Creature : MonoBehaviour, IHittable
         Vector3 dir = (transform.position - attacker.transform.position).normalized; //take hit in direction opposite to attacker
         dir.y = 0;
         rb.AddForce(dir * 600);
-        
-        // health-=damage;
-        // if (health <= 0){
-        //     Die();
-        // }
     }
 
     protected void Idle(){
@@ -132,9 +164,19 @@ public class Creature : MonoBehaviour, IHittable
         StartCoroutine(Movement(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
     }
 
-    void Die(){
+    protected virtual void Die(){
+        if (HeldItem != null){
+            DropItem();
+        }
+        if (Target != null){
+            ClearTarget();
+        }
+        alive = false;
         StopAllCoroutines();
         Debug.Log(myName + " has died");
+        myText.gameObject.SetActive(false);
+        healthBar.gameObject.SetActive(false);
+        GhettoAnimations.FallOver(transform);
         manager.spawner.DespawnCreature(this.gameObject);
     }
 
@@ -149,29 +191,31 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected IEnumerator Movement(Vector3 dir){
-        StartCoroutine(FaceTarget(dir));
-        int counter = 0;
-        rb.velocity = Vector3.zero;
-        while (counter < 100){
-            rb.MovePosition(rb.position + dir * Time.fixedDeltaTime * MyStats.Speed);
-            counter++;
+        if (alive){
+            StartCoroutine(FaceTarget(dir));
+            int counter = 0;
+            rb.velocity = Vector3.zero;
+            while (counter < 100){
+                rb.MovePosition(rb.position + dir * Time.fixedDeltaTime * MyStats.Speed);
+                counter++;
 
-            // health-=.02f;
-            // UpdateHealth();
-            // if (health <= 0){
-            //     Die();
-            // }
+                // health-=.02f;
+                // UpdateHealth();
+                // if (health <= 0){
+                //     Die();
+                // }
 
-            yield return null;
+                yield return null;
+            }
+            PostMovementChecks();
         }
-        PostMovementChecks();
     }
 
     protected virtual void PostMovementChecks(){
         //sometimes the bobbing clips thru floor/goes too high, so just resetting if it does
-        if (visibleMesh.localPosition.y > .7f || visibleMesh.localPosition.y < 0){
-            visibleMesh.localPosition = new Vector3(0,0.25f,0);
-        }
+        // if (visibleMesh.localPosition.y > .7f || visibleMesh.localPosition.y < 0){
+        //     visibleMesh.localPosition = new Vector3(0,0.25f,0);
+        // }
         //i dont know why this happens sometimes, but AI gets stuck with deactivated items as its HeldItem or Target
         if (HeldItem != null){
             if (!HeldItem.activeSelf){

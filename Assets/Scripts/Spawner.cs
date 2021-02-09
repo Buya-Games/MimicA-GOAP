@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using DG.Tweening;
 
 public class Spawner : MonoBehaviour
 {
@@ -17,15 +17,16 @@ public class Spawner : MonoBehaviour
     Queue<GameObject> berryQueue = new Queue<GameObject>();
     Queue<GameObject> berryPoopQueue = new Queue<GameObject>();
     Queue<GameObject> fungusPoopQueue = new Queue<GameObject>();
-    public List<GameObject> ActivesBushes =  new List<GameObject>();
+    public List<GameObject> ActiveBushes =  new List<GameObject>();
     public List<GameObject> ActiveBerries =  new List<GameObject>();
     public List<GameObject> ActiveBerryPoop =  new List<GameObject>();
     public List<GameObject> ActiveFungusPoop =  new List<GameObject>();
     public List<GameObject> ActiveMushrooms =  new List<GameObject>();
     public List<GameObject> ActiveFungus =  new List<GameObject>();
     public List<GameObject> ActiveEnemies =  new List<GameObject>();
-    [HideInInspector]public List<GameObject> ActiveBuddies =  new List<GameObject>();
+    public List<GameObject> ActiveBuddies =  new List<GameObject>();
     [SerializeField] LayerMask spawnCheckLM;
+    public Queue<CreatureLogic> Teachers = new Queue<CreatureLogic>();
 
     void Awake(){
         manager = GetComponent<GameManager>();
@@ -58,33 +59,29 @@ public class Spawner : MonoBehaviour
             newCreature.transform.position = spawnPos;
             ActiveBuddies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availBuddy);
-            manager.ui.textPlayerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
+            Teachers.Enqueue(newCreature.GetComponent<CreatureLogic>());
         } else {
             newCreature = Instantiate(enemyPrefab);
             newCreature.transform.position = spawnPos;
             ActiveEnemies.Add(newCreature);
             manager.CurrentState.Add(GameState.State.availEnemy);
-            manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
+            //manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
-        Debug.Log("active buddies" + ActiveBuddies.Count);
-        if (ActiveBuddies.Count >= 4){
-            manager.PlayerDeath();
-        }
+        manager.UpdateScore();
     }
-
-    
 
     public void DespawnCreature(GameObject who){
         if (who.GetComponent<Buddy>() != null){ //if its a buddy
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
-            manager.ui.textPlayerPopulation.text = "Player Population: " + (ActiveBuddies.Count + 1).ToString();
         } else { //if its an enemy
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
-            manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
+            //manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
-        Destroy(who);//should I make this into a queue to avoid creating/destroying all the time?
+        manager.ui.DisplayMessage(who.transform.position,who.name + " died!");
+        manager.UpdateScore();
+        StartCoroutine(GhettoAnimations.FallOver(who.transform));
     }
 
     public void SpawnEnvironment(Vector3 spawnPos, EnvironmentType type){
@@ -98,7 +95,7 @@ public class Spawner : MonoBehaviour
         } else if (type == EnvironmentType.Bush){
             useQueue = bushQueue;
             usePrefab = bushPrefab;
-            useList = ActivesBushes;
+            useList = ActiveBushes;
             manager.CurrentState.Add(GameState.State.availBush);
         } else if (type == EnvironmentType.Berry){
             useQueue = berryQueue;
@@ -153,8 +150,15 @@ public class Spawner : MonoBehaviour
             Vector3 poopedOut = new Vector3(Random.Range(-.2f,.2f),0,-1);
             newItem.GetComponent<Rigidbody>().velocity = poopedOut * Random.Range(3,8);
         }
-
         newItem.SetActive(true);
+
+        if (type == EnvironmentType.Bush || type == EnvironmentType.Mushroom){
+            Vector3 origScale = newItem.transform.localScale;
+            newItem.transform.localScale = Vector3.zero;
+            newItem.transform.DOScale(origScale,0.01f).OnComplete(() => {
+                newItem.transform.DOPunchScale(origScale*0.6f,0.5f,10,0.1f);
+            });
+        }
     }
 
     public void DespawnEnvironment(GameObject item, EnvironmentType type){
@@ -162,7 +166,7 @@ public class Spawner : MonoBehaviour
             treeQueue.Enqueue(item);
         } else if (type == EnvironmentType.Bush){
             bushQueue.Enqueue(item);
-            ActivesBushes.Remove(item);
+            ActiveBushes.Remove(item);
             manager.CurrentState.Remove(GameState.State.availBush);
         } else if (type == EnvironmentType.Mushroom){
             mushroomQueue.Enqueue(item);
@@ -203,6 +207,12 @@ public class Spawner : MonoBehaviour
             } else if (type == EnvironmentType.FungusPoop && !ActiveFungusPoop.Contains(item)){
                 ActiveFungusPoop.Add(item);
                 manager.CurrentState.Add(GameState.State.availFungusPoop);
+            } else if (type == EnvironmentType.Bush && !ActiveBushes.Contains(item)){
+                ActiveBushes.Add(item);
+                manager.CurrentState.Add(GameState.State.availBush);
+            } else if (type == EnvironmentType.Mushroom && !ActiveMushrooms.Contains(item)){
+                ActiveMushrooms.Add(item);
+                manager.CurrentState.Add(GameState.State.availMushroom);
             }
         } else {
             if (type == EnvironmentType.Fungus && ActiveFungus.Contains(item)){
@@ -217,18 +227,26 @@ public class Spawner : MonoBehaviour
             } else if (type == EnvironmentType.FungusPoop && ActiveFungusPoop.Contains(item)){
                 ActiveFungusPoop.Remove(item);
                 manager.CurrentState.Remove(GameState.State.availFungusPoop);
+            } else if (type == EnvironmentType.Bush && ActiveBushes.Contains(item)){
+                ActiveBushes.Remove(item);
+                manager.CurrentState.Remove(GameState.State.availBush);
+            } else if (type == EnvironmentType.Mushroom && ActiveMushrooms.Contains(item)){
+                ActiveMushrooms.Remove(item);
+                manager.CurrentState.Remove(GameState.State.availMushroom);
             }
         }
     }
     public Vector3 EmptyLocation(){
         int posNegX = Random.Range(0,2)*2-1;
         int posNegZ = Random.Range(0,2)*2-1;
-        Vector3 pos = manager.cow.transform.position + new Vector3(Random.Range(0,25)*posNegX,0,Random.Range(0,20)*posNegZ);//relative to the cow
+        int maxRadius = 1- + ActiveBuddies.Count;
+        Vector3 pos = manager.cow.transform.position + new Vector3(Random.Range(5,maxRadius)*posNegX,0,Random.Range(5,maxRadius)*posNegZ);//relative to the cow
         while (!CheckIfLocationClear(pos)){
             int posNegX2 = Random.Range(0,2)*2-1;
             int posNegZ2 = Random.Range(0,2)*2-1;
-            pos = manager.cow.transform.position + new Vector3(Random.Range(0,25)*posNegX,0,Random.Range(0,20)*posNegZ);//relative to the cow
+            pos = manager.cow.transform.position + new Vector3(Random.Range(5,maxRadius)*posNegX,0,Random.Range(5,maxRadius)*posNegZ);//relative to the cow
         }
+        pos.y = 0;
         return pos;
     }
 

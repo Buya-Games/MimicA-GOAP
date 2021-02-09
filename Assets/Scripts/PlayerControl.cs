@@ -6,6 +6,7 @@ using System;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerControl : MonoBehaviour
 {
+    GameManager manager;
     Player player;
     Vector3 keybInputDirection, lookTarget;
     Rigidbody rb;
@@ -19,17 +20,28 @@ public class PlayerControl : MonoBehaviour
 
     // Awake is called before Start so I use it to initialize all the core stuff
     void Awake(){
+        manager = FindObjectOfType<GameManager>();
         player = GetComponent<Player>();
         rb = GetComponent<Rigidbody>();
     }
 
     // Update is called every frame
     void Update(){
-        keybInputDirection = new Vector3(Input.GetAxisRaw ("Horizontal"),0,Input.GetAxisRaw("Vertical")).normalized;//when move with WSAD or arrow keys
-        MoveMouse();
-        if (Input.GetKeyDown(KeyCode.Space)){
-            player.Interact();
+        if (manager.PlayerAlive){
+            keybInputDirection = new Vector3(Input.GetAxisRaw ("Horizontal"),0,Input.GetAxisRaw("Vertical")).normalized;//when move with WSAD or arrow keys
+            MoveMouse();
+            if (Input.GetKeyDown(KeyCode.Space)){
+                player.Interact();
+            }
+            if (Input.GetKeyDown(KeyCode.E)){
+                player.EatItem();
+            }
         }
+        // if (Input.GetMouseButtonDown(0)){
+        //     if (manager.ui.GUI){
+        //         manager.ui.ClearGUI();
+        //     }
+        // }
         // bobHeight = Mathf.Sin(Time.time * 4);//just making the figure bob up and down
         // visibleMesh.position = visibleMesh.position + transform.up * bobHeight;
     }
@@ -37,14 +49,16 @@ public class PlayerControl : MonoBehaviour
     // FixedUpdate is called once per physics frame (everytime physics is re-calculated)
     void FixedUpdate(){
         rb.velocity = Vector3.zero;
-        if (keybInputDirection != Vector3.zero){
-            rb.MovePosition(rb.position + keybInputDirection * Time.fixedDeltaTime * moveSpeed);
-            Quaternion rot = Quaternion.LookRotation(keybInputDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation,rot,Time.fixedDeltaTime * 10);
-            //player.health-=0.04f;
-        }
-        if (lookTarget != Vector3.zero){
-            LookAtTarget();
+        if (manager.PlayerAlive){
+            if (keybInputDirection != Vector3.zero){
+                rb.MovePosition(rb.position + keybInputDirection * Time.fixedDeltaTime * moveSpeed);
+                Quaternion rot = Quaternion.LookRotation(keybInputDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation,rot,Time.fixedDeltaTime * 10);
+                //player.health-=0.04f;
+            }
+            if (lookTarget != Vector3.zero){
+                LookAtTarget();
+            }
         }
     }
 
@@ -59,8 +73,8 @@ public class PlayerControl : MonoBehaviour
     }
 
     public int ThrowingTarget(Vector3 pos){ //looks at where mouse is to figure out what you're trying to throw at (cow, enemy, random spot)
-        int targetLayer = 0;
-        Collider[] nearbyObjects = Physics.OverlapSphere(pos,2,throwingLM);//check surroundings for stuff
+        int targetLayer = 4;
+        Collider[] nearbyObjects = Physics.OverlapSphere(pos,1,throwingLM);//check surroundings for stuff
         if (nearbyObjects.Length>0){
             GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,pos);
             targetLayer = closest.layer;
@@ -118,5 +132,9 @@ public class PlayerControl : MonoBehaviour
         Vector3 lookDir = (lookTarget - head.transform.position);
         Quaternion lookRot = Quaternion.LookRotation(new Vector3(lookDir.x,0,lookDir.z));
         head.rotation = Quaternion.Slerp(head.rotation,lookRot,Time.fixedDeltaTime * 10);
+    }
+
+    public void StopMovement(){
+        rb.velocity = Vector3.zero;
     }
 }

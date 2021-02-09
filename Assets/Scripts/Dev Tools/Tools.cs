@@ -13,16 +13,49 @@ public static class Tools
         return Mathf.Abs(Vector3.Distance(target, agent));
     }
 
-    public static GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent){
+    public static GameObject FindClosestObjectInList(List<GameObject> objects, GameObject agent, bool searchPlayerItem = false){
         GameObject closest = null;
+
+        //if player is already holding item of the targeted layer, then start search from there
+        if (searchPlayerItem){
+            closest = agent.GetComponent<Creature>().Target;
+        }
+
         if (objects.Count>0){
             float dist = 5;//starting distance to search through
             while (closest == null && dist < maxDistance){
                 // if (dist >= 100) {Debug.Log(dist);}
                 foreach (GameObject b in objects){
-                    float thisDist = GetDist(b,agent);
-                    if (thisDist < dist){
-                        closest = b;
+                        float thisDist = GetDist(b,agent);
+                        if (thisDist < dist){
+                            closest = b;
+                        }
+                }
+                dist+=10;
+            }
+        }
+        return closest;
+    }
+
+    public static ITargettable FindClosestTargetInList(List<ITargettable> objects, GameObject agent, bool searchPlayerItem = false){
+        ITargettable closest = null;
+
+        //if player is already holding item of the targeted layer, then start search from there
+        if (searchPlayerItem){
+            closest = agent.GetComponent<Creature>().Target.GetComponent<ITargettable>();
+        }
+
+        if (objects.Count>0){
+            float dist = 5;//starting distance to search through
+            while (closest == null && dist < maxDistance){
+                // if (dist >= 100) {Debug.Log(dist);}
+                foreach (ITargettable b in objects){
+                    //Debug.Log(b.TargetBy);
+                    if (b.Owner == null || b.Owner == agent){
+                        float thisDist = GetDist(b.gameObj,agent);
+                        if (thisDist < dist){
+                            closest = b;
+                        }
                     }
                 }
                 dist+=10;
@@ -31,7 +64,16 @@ public static class Tools
         return closest;
     }
 
-    public static List<GameObject> FindOnlyNearbyObjects(List<GameObject> objects, GameObject agent){
+    public static List<ITargettable> ConvertToITargettable(List<GameObject> objects){
+        List<ITargettable> targets = new List<ITargettable>();
+        foreach (GameObject o in objects){
+            targets.Add(o.GetComponent<ITargettable>());
+        }
+        return targets;
+
+    }
+
+    public static List<GameObject> FindNearbyObjects(List<GameObject> objects, GameObject agent){
         List<GameObject> closest = new List<GameObject>();
         if (objects.Count>0){
             float dist = 5;//starting distance to search through
@@ -93,7 +135,7 @@ public static class Tools
         List<GameObject> useList = new List<GameObject>();
         Spawner spawner = GameObject.FindObjectOfType<Spawner>();
         if (layer == 6){
-            useList = spawner.ActivesBushes;
+            useList = spawner.ActiveBushes;
         }
         if (layer == 7){
             useList = spawner.ActiveBerries;

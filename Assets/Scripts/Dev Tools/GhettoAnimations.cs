@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public static class GhettoAnimations
 {
@@ -15,6 +16,19 @@ public static class GhettoAnimations
             yield return null;
         }
         melee.gameObject.SetActive(false);
+    }
+
+    public static IEnumerator FallOver(Transform deadThing){
+        float fallAngle = 0;
+        Vector3 rot = deadThing.rotation.eulerAngles;
+        while (fallAngle > -90){
+            fallAngle-=2;
+            rot.z = fallAngle;
+            deadThing.transform.rotation = Quaternion.Euler(rot);
+            yield return null;
+        }
+        yield return new WaitForSeconds(5);
+        deadThing.transform.DOScale(Vector3.zero,0.1f).OnComplete(() => {GameObject.Destroy(deadThing.gameObject);});
     }
 
     // public static IEnumerator AnimHitRB(Vector3 dir, Rigidbody rb){

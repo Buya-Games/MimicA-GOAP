@@ -19,7 +19,7 @@ public class Fake: GOAPAct
         return true;
     }
 
-    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(Creature agent){
         return null;
     }
 

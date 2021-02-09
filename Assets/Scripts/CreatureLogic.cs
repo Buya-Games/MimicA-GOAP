@@ -20,9 +20,9 @@ public class CreatureLogic : Creature
         planner = FindObjectOfType<GOAPPlan>();
 
         //everyone gets basic skills to eat and survive
-        eatBerry = new Eat();
+        eatBerry = new Eat(7);
         pickupBerry = new PickupItem(7);
-        harvestBerry = new MeleeAttack(6,1);
+        harvestBerry = new MeleeAttack(6,2);
     }
 
     protected void AddCoreSkills(){
@@ -33,18 +33,20 @@ public class CreatureLogic : Creature
 
 
     protected virtual void GetPlan(){
-        CurrentAction = null;
-        myText.text = "";
-        toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
-        if (toDo == null || toDo.Count == 0){ //if failed to find a plan or plan has no moves
-            if(manager.debug){Debug.Log("toDo was null");}
-            if (HeldItem != null){//if holding item is preventing you finding a path or actions, let's try dropping the item
-                DropItem();
+        if (alive){
+            CurrentAction = null;
+            myText.text = "";
+            toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
+            if (toDo == null || toDo.Count == 0){ //if failed to find a plan or plan has no moves
+                if(manager.debug){Debug.Log("toDo was null");}
+                if (HeldItem != null){//if holding item is preventing you finding a path or actions, let's try dropping the item
+                    DropItem();
+                }
+                Invoke("Idle",breakTime * Random.Range(1f,2f));
+            } else {
+                if(manager.debug){Debug.Log(toDo.Peek());}
+                GetDecision();
             }
-            Invoke("Idle",breakTime * Random.Range(1f,2f));
-        } else {
-            if(manager.debug){Debug.Log(toDo.Peek());}
-            GetDecision();
         }
     }
 
@@ -56,7 +58,7 @@ public class CreatureLogic : Creature
 
         if (Target != null && !Target.activeSelf){//if somehow target became inactive, set it to null
             if (manager.debug){Debug.Log("target set to null");}
-            Target = null;
+            ClearTarget();
         }
 
         if (toDo != null && toDo.Count>0){//if we still got things we wanna peform
@@ -110,17 +112,17 @@ public class CreatureLogic : Creature
             whatToDo.Add(GameState.State.goalEat);
 
             //adding/removing eat cuz when they bored sometimes all they do is just keep eating
-            if (!availableActions.Contains(eatBerry)){
-                availableActions.Add(eatBerry);
-            }
+            // if (!availableActions.Contains(eatBerry)){
+            //     availableActions.Add(eatBerry);
+            // }
         } else { //carry on with your goals
             GameState.State goal = myGoals.Dequeue();
-            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal
+            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal but then more work for GOAPPlan
             myGoals.Enqueue(goal);
 
-            if (availableActions.Contains(eatBerry)){
-                availableActions.Remove(eatBerry);
-            }
+            // if (availableActions.Contains(eatBerry)){
+            //     availableActions.Remove(eatBerry);
+            // }
         }
         return whatToDo;
     }

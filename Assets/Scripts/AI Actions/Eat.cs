@@ -2,15 +2,27 @@ using UnityEngine;
 using System.Collections.Generic;
 public class Eat: GOAPAct
 {
-    public Eat(){
+    public Eat(int itemLayer){
+        ActionLayer = itemLayer;
         coreCost = -100;//gotta eat! so "cost" is lowest
-        Preconditions.Add(GameState.State.itemBerry);
+        if (ActionLayer == 7){
+            Preconditions.Add(GameState.State.itemBerry);
+        }
+        if (ActionLayer == 9){
+            Preconditions.Add(GameState.State.itemFungus);
+        }
+        if (ActionLayer == 10){
+            Preconditions.Add(GameState.State.itemBerryPoop);
+        }
+        if (ActionLayer == 16){
+            Preconditions.Add(GameState.State.itemFungusPoop);
+        }
         Effects.Add(GameState.State.goalEat);
         Effects.Add(GameState.State.itemNone);
     }
 
     public override GOAPAct Clone(){
-        Eat clone = new Eat();
+        Eat clone = new Eat(this.ActionLayer);
         return clone;
     }
 
@@ -23,13 +35,13 @@ public class Eat: GOAPAct
         return true;
     }
 
-    protected override GameObject FindClosestObjectOfLayer(GameObject agent){
+    protected override GameObject FindClosestObjectOfLayer(Creature agent){
         return null;
     }
 
     public override bool PerformEvent(Creature agent){
         if (agent.HeldItem != null){
-            agent.Eat();
+            agent.Eat(agent.HeldItem.GetComponent<Item>().MyType);
             return true;
         } else {
             return false;

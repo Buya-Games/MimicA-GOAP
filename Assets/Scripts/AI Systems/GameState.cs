@@ -19,20 +19,22 @@ public class GameState
         availMushroom, 
         availEnemy,
         availBuddy,
-        availCow, 
-        goalAttacked,
-        goalReproduced,
-        goalHarvested,
-        goalCowAttacked,
+        goalAttackEnemies,
+        goalGatherShrooms,
+        goalGatherFood,
+        goalAttackCow,
         goalFollowPlayer,
+        goalHelpOthers,
         goalEat
     }
 
-    public static bool CompareStates(List<State> compareThis, List<State> againstThis){
+    public static bool CompareStates(List<State> compareThis, List<State> againstThis, string actionName = ""){
         foreach (var state in compareThis){
             if (!againstThis.Contains(state)){
+                //UnityEngine.Debug.Log(string.Format("{0}{1} wasn't found",actionName,state));
                 return false;
             }
+            //UnityEngine.Debug.Log(string.Format("{0}{1} was found",actionName,state));
         }
         return true;
     }

@@ -19,7 +19,7 @@ public class Enemy : CreatureLogic
     }
 
     void SetGoals(){
-        myGoals.Enqueue(GameState.State.goalCowAttacked);
+        myGoals.Enqueue(GameState.State.goalAttackCow);
     }
    
 }

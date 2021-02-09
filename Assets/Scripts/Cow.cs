@@ -14,6 +14,7 @@ public class Cow : MonoBehaviour, IHittable
     Transform mainCamera;
     float eatenFungus = 0;
     Rigidbody rb;
+    [SerializeField] Transform ground;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
@@ -34,8 +35,8 @@ public class Cow : MonoBehaviour, IHittable
     }
 
     void RandomWalk(){
-        StartCoroutine(MoveNearPlayer());
-        //StartCoroutine(MovingAround(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
+        //StartCoroutine(MoveNearPlayer());
+        StartCoroutine(MovingAround(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
         //StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
         //StartCoroutine(MovingAround(manager.spawner.EmptyNearbyLocation(manager.player.transform.position,5,15)));
     }
@@ -67,6 +68,8 @@ public class Cow : MonoBehaviour, IHittable
             counter--;
             yield return null;
         }
+        //ground will follow the cow so we never near edge of map
+        ground.position = new Vector3(transform.position.x,0,transform.position.z);
         RandomWalk();
     }
 
@@ -112,13 +115,13 @@ public class Cow : MonoBehaviour, IHittable
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.FungusPoop);
         manager.particles.EatingFungus(fungus.transform.position);
 
-        eatenFungus+=10;
+        eatenFungus++;
         birthBar.GetPropertyBlock(matBlockBirth);
-        matBlockBirth.SetFloat("_Fill", Mathf.Clamp(eatenFungus/100,0,1));
+        matBlockBirth.SetFloat("_Fill", Mathf.Clamp(eatenFungus/10,0,1));
         birthBar.SetPropertyBlock(matBlockBirth);
 
-        if (eatenFungus >= 100){ //once you've eaten 10 fungus you poop out a new buddy
-            eatenFungus-=100;
+        if (eatenFungus >= 10){ //once you've eaten 10 fungus you poop out a new buddy
+            eatenFungus=0;
             FindObjectOfType<Spawner>().SpawnCreature(poopPos.position);
         }
     }
