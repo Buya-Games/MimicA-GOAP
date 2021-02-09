@@ -16,9 +16,11 @@ public class GameManager : MonoBehaviour
     public bool debug;
     [SerializeField] CinemachineVirtualCamera vcam;
     public Gradient HeadColor;
-    [SerializeField] int playerDeathScore;
+    [SerializeField] int playerDeathBuddyCount;
     [HideInInspector] public bool PlayerAlive = true;
+    public int buddyLearningActions;
     [SerializeField] Transform camFollow;
+    int gameTime = 1;
     
 
     //Awake is called before Start
@@ -95,11 +97,14 @@ public class GameManager : MonoBehaviour
     }
 
     public void UpdateScore(){
-        if (spawner.ActiveBuddies.Count >= playerDeathScore){
+        if (spawner.ActiveBuddies.Count > playerDeathBuddyCount){
             PlayerDeath();
-            ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString() + " (Win at 20)";
+        }
+        ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString();
+        if (PlayerAlive){
+            ui.textPlayerPopulation.text = ui.textPlayerPopulation.text + " (Player Dies After " + playerDeathBuddyCount + ")";
         } else {
-            ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString() + " (Player Dies at " + playerDeathScore + ")";
+            ui.textPlayerPopulation.text = ui.textPlayerPopulation.text + " (Win at 20)";
         }
     }
 
@@ -138,5 +143,21 @@ public class GameManager : MonoBehaviour
             Debug.Log("you lost");
         }
     }
+
+    // public void SpeedUpTime(){
+    //     gameTime *= 2;
+    //     Time.timeScale = gameTime;
+    //     Time.fixedDeltaTime = Time.timeScale * 0.02f;
+    //     ui.textGameTime.text = "Game Speed: " + gameTime + "x";
+    // }
+
+    // public void SlowDownTime(){
+    //     if (gameTime > 1){
+    //         gameTime /= 2;
+    //         Time.timeScale = gameTime;
+    //         Time.fixedDeltaTime = Time.timeScale * 0.02f;
+    //         ui.textGameTime.text = "Game Speed: " + gameTime + "x";
+    //     }
+    // }
 
 }

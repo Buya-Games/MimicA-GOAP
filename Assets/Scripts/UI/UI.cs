@@ -13,6 +13,7 @@ public class UI : MonoBehaviour
     [SerializeField] TMP_Text textGUIName, textGUIGoals, textGUIActions;
     [SerializeField] GameObject canvasGUI;
     [HideInInspector] public bool GUI;
+    public TMP_Text textGameTime;
 
     void Start(){
         InitQueues();

@@ -38,11 +38,11 @@ public class GOAPPlan : MonoBehaviour
         Node startNode = new Node(fakeParentNode,0,goals,null);
         bool success = buildPath(startNode, leaves, agent.availableActions, worldState, agent);//try to build path directly to goal
 
-        if (!success){ //if no action can get us to the goal, see what actions are possible and judge based cost + # of actions they allow
+        if (!success){ //if no action can get us to the goal, see what actions are possible and judge based on motive alignment, etc
             List<GOAPAct> possibleActions = getPossibleActions(agent.availableActions,worldState);
             if (debug){Debug.Log(string.Format("[{0}] no direct path to goal ({1}) but looking at possible secondary actions",agent.name,goals[0]));}
             if (debug) {Tools.PrintList(agent.name, "POSSIBLE SECONDARY ACTIONS", possibleActions);}
-            bool lastResort = false;
+            bool secondaryActions = false;
             foreach (GOAPAct action in possibleActions){
                 float alignmentBonus = checkGoalAlignment((Buddy)agent,action);
                 if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
@@ -60,11 +60,27 @@ public class GOAPPlan : MonoBehaviour
                         secondaryActionNode.costBenefit -= (futureActions.Count * 5);
                     }
                     leaves.Add(secondaryActionNode);
-                    lastResort = true;
+                    secondaryActions = true;
                 }
             }
-            if (!lastResort){
-                return null;
+            if (!secondaryActions){//in absolute worst case, just look at anything you can do and what actions it will lead to 
+                bool lastResort = false;
+                foreach (GOAPAct action in possibleActions){
+                    Node lastResortNode = new Node(fakeParentNode, action.Cost, action.Preconditions, action);
+
+                    //additional benefit if more actions become possible after this
+                    List<GOAPAct> futureActions = getPossibleActions(agent.availableActions,GameState.CombineStates(worldState,action.Effects));
+                    if (futureActions.Count > 0){
+                        if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} leads to {4} more actions",
+                            agent.name,action,action.ActionLayer,action.ActionLayer2,futureActions.Count));}
+                        lastResortNode.costBenefit -= (futureActions.Count * 5);
+                    }
+                    leaves.Add(lastResortNode);
+                    lastResort = true;
+                }
+                if (!lastResort){
+                    return null;
+                }
             }
         }
 
@@ -101,6 +117,12 @@ public class GOAPPlan : MonoBehaviour
         foreach (GOAPAct action in goalActions){
             //create new node for each action (necessary if goalActions has more than 1 actions, otherwise they'll overwrite each other)
             Node thisNode = new Node(node.parent,action.Cost,node.goalState,action);
+            
+            //just for avoiding debugging crap
+            if (debug){
+                node.action = action;
+                node.costBenefit = action.Cost;
+            }
             
             //otherwise, this action has to be cheaper than parent (##WE MAKE A BIG ASSUMPTION THAT CHEAPER KIDS LEAD TO CHEAPER PARENTS)
             if (leaves.Count == 0 || thisNode.costBenefit < node.parent.costBenefit){

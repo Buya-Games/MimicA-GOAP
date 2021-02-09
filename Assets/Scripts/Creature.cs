@@ -135,7 +135,6 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     public void Eat(Spawner.EnvironmentType type){
-        Debug.Log("creature eating");
         if (type == Spawner.EnvironmentType.Berry){
             health = Mathf.Clamp(health + 50,50,100);
             manager.particles.EatingBerry(HeldItem.transform.position);

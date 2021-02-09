@@ -106,23 +106,16 @@ public class CreatureLogic : Creature
     protected List<GameState.State> HungryCheck(){
         List<GameState.State> whatToDo = new List<GameState.State>();
         if (health<50){//if hungry, start eating
+            whatToDo.Add(GameState.State.goalEat);
+
+            //just in case drop whatever you were carrying as it might impede action
             if (HeldItem != null){
                 DropItem();
             }
-            whatToDo.Add(GameState.State.goalEat);
-
-            //adding/removing eat cuz when they bored sometimes all they do is just keep eating
-            // if (!availableActions.Contains(eatBerry)){
-            //     availableActions.Add(eatBerry);
-            // }
         } else { //carry on with your goals
             GameState.State goal = myGoals.Dequeue();
-            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal but then more work for GOAPPlan
+            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal but more work for GOAPPlan
             myGoals.Enqueue(goal);
-
-            // if (availableActions.Contains(eatBerry)){
-            //     availableActions.Remove(eatBerry);
-            // }
         }
         return whatToDo;
     }

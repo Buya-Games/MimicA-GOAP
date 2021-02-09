@@ -77,7 +77,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void Drop(){
-        thrown = false;
+        //thrown = false;
         //accessible = true;
         //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         rb.velocity = Vector3.zero;
@@ -97,10 +97,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
         transform.position = higherPos;
-        // rb.velocity = Vector3.zero;
-        // rb.isKinematic = false;
-        // transform.parent = null;
-        // transform.localScale = origScale;
         Drop();
         Vector3 traj = CalculateTrajectory(where,throwStrength);
         if (!float.IsNaN(traj.x)){//##spits out weird number if target is in same position, so just checking for that exception
@@ -122,6 +118,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
 
     protected virtual void OnCollisionEnter(Collision col){
         if (thrown && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
+            Drop();
         //if (!accessible && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
             //Drop();
             if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
@@ -143,6 +140,10 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
                 manager.particles.BombExplosion(transform.position);
             }
+        }
+        if ((col.gameObject.layer == 14)// || col.gameObject.layer == 7 || col.gameObject.layer == 9 || col.gameObject.layer == 10 || col.gameObject.layer == 16) 
+            && (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop)){//if cow and this item is poop
+            Drop();
         }
         if (col.gameObject.layer == 13){//if player
             Player player = col.gameObject.GetComponent<Player>();

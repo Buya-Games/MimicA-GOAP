@@ -10,7 +10,7 @@ public class Buddy : CreatureLogic
 {
     Player player;
     [HideInInspector]public bool learning;
-    int learningActions = 10;//# of player actions that creature will observe to learn, then start mimicing
+    int learningActions;//# of player actions that creature will observe to learn, then start mimicing
     public float motiveReproduction, motiveHarvest, motiveAttack, motiveHelper;//the 4 possible goals of a creature
     
     protected override void Awake(){
@@ -37,14 +37,14 @@ public class Buddy : CreatureLogic
             myGoals.Enqueue(GameState.State.goalFollowPlayer);
             availableActions.Insert(0,new Follow());
             availableActions.Add(new Eat(7));
-            availableActions.Add(new Eat(9));
-            availableActions.Add(new Eat(10));
-            availableActions.Add(new Eat(16));
+            // availableActions.Add(new Eat(9));
+            // availableActions.Add(new Eat(10));
+            // availableActions.Add(new Eat(16));
             availableActions.Add(new PickupItem(7,false));
-            availableActions.Add(new PickupItem(9,false));
-            availableActions.Add(new PickupItem(10,false));
-            availableActions.Add(new PickupItem(16,false));
-            learningActions = availableActions.Count + 5;//buddies can learn 9 actions from the player
+            // availableActions.Add(new PickupItem(9,false));
+            // availableActions.Add(new PickupItem(10,false));
+            // availableActions.Add(new PickupItem(16,false));
+            learningActions = manager.buddyLearningActions;//availableActions.Count + 5;//buddies can learn 9 actions from the player
         
         //if player is dead, learn from another AI
         } else {
@@ -61,7 +61,7 @@ public class Buddy : CreatureLogic
     void LearnFromAI(){
         availableActions.Clear();
 
-        CreatureLogic learnFrom = null;//manager.spawner.Teachers.Dequeue();
+        CreatureLogic learnFrom = null;
         while (learnFrom == null){
             learnFrom = manager.spawner.Teachers.Dequeue();
         }
@@ -69,20 +69,10 @@ public class Buddy : CreatureLogic
         foreach (GOAPAct act in learnFrom.availableActions){
             if (!IsDupeAction(act)){
                 availableActions.Add(act.Clone());
-                //Debug.Log(string.Format("{0} learned {1}{2}-{3} from {4}",myName,a,a.ActionLayer,a.ActionLayer2,manager.spawner.ActiveBuddies[teacher]));
             }
         }
 
         int teacher = UnityEngine.Random.Range(0,manager.spawner.ActiveBuddies.Count);
-        // if (manager.spawner.ActiveBuddies[teacher] != null){
-        //     List<GOAPAct> teacherActions = manager.spawner.ActiveBuddies[teacher].GetComponent<CreatureLogic>().availableActions;
-        //     foreach (GOAPAct act in teacherActions){
-        //         if (!IsDupeAction(act)){
-        //             availableActions.Add(act.Clone());
-        //             //Debug.Log(string.Format("{0} learned {1}{2}-{3} from {4}",myName,a,a.ActionLayer,a.ActionLayer2,manager.spawner.ActiveBuddies[teacher]));
-        //         }
-        //     }
-        // }
 
         //learn one more random thing from a random person
         teacher = UnityEngine.Random.Range(0,manager.spawner.ActiveBuddies.Count);
@@ -199,21 +189,17 @@ public class Buddy : CreatureLogic
             }
         }
         Vector3 popUpPos = transform.position;
-        popUpPos.y-=10;
+        popUpPos.y-=5;
         manager.ui.DisplayMessage(popUpPos,popUp);
     }
 
     void TallyGoals(){
-        // availableActions.Remove(harvestBerry);
-        // availableActions.Remove(pickupBerry);
-        // availableActions.Remove(eatBerry);
         for (int i = 0;i<availableActions.Count;i++){
             motiveAttack+=availableActions[i].motiveAttack;
             motiveHarvest+=availableActions[i].motiveHarvest;
             motiveReproduction+=availableActions[i].motiveReproduction;
             motiveHelper+=availableActions[i].motiveHelper;
         }
-        //AddCoreSkills();
     }
 
     void OnMouseDown(){

@@ -6,19 +6,19 @@ public class Eat: GOAPAct
         ActionLayer = itemLayer;
         if (ActionLayer == 7){
             Preconditions.Add(GameState.State.itemBerry);
-            coreCost = -100;//gotta eat! so "cost" is lowest
+            coreCost = -200;//gotta eat! so "cost" is lowest. and berry is best thing to eat so eat that
         }
         if (ActionLayer == 9){
             Preconditions.Add(GameState.State.itemFungus);
-            coreCost = -50;//gotta eat! so "cost" is lowest
+            coreCost = -20; 
         }
         if (ActionLayer == 10){
             Preconditions.Add(GameState.State.itemBerryPoop);
-            coreCost = -10;//gotta eat! so "cost" is lowest
+            coreCost = 30;//eating poop is pretty bad so try not to do it
         }
         if (ActionLayer == 16){
             Preconditions.Add(GameState.State.itemFungusPoop);
-            coreCost = -10;//gotta eat! so "cost" is lowest
+            coreCost = 30;//eating poop is pretty bad so try not to do it
         }
         Effects.Add(GameState.State.goalEat);
         Effects.Add(GameState.State.itemNone);
@@ -43,9 +43,7 @@ public class Eat: GOAPAct
     }
 
     public override bool PerformEvent(Creature agent){
-        Debug.Log("performing eat");
         if (agent.HeldItem != null){
-            Debug.Log("eat: item not null");
             agent.Eat(agent.HeldItem.GetComponent<Item>().MyType);
             return true;
         } else {
