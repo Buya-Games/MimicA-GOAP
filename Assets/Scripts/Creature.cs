@@ -49,7 +49,7 @@ public class Creature : MonoBehaviour, IHittable
         MyStats = new Stats();
         MyStats.Strength = 1;
         MyStats.Speed = Random.Range(1.9f,2.1f);//just to give everything a bit variability
-        MyStats.Range = 10;
+        MyStats.Range = 15;
         MyStats.Accuracy = 1;
         MyStats.HarvestSkill = 1;
     }
@@ -135,7 +135,7 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     public void Eat(Spawner.EnvironmentType type){
-        HeldItem.GetComponent<Item>().Drop();//not using DropItem cuz it causes a conflict.... it's a turd i know i need to clean it up
+        Debug.Log("creature eating");
         if (type == Spawner.EnvironmentType.Berry){
             health = Mathf.Clamp(health + 50,50,100);
             manager.particles.EatingBerry(HeldItem.transform.position);
@@ -149,6 +149,7 @@ public class Creature : MonoBehaviour, IHittable
             manager.particles.BombExplosion(HeldItem.transform.position);
             
         }
+        //HeldItem.GetComponent<Item>().Drop();//not using DropItem cuz it causes a conflict.... it's a turd i know i need to clean it up
         manager.spawner.DespawnEnvironment(HeldItem,type);
         HeldItem = null;
     }

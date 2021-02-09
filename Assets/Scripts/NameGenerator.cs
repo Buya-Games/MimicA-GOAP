@@ -9,7 +9,7 @@ public static class NameGenerator
         string rando = "";
         //bool vowel = false;
         int nameLength = Random.Range(3,6);
-        int vowelChance = Random.Range(1,10);
+        int vowelChance = Random.Range(1,9);
         for (int i = 0;i<nameLength;i++){
             int character;
             if (vowelChance > 6){

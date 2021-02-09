@@ -36,7 +36,15 @@ public class Buddy : CreatureLogic
             //give buddies the basic goal of following the player
             myGoals.Enqueue(GameState.State.goalFollowPlayer);
             availableActions.Insert(0,new Follow());
-            learningActions = availableActions.Count + 9;//buddies can learn 9 actions from the player
+            availableActions.Add(new Eat(7));
+            availableActions.Add(new Eat(9));
+            availableActions.Add(new Eat(10));
+            availableActions.Add(new Eat(16));
+            availableActions.Add(new PickupItem(7,false));
+            availableActions.Add(new PickupItem(9,false));
+            availableActions.Add(new PickupItem(10,false));
+            availableActions.Add(new PickupItem(16,false));
+            learningActions = availableActions.Count + 5;//buddies can learn 9 actions from the player
         
         //if player is dead, learn from another AI
         } else {

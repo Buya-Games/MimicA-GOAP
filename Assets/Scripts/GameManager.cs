@@ -97,6 +97,7 @@ public class GameManager : MonoBehaviour
     public void UpdateScore(){
         if (spawner.ActiveBuddies.Count >= playerDeathScore){
             PlayerDeath();
+            ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString() + " (Win at 20)";
         } else {
             ui.textPlayerPopulation.text = "Buddy Population: " + (spawner.ActiveBuddies.Count).ToString() + " (Player Dies at " + playerDeathScore + ")";
         }

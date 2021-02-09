@@ -10,9 +10,9 @@ public class MeleeAttack : GOAPAct
         ActionSkill = playerAbility;//player performance during training sets the action's base effectiveness
         Preconditions.Add(GameState.State.itemNone); 
         if (ActionLayer == 6){//if attacking bush
-            motiveHarvest++;
             Preconditions.Add(GameState.State.availBush);
             Effects.Add(GameState.State.availBerry);
+            motiveHarvest++;
         }
         if (ActionLayer == 8){//if attacking mushroom
             motiveReproduction++;

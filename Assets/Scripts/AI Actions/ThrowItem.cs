@@ -84,7 +84,7 @@ public class ThrowItem : GOAPAct
                 
             }
             //throw at random open area near cow
-            throwTargetPos.transform.position = manager.spawner.EmptyNearbyLocation(cow.transform.position,0,10);
+            throwTargetPos.transform.position = manager.spawner.EmptyNearbyLocation(cow.transform.position,5,15);
             target = throwTargetPos;
             throwTargetPos.transform.parent = agent.transform;
         }

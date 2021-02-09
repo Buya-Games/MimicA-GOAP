@@ -193,49 +193,49 @@ public class Spawner : MonoBehaviour
         item.transform.SetParent(transform);
     }
 
-    public void ThrowOrPickUpObject(GameObject item, EnvironmentType type, bool add = false){
-        if (add){
-            if (type == EnvironmentType.Fungus && !ActiveFungus.Contains(item)){
-                ActiveFungus.Add(item);
-                manager.CurrentState.Add(GameState.State.availFungus);
-            } else if (type == EnvironmentType.Berry && !ActiveBerries.Contains(item)){
-                ActiveBerries.Add(item);
-                manager.CurrentState.Add(GameState.State.availBerry);
-            } else if (type == EnvironmentType.BerryPoop && !ActiveBerryPoop.Contains(item)){
-                ActiveBerryPoop.Add(item);
-                manager.CurrentState.Add(GameState.State.availBerryPoop);
-            } else if (type == EnvironmentType.FungusPoop && !ActiveFungusPoop.Contains(item)){
-                ActiveFungusPoop.Add(item);
-                manager.CurrentState.Add(GameState.State.availFungusPoop);
-            } else if (type == EnvironmentType.Bush && !ActiveBushes.Contains(item)){
-                ActiveBushes.Add(item);
-                manager.CurrentState.Add(GameState.State.availBush);
-            } else if (type == EnvironmentType.Mushroom && !ActiveMushrooms.Contains(item)){
-                ActiveMushrooms.Add(item);
-                manager.CurrentState.Add(GameState.State.availMushroom);
-            }
-        } else {
-            if (type == EnvironmentType.Fungus && ActiveFungus.Contains(item)){
-                ActiveFungus.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availFungus);
-            } else if (type == EnvironmentType.Berry && ActiveBerries.Contains(item)){
-                ActiveBerries.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availBerry);
-            } else if (type == EnvironmentType.BerryPoop && ActiveBerryPoop.Contains(item)){
-                ActiveBerryPoop.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availBerryPoop);
-            } else if (type == EnvironmentType.FungusPoop && ActiveFungusPoop.Contains(item)){
-                ActiveFungusPoop.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availFungusPoop);
-            } else if (type == EnvironmentType.Bush && ActiveBushes.Contains(item)){
-                ActiveBushes.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availBush);
-            } else if (type == EnvironmentType.Mushroom && ActiveMushrooms.Contains(item)){
-                ActiveMushrooms.Remove(item);
-                manager.CurrentState.Remove(GameState.State.availMushroom);
-            }
-        }
-    }
+    // public void ThrowOrPickUpObject(GameObject item, EnvironmentType type, bool add = false){
+    //     if (add){
+    //         if (type == EnvironmentType.Fungus && !ActiveFungus.Contains(item)){
+    //             ActiveFungus.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availFungus);
+    //         } else if (type == EnvironmentType.Berry && !ActiveBerries.Contains(item)){
+    //             ActiveBerries.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availBerry);
+    //         } else if (type == EnvironmentType.BerryPoop && !ActiveBerryPoop.Contains(item)){
+    //             ActiveBerryPoop.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availBerryPoop);
+    //         } else if (type == EnvironmentType.FungusPoop && !ActiveFungusPoop.Contains(item)){
+    //             ActiveFungusPoop.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availFungusPoop);
+    //         } else if (type == EnvironmentType.Bush && !ActiveBushes.Contains(item)){
+    //             ActiveBushes.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availBush);
+    //         } else if (type == EnvironmentType.Mushroom && !ActiveMushrooms.Contains(item)){
+    //             ActiveMushrooms.Add(item);
+    //             manager.CurrentState.Add(GameState.State.availMushroom);
+    //         }
+    //     } else {
+    //         if (type == EnvironmentType.Fungus && ActiveFungus.Contains(item)){
+    //             ActiveFungus.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availFungus);
+    //         } else if (type == EnvironmentType.Berry && ActiveBerries.Contains(item)){
+    //             ActiveBerries.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availBerry);
+    //         } else if (type == EnvironmentType.BerryPoop && ActiveBerryPoop.Contains(item)){
+    //             ActiveBerryPoop.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availBerryPoop);
+    //         } else if (type == EnvironmentType.FungusPoop && ActiveFungusPoop.Contains(item)){
+    //             ActiveFungusPoop.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availFungusPoop);
+    //         } else if (type == EnvironmentType.Bush && ActiveBushes.Contains(item)){
+    //             ActiveBushes.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availBush);
+    //         } else if (type == EnvironmentType.Mushroom && ActiveMushrooms.Contains(item)){
+    //             ActiveMushrooms.Remove(item);
+    //             manager.CurrentState.Remove(GameState.State.availMushroom);
+    //         }
+    //     }
+    // }
     public Vector3 EmptyLocation(){
         int posNegX = Random.Range(0,2)*2-1;
         int posNegZ = Random.Range(0,2)*2-1;

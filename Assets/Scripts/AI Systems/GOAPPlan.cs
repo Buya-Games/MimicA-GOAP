@@ -34,16 +34,9 @@ public class GOAPPlan : MonoBehaviour
         }
         
         List<Node> leaves = new List<Node>();
-        Node fakeParentNode = new Node(null,1000,goals,new Fake());//a fake node so we don't trigger alerts in debug.log
+        Node fakeParentNode = new Node(null,1000,goals,new Fake());//a fake node so we don't trigger alerts in debug.log. it's stupid just delete it after debugging
         Node startNode = new Node(fakeParentNode,0,goals,null);
         bool success = buildPath(startNode, leaves, agent.availableActions, worldState, agent);//try to build path directly to goal
-
-        // if (debug){
-        //     Debug.Log(string.Format("------------------ {0} leaves after graph build ({1}) ------------------",leaves.Count,agent.name));
-        //     for (int i = 0;i<leaves.Count;i++){
-        //         Debug.Log(string.Format("[{0}] {1} : {2}",agent.name,leaves[i].action,leaves[i].costBenefit));
-        //     }
-        // }
 
         if (!success){ //if no action can get us to the goal, see what actions are possible and judge based cost + # of actions they allow
             List<GOAPAct> possibleActions = getPossibleActions(agent.availableActions,worldState);
@@ -75,13 +68,6 @@ public class GOAPPlan : MonoBehaviour
             }
         }
 
-        // if (debug){
-        //     Debug.Log(string.Format("------------------ {0} leaves after secondary action search search ({1}) ------------------",leaves.Count,agent.name));
-        //     for (int i = 0;i<leaves.Count;i++){
-        //         Debug.Log(string.Format("[{0}] {1} : {2}",agent.name,leaves[i].action,leaves[i].costBenefit));
-        //     }
-        // }
-
         tallyParentCosts(leaves,agent);
 
         // get its node and work back through the parents
@@ -99,8 +85,6 @@ public class GOAPPlan : MonoBehaviour
             if (debug){Debug.Log(string.Format("[{0}] adding {1}{2}-{3} to the queue", agent.name, e,e.ActionLayer,e.ActionLayer2));}
 			plan.Enqueue(e);
 		}
-        // if (debug){Debug.Log(string.Format("[{0}] first action in queue: {1}{2}-{3} to the queue", 
-        //     agent.name, plan.Peek(),plan.Peek().ActionLayer,plan.Peek().ActionLayer2));}
         return plan;
     }
 
@@ -115,39 +99,44 @@ public class GOAPPlan : MonoBehaviour
             Tools.PrintList(agent.name, "ACTIONS SATISFYING GOAL STATE", goalActions);
         }
         foreach (GOAPAct action in goalActions){
-            node.costBenefit = action.Cost;
-            //node.costBenefit = action.EstimateActionCost(agent);
-            node.action = action;
-            //if not paths found (leaves.Count == 0) then ignore cheaper check
+            //create new node for each action (necessary if goalActions has more than 1 actions, otherwise they'll overwrite each other)
+            Node thisNode = new Node(node.parent,action.Cost,node.goalState,action);
+            
             //otherwise, this action has to be cheaper than parent (##WE MAKE A BIG ASSUMPTION THAT CHEAPER KIDS LEAD TO CHEAPER PARENTS)
-            if (leaves.Count == 0 || node.costBenefit < node.parent.costBenefit){
+            if (leaves.Count == 0 || thisNode.costBenefit < node.parent.costBenefit){
                 if (GameState.CompareStates(action.Preconditions,worldState)){//if can be performed in current state
                     if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can be performed now, so addding it to leaves",
-                        agent.name, action, action.ActionLayer,action.ActionLayer2,node.costBenefit));}
-                    leaves.Add(node);
+                        agent.name, action, action.ActionLayer,action.ActionLayer2,thisNode.costBenefit));}
+                    leaves.Add(thisNode);
                     foundPath = true;
                 } //else {
-                    // if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can't be performed now but looking if other actions can meet its preconditions",
-                    //     agent.name, action, action.ActionLayer,action.ActionLayer2,node.costBenefit));}
 
-                    //new node to check if another action can lead to this action at a cheaper cost
-                    Node childNode = new Node(node, 0, action.Preconditions, null);
+                    //create new node to check if other actions can allow current action at cheaper cost
+                    //honestly we don't need this transitionNode cuz it's never actually used, but I'm too tired to fix my spaghetti
+                    Node transitionNode = new Node(thisNode, 0, action.Preconditions, null);
 
                     //if cheaper actions do exist, then create a new path with a new cost
-                    if (buildPath(childNode,leaves,Tools.ListSubset(availActions,action),worldState,agent)){
+                    if (buildPath(transitionNode,leaves,Tools.ListSubset(availActions,action),worldState,agent)){
                         //Node newPathNode = new Node(node.parent,childNode.costBenefit,node.goalState,action);
                         if (debug){Debug.Log(string.Format("[{0}] new path found {1}{2}-{3} ({4}) via child {5}{6}-{7} ({8})",
-                            agent.name,node.action,node.action.ActionLayer,node.action.ActionLayer2,node.costBenefit,
-                            childNode.action,childNode.action.ActionLayer,childNode.action.ActionLayer2,childNode.costBenefit));}
+                            agent.name,thisNode.action,thisNode.action.ActionLayer,thisNode.action.ActionLayer2,thisNode.costBenefit,
+                            transitionNode.action,transitionNode.action.ActionLayer,transitionNode.action.ActionLayer2,transitionNode.costBenefit));}
                         foundPath = true;
                     }
                 //}
             } else {
                 if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) wasn't cheaper than parent {5}{6}-{7} ({8})",
-                    agent.name, action, action.ActionLayer,action.ActionLayer2,node.costBenefit,
-                    node.parent.action,node.parent.action.ActionLayer,node.parent.action.ActionLayer2,node.parent.costBenefit));}
+                    agent.name, action, action.ActionLayer,action.ActionLayer2,thisNode.costBenefit,
+                    thisNode.parent.action,thisNode.parent.action.ActionLayer,thisNode.parent.action.ActionLayer2,thisNode.parent.costBenefit));}
             }
         }
+        // if (debug){
+        //     Debug.Log(string.Format("------------------ {0} leaves ------------------",leaves.Count));
+        //     for (int i = 0;i<leaves.Count;i++){
+        //         Debug.Log(string.Format("[{0}] {1}{2}-{3} : {4}",agent.name,leaves[i].action,
+        //             leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));
+        //     }
+        // }
         return foundPath;
     }
 

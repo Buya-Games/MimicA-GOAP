@@ -19,9 +19,10 @@ public static class GhettoAnimations
     }
 
     public static IEnumerator FallOver(Transform deadThing){
+        int posNeg = Random.Range(0,2)*2-1;//using this so he might fall left or right
         float fallAngle = 0;
         Vector3 rot = deadThing.rotation.eulerAngles;
-        while (fallAngle > -90){
+        while (fallAngle > 90 * posNeg){
             fallAngle-=2;
             rot.z = fallAngle;
             deadThing.transform.rotation = Quaternion.Euler(rot);

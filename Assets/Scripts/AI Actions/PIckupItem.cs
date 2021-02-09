@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 public class PickupItem : GOAPAct
 {
-    public PickupItem(int itemLayer){
+    public PickupItem(int itemLayer, bool trackMotive = true){
         Init(); 
         eventRange = 3; //distance necessary to pickup an item
         ActionLayer = itemLayer;
@@ -10,24 +10,33 @@ public class PickupItem : GOAPAct
         if (ActionLayer == 7){
             Preconditions.Add(GameState.State.availBerry);
             Effects.Add(GameState.State.itemBerry);
-            motiveHarvest++;
+            if (trackMotive){
+                motiveHarvest++;
+            }
         }
         if (ActionLayer == 9){
             Preconditions.Add(GameState.State.availFungus);
             Effects.Add(GameState.State.itemFungus);
-            motiveReproduction++;
+            if (trackMotive){
+                motiveReproduction++;
+            }
+            
         }
         if (ActionLayer == 10){
             Preconditions.Add(GameState.State.availBerryPoop);
             Effects.Add(GameState.State.itemBerryPoop);
-            motiveHarvest++;
-            motiveAttack++;
+            if (trackMotive){
+                motiveHarvest++;
+                motiveAttack++;
+            }
         }
         if (ActionLayer == 16){
             Preconditions.Add(GameState.State.availFungusPoop);
             Effects.Add(GameState.State.itemFungusPoop);
-            motiveReproduction++;
-            motiveAttack++;
+            if (trackMotive){
+                motiveReproduction++;
+                motiveAttack++;
+            }
         }
     }
 

@@ -9,10 +9,11 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     float gravity;
     float height = 5;
     public Spawner.EnvironmentType MyType;
-    bool accessible = true;//once object is pickedup/thrown it is inaccessible until it drops
+    //bool accessible = true;//once object is pickedup/thrown it is inaccessible until it drops
     Vector3 origScale;
     public GameObject Owner { get; set; }
     public GameObject gameObj { get; set; }
+    bool thrown = false;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
@@ -39,19 +40,19 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void Targeted(GameObject who){
-        if (accessible){
-            accessible = false;
+        //if (accessible){
+            //accessible = false;
             Owner = who;
             //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        }
+        //}
     }
 
     public void NotTargeted(){
-        if (!accessible){
-            accessible = true;
+        // if (!accessible){
+        //     accessible = true;
             Owner = null;
             //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        }
+        //}
     }
 
     public GameObject ThisGameObject(){
@@ -59,7 +60,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void PickUp(Creature agent){
-        accessible = false;
+        //accessible = false;
         //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         Vector3 pos = agent.visibleMesh.position;
         pos.y += 3;
@@ -76,7 +77,8 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void Drop(){
-        accessible = true;
+        thrown = false;
+        //accessible = true;
         //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
@@ -86,18 +88,20 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void ThrowObject(Vector3 where, float throwStrength){
-        if (accessible){
-            accessible = false;
-            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
-        }
+        // if (accessible){
+        //     accessible = false;
+        //     //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
+        // }
 
+        thrown = true;
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
         transform.position = higherPos;
-        rb.velocity = Vector3.zero;
-        rb.isKinematic = false;
-        transform.parent = null;
-        transform.localScale = origScale;
+        // rb.velocity = Vector3.zero;
+        // rb.isKinematic = false;
+        // transform.parent = null;
+        // transform.localScale = origScale;
+        Drop();
         Vector3 traj = CalculateTrajectory(where,throwStrength);
         if (!float.IsNaN(traj.x)){//##spits out weird number if target is in same position, so just checking for that exception
             rb.velocity = CalculateTrajectory(where, throwStrength);
@@ -117,13 +121,15 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     protected virtual void OnCollisionEnter(Collision col){
-        if (!accessible && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
-            Drop();
+        if (thrown && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
+        //if (!accessible && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
+            //Drop();
             if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
                 BombBoom();
             }
         }
-        if (!accessible && col.gameObject.layer == 4){//if collide with ground after it has been thrown
+        if (thrown && col.gameObject.layer == 4){//if collide with ground after it has been thrown
+        //if (!accessible && col.gameObject.layer == 4){//if collide with ground after it has been thrown
             Drop();
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = 0f;
@@ -151,6 +157,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 }
             }
         }
+        thrown = false;
     }
 
     void BombBoom(){
