@@ -5,25 +5,25 @@ using UnityEngine;
 public class Resources : MonoBehaviour, ITargettable
 {
     bool accessible;
-    //Spawner.EnvironmentType MyType;
+    public Spawner.EnvironmentType MyType;
     GameManager manager;
     [SerializeField] public GameObject Owner { get; set; }
     public GameObject gameObj { get; set; }
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
-        //SetType();
+        SetType();
         gameObj = gameObject;
     }
 
-    // void SetType(){
-    //     if (gameObject.layer == 6){
-    //         MyType = Spawner.EnvironmentType.Bush;
-    //     }
-    //     if (gameObject.layer == 8){
-    //         MyType = Spawner.EnvironmentType.Mushroom;
-    //     }
-    // }
+    void SetType(){
+        if (gameObject.layer == 6){
+            MyType = Spawner.EnvironmentType.Bush;
+        }
+        if (gameObject.layer == 8){
+            MyType = Spawner.EnvironmentType.Mushroom;
+        }
+    }
     public void Targeted(GameObject who){
         if (accessible){
             accessible = false;

@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using DG.Tweening;
+using UnityEngine.UI;
 
 public class UI : MonoBehaviour
 {
-    public TMP_Text textPlayerPopulation, textEnemyPopulation;
-    [SerializeField] TMP_Text textTimer;
+    public TMP_Text textPlayerPopulation, textTutorial;
+    [SerializeField] TMP_Text textTitle, textResult;
+    [SerializeField] GameObject btnStartGame;
+    public Toggle ToggleTutorial;
     [SerializeField] TMP_Text textPopUpPrefab;
     Queue<TMP_Text> popUpQueue = new Queue<TMP_Text>();
     [SerializeField] TMP_Text textGUIName, textGUIGoals, textGUIActions;
     [SerializeField] GameObject canvasGUI;
     [HideInInspector] public bool GUI;
-    public TMP_Text textGameTime;
+    [SerializeField] GameObject panelPause;
 
     void Start(){
         InitQueues();
+        
     }
 
     void InitQueues(){
@@ -31,6 +35,29 @@ public class UI : MonoBehaviour
         string text = message + subText;
         PopUp(where,text);
 
+    }
+
+    public void StartGame(){
+        panelPause.SetActive(false);
+        textTitle.gameObject.SetActive(false);
+        textResult.gameObject.SetActive(false);
+    }
+
+    public void EndGame(bool win = true){
+        panelPause.SetActive(true);
+        btnStartGame.GetComponentInChildren<TMP_Text>().text = "Play Again";
+
+        if (win){
+            textResult.text = "You won!";
+        } else {
+            textResult.text = "You lost :(";
+        }
+        textResult.gameObject.SetActive(true);
+    }
+
+    public void PauseGame(bool pause = true){
+        panelPause.SetActive(pause);
+        btnStartGame.GetComponentInChildren<TMP_Text>().text = "Restart";
     }
 
     public void DisplayAction(Vector3 where, GOAPAct action, string subText = ""){

@@ -36,14 +36,16 @@ public class PlayerControl : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.E)){
                 player.EatItem();
             }
+            if (Input.GetKeyDown(KeyCode.Escape)){
+                manager.PauseGame();
+            }
+            if (Input.GetKeyDown(KeyCode.B)){
+                manager.spawner.SpawnCreature(transform.position);
+            }
+            if (Input.GetKeyDown(KeyCode.V)){
+                manager.spawner.SpawnCreature(manager.spawner.EmptyNearbyLocation(transform.position,15,20),true);
+            }
         }
-        // if (Input.GetMouseButtonDown(0)){
-        //     if (manager.ui.GUI){
-        //         manager.ui.ClearGUI();
-        //     }
-        // }
-        // bobHeight = Mathf.Sin(Time.time * 4);//just making the figure bob up and down
-        // visibleMesh.position = visibleMesh.position + transform.up * bobHeight;
     }
 
     // FixedUpdate is called once per physics frame (everytime physics is re-calculated)
@@ -74,7 +76,7 @@ public class PlayerControl : MonoBehaviour
 
     public int ThrowingTarget(Vector3 pos){ //looks at where mouse is to figure out what you're trying to throw at (cow, enemy, random spot)
         int targetLayer = 4;
-        Collider[] nearbyObjects = Physics.OverlapSphere(pos,1,throwingLM);//check surroundings for stuff
+        Collider[] nearbyObjects = Physics.OverlapSphere(pos,2,throwingLM);//check surroundings for stuff
         if (nearbyObjects.Length>0){
             GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,pos);
             targetLayer = closest.layer;
@@ -104,7 +106,7 @@ public class PlayerControl : MonoBehaviour
     }
 
     void MouseHighlight(Vector3 mousePos){
-        Collider[] nearbyObjects = Physics.OverlapSphere(mousePos,1,throwingLM);//check surroundings for stuff
+        Collider[] nearbyObjects = Physics.OverlapSphere(mousePos,2,throwingLM);//check surroundings for stuff
         if (nearbyObjects.Length>0){
             GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,mousePos);
             if (closest != null){

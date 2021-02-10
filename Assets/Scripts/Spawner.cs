@@ -34,7 +34,8 @@ public class Spawner : MonoBehaviour
     }
     
     void InitializeQueues(){
-        for (int i = 0;i<5;i++){
+        for (int i = 0;i<10;i++){
+            ActualSpawn(treePrefab,treeQueue);
             ActualSpawn(bushPrefab,bushQueue);
             ActualSpawn(berryPrefab,berryQueue);
             ActualSpawn(mushroomPrefab,mushroomQueue);
@@ -46,7 +47,7 @@ public class Spawner : MonoBehaviour
 
     void ActualSpawn(GameObject prefab, Queue<GameObject> thingQueue){
         GameObject newThing = Instantiate(prefab);
-        newThing.transform.SetParent(transform);
+        //newThing.transform.SetParent(transform);
         newThing.SetActive(false);
         thingQueue.Enqueue(newThing);
     }
@@ -70,6 +71,16 @@ public class Spawner : MonoBehaviour
         manager.UpdateScore();
     }
 
+    public void Despawn(GameObject what){
+        if (what.GetComponent<Item>() != null){
+            DespawnEnvironment(what,what.GetComponent<Item>().MyType);
+        } else if (what.GetComponent<Resources>() != null){
+            DespawnEnvironment(what,what.GetComponent<Resources>().MyType);
+        } else {
+            DespawnCreature(what);
+        }
+    }
+
     public void DespawnCreature(GameObject who){
         if (who.GetComponent<Buddy>() != null){ //if its a buddy
             ActiveBuddies.Remove(who);
@@ -82,6 +93,10 @@ public class Spawner : MonoBehaviour
         manager.ui.DisplayMessage(who.transform.position,who.name + " died!");
         manager.UpdateScore();
         StartCoroutine(GhettoAnimations.FallOver(who.transform));
+
+        if (!manager.PlayerAlive && ActiveBuddies.Count == 0){
+            manager.GameOver(false);
+        }
     }
 
     public void SpawnEnvironment(Vector3 spawnPos, EnvironmentType type){
@@ -127,37 +142,40 @@ public class Spawner : MonoBehaviour
             newItem = useQueue.Dequeue();
         } else {
             newItem = Instantiate(usePrefab);
-            newItem.transform.SetParent(transform);
+            //newItem.transform.SetParent(transform);
         }
-        useList.Add(newItem);
+        if (newItem != null){//dunno why but I had this exception thrown once
+            useList.Add(newItem);
 
-        newItem.transform.position = spawnPos;
-        Vector3 randoRot = newItem.transform.rotation.eulerAngles;
+            Vector3 randoRot = newItem.transform.rotation.eulerAngles;
 
-        if (type == EnvironmentType.Mushroom){
-            randoRot.y = Random.Range(-360,360); //random rotation just to add some diversity
-        } else {
-            randoRot.z = Random.Range(-360,360); //random rotation just to add some diversity
-        }
-        newItem.transform.rotation = Quaternion.Euler(randoRot);
+            if (type == EnvironmentType.Mushroom){
+                randoRot.y = Random.Range(-360,360); //random rotation just to add some diversity
+            } else {
+                randoRot.z = Random.Range(-360,360); //random rotation just to add some diversity
+            }
+            newItem.transform.rotation = Quaternion.Euler(randoRot);
 
-        if (type == EnvironmentType.Berry || type == EnvironmentType.Fungus){
-            Vector3 rando = new Vector3(Random.Range(-.1f,.1f),1,Random.Range(-.1f,.1f));
-            newItem.GetComponent<Rigidbody>().velocity = rando * 15;
-        }
+            if (type == EnvironmentType.Berry || type == EnvironmentType.Fungus){
+                Vector3 rando = new Vector3(Random.Range(-.1f,.1f),1,Random.Range(-.1f,.1f));
+                newItem.GetComponent<Rigidbody>().velocity = rando * 15;
+                spawnPos.x += Random.Range(-.5f,.5f);//a small offset for when u spawn 2 at a time
+            }
 
-        if (type == EnvironmentType.BerryPoop || type == EnvironmentType.FungusPoop){
-            Vector3 poopedOut = new Vector3(Random.Range(-.2f,.2f),0,-1);
-            newItem.GetComponent<Rigidbody>().velocity = poopedOut * Random.Range(3,8);
-        }
-        newItem.SetActive(true);
+            if (type == EnvironmentType.BerryPoop || type == EnvironmentType.FungusPoop){
+                Vector3 poopedOut = new Vector3(Random.Range(-.2f,.2f),0,-1);
+                newItem.GetComponent<Rigidbody>().velocity = poopedOut * Random.Range(3,8);
+            }
+            newItem.transform.position = spawnPos;
+            newItem.SetActive(true);
 
-        if (type == EnvironmentType.Bush || type == EnvironmentType.Mushroom){
-            Vector3 origScale = newItem.transform.localScale;
-            newItem.transform.localScale = Vector3.zero;
-            newItem.transform.DOScale(origScale,0.01f).OnComplete(() => {
-                newItem.transform.DOPunchScale(origScale*0.6f,0.5f,10,0.1f);
-            });
+            if (type == EnvironmentType.Bush || type == EnvironmentType.Mushroom){
+                Vector3 origScale = newItem.transform.localScale;
+                newItem.transform.localScale = Vector3.zero;
+                newItem.transform.DOScale(origScale,0.01f).OnComplete(() => {
+                    newItem.transform.DOPunchScale(origScale*0.6f,0.5f,10,0.1f);
+                });
+            }
         }
     }
 
@@ -190,56 +208,40 @@ public class Spawner : MonoBehaviour
             manager.CurrentState.Remove(GameState.State.availFungusPoop);
         }
         item.SetActive(false);
-        item.transform.SetParent(transform);
+        //item.transform.SetParent(transform);
     }
 
-    // public void ThrowOrPickUpObject(GameObject item, EnvironmentType type, bool add = false){
-    //     if (add){
-    //         if (type == EnvironmentType.Fungus && !ActiveFungus.Contains(item)){
-    //             ActiveFungus.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availFungus);
-    //         } else if (type == EnvironmentType.Berry && !ActiveBerries.Contains(item)){
-    //             ActiveBerries.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availBerry);
-    //         } else if (type == EnvironmentType.BerryPoop && !ActiveBerryPoop.Contains(item)){
-    //             ActiveBerryPoop.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availBerryPoop);
-    //         } else if (type == EnvironmentType.FungusPoop && !ActiveFungusPoop.Contains(item)){
-    //             ActiveFungusPoop.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availFungusPoop);
-    //         } else if (type == EnvironmentType.Bush && !ActiveBushes.Contains(item)){
-    //             ActiveBushes.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availBush);
-    //         } else if (type == EnvironmentType.Mushroom && !ActiveMushrooms.Contains(item)){
-    //             ActiveMushrooms.Add(item);
-    //             manager.CurrentState.Add(GameState.State.availMushroom);
-    //         }
-    //     } else {
-    //         if (type == EnvironmentType.Fungus && ActiveFungus.Contains(item)){
-    //             ActiveFungus.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availFungus);
-    //         } else if (type == EnvironmentType.Berry && ActiveBerries.Contains(item)){
-    //             ActiveBerries.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availBerry);
-    //         } else if (type == EnvironmentType.BerryPoop && ActiveBerryPoop.Contains(item)){
-    //             ActiveBerryPoop.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availBerryPoop);
-    //         } else if (type == EnvironmentType.FungusPoop && ActiveFungusPoop.Contains(item)){
-    //             ActiveFungusPoop.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availFungusPoop);
-    //         } else if (type == EnvironmentType.Bush && ActiveBushes.Contains(item)){
-    //             ActiveBushes.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availBush);
-    //         } else if (type == EnvironmentType.Mushroom && ActiveMushrooms.Contains(item)){
-    //             ActiveMushrooms.Remove(item);
-    //             manager.CurrentState.Remove(GameState.State.availMushroom);
-    //         }
-    //     }
-    // }
+    public void CleanUp(){
+        for (int i = 0;i<ActiveBushes.Count;i++){
+            Despawn(ActiveBushes[i]);
+        }
+        for (int i = 0;i<ActiveBerries.Count;i++){
+            Despawn(ActiveBerries[i]);
+        }
+        for (int i = 0;i<ActiveBerryPoop.Count;i++){
+            Despawn(ActiveBerryPoop[i]);
+        }
+        for (int i = 0;i<ActiveFungusPoop.Count;i++){
+            Despawn(ActiveFungusPoop[i]);
+        }
+        for (int i = 0;i<ActiveMushrooms.Count;i++){
+            Despawn(ActiveMushrooms[i]);
+        }
+        for (int i = 0;i<ActiveFungus.Count;i++){
+            Despawn(ActiveFungus[i]);
+        }
+        for (int i = 0;i<ActiveEnemies.Count;i++){
+            Despawn(ActiveEnemies[i]);
+        }
+        for (int i = 0;i<ActiveBuddies.Count;i++){ 
+            Despawn(ActiveBuddies[i]);
+        }
+    }
+
     public Vector3 EmptyLocation(){
         int posNegX = Random.Range(0,2)*2-1;
         int posNegZ = Random.Range(0,2)*2-1;
-        int maxRadius = 1- + ActiveBuddies.Count;
+        int maxRadius = ActiveBuddies.Count + 10;
         Vector3 pos = manager.cow.transform.position + new Vector3(Random.Range(5,maxRadius)*posNegX,0,Random.Range(5,maxRadius)*posNegZ);//relative to the cow
         while (!CheckIfLocationClear(pos)){
             int posNegX2 = Random.Range(0,2)*2-1;

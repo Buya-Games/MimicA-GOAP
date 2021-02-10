@@ -4,7 +4,12 @@ using UnityEngine;
 
 public class ParticleManager : MonoBehaviour
 {
+    GameManager manager;
     [SerializeField] ParticleSystem EatBerry, EatFungus, DestroyBush, DestroyMushroom, BombBoom;
+
+    void Awake(){
+        manager = FindObjectOfType<GameManager>();
+    }
 
     public void EatingBerry(Vector3 where){
         EatBerry.transform.position = where;
@@ -28,6 +33,7 @@ public class ParticleManager : MonoBehaviour
     public void BombExplosion(Vector3 where){
         BombBoom.transform.position = where;
         BombBoom.Play();
+        manager.audioManager.PlaySound("bomb",0,1,Random.Range(.9f,1.1f));
     }
     
 }

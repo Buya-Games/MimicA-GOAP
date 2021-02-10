@@ -44,7 +44,10 @@ public class GOAPPlan : MonoBehaviour
             if (debug) {Tools.PrintList(agent.name, "POSSIBLE SECONDARY ACTIONS", possibleActions);}
             bool secondaryActions = false;
             foreach (GOAPAct action in possibleActions){
-                float alignmentBonus = checkGoalAlignment((Buddy)agent,action);
+                float alignmentBonus = 0;
+                if (agent is Buddy){//only buddies have motives
+                    alignmentBonus = checkGoalAlignment((Buddy)agent,action);
+                }
                 if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
                             agent.name,action,action.ActionLayer,action.ActionLayer2,alignmentBonus));}
                 if (alignmentBonus > 0){//if it's a task that at least somewhat aligns with agent's motivation

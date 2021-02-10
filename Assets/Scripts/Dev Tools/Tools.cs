@@ -67,7 +67,9 @@ public static class Tools
     public static List<ITargettable> ConvertToITargettable(List<GameObject> objects){
         List<ITargettable> targets = new List<ITargettable>();
         foreach (GameObject o in objects){
-            targets.Add(o.GetComponent<ITargettable>());
+            if (o != null){
+                targets.Add(o.GetComponent<ITargettable>());
+            }
         }
         return targets;
 

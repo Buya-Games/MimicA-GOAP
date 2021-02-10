@@ -35,7 +35,7 @@ public class CreatureLogic : Creature
     protected virtual void GetPlan(){
         if (alive){
             CurrentAction = null;
-            myText.text = "";
+            //myText.text = "";
             toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
             if (toDo == null || toDo.Count == 0){ //if failed to find a plan or plan has no moves
                 if(manager.debug){Debug.Log("toDo was null");}
@@ -54,7 +54,7 @@ public class CreatureLogic : Creature
     //ideally this should take the game state when deciding, instead of just randomly choosing from possibleEvents
     protected virtual void GetDecision(){
         CurrentAction = null;
-        myText.text = "";
+        //myText.text = "";
 
         if (Target != null && !Target.activeSelf){//if somehow target became inactive, set it to null
             if (manager.debug){Debug.Log("target set to null");}
@@ -63,7 +63,7 @@ public class CreatureLogic : Creature
 
         if (toDo != null && toDo.Count>0){//if we still got things we wanna peform
             CurrentAction = toDo.Dequeue();
-            myText.text = CurrentAction.ToString();
+            //myText.text = CurrentAction.ToString();
             PerformDecision();
         } else {
             GetPlan();

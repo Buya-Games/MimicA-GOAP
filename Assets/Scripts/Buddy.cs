@@ -37,13 +37,7 @@ public class Buddy : CreatureLogic
             myGoals.Enqueue(GameState.State.goalFollowPlayer);
             availableActions.Insert(0,new Follow());
             availableActions.Add(new Eat(7));
-            // availableActions.Add(new Eat(9));
-            // availableActions.Add(new Eat(10));
-            // availableActions.Add(new Eat(16));
             availableActions.Add(new PickupItem(7,false));
-            // availableActions.Add(new PickupItem(9,false));
-            // availableActions.Add(new PickupItem(10,false));
-            // availableActions.Add(new PickupItem(16,false));
             learningActions = manager.buddyLearningActions;//availableActions.Count + 5;//buddies can learn 9 actions from the player
         
         //if player is dead, learn from another AI
@@ -96,25 +90,61 @@ public class Buddy : CreatureLogic
     }
 
     void LearnRandomSkills(){
+        //not sure if this ever occurs, but if it does the buddy learns EVERYTHING to become super smart
+        availableActions.Add(new Eat(9));
+        availableActions.Add(new Eat(10));
+        availableActions.Add(new Eat(16));
+        availableActions.Add(new PickupItem(9,false));
+        availableActions.Add(new PickupItem(10,false));
+        availableActions.Add(new PickupItem(16,false));
+        availableActions.Add(new ThrowItem(Vector3.zero,7,12));
+        availableActions.Add(new ThrowItem(Vector3.zero,7,14));
+        availableActions.Add(new ThrowItem(Vector3.zero,9,12));
+        availableActions.Add(new ThrowItem(Vector3.zero,9,14));
+        availableActions.Add(new ThrowItem(Vector3.zero,10,4));
+        availableActions.Add(new ThrowItem(Vector3.zero,10,11));
+        availableActions.Add(new ThrowItem(Vector3.zero,16,4));
+        availableActions.Add(new ThrowItem(Vector3.zero,16,11));
         Debug.Log(myName + " learned random skills");
     }
 
     void Learn(){
-        if (availableActions.Count<learningActions){//listen until X actions
-            if (!IsDupeAction(player.CurrentEvent)){
-                availableActions.Add(player.CurrentEvent.Clone());
-                manager.ui.DisplayAction(transform.position,player.CurrentEvent, 
-                    "<br><size=6>(" + (learningActions-availableActions.Count).ToString() + " left)");
+        //tutorial shit
+        if (manager.Tutorial){
+            if (manager.tut.Tut8TeachAny){
+                manager.tut.Tut8TeachAny = false;
+                manager.tut.Tut9TeachFeedPlayer = true;
+                manager.tut.DisplayNextTip(9);//throw berry at me
+                manager.tut.SpawnBush();
+            }
+            if (manager.tut.Tut9TeachFeedPlayer){
+                ThrowItem test = new ThrowItem(Vector3.zero,7,13);
+                if (player.CurrentAction.GetType() == test.GetType() && 
+                    player.CurrentAction.ActionLayer == test.ActionLayer && player.CurrentAction.ActionLayer2 == test.ActionLayer2){
+                        manager.tut.Tut9TeachFeedPlayer = false;
+                        manager.tut.DisplayNextTip(10);//final message
+                        manager.tut.EndTutorial();
+                }
+            }
+        } else {
+            //end tutorial shit
+            if (availableActions.Count<learningActions){//listen until X actions
+                if (!IsDupeAction(player.CurrentAction)){
+                    availableActions.Add(player.CurrentAction.Clone());
+                    manager.ui.DisplayAction(transform.position,player.CurrentAction, 
+                        "<br><size=6>(" + (learningActions-availableActions.Count).ToString() + " left)");
+                }    
+            }
+            if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
+                SetGoals();
+                availableActions.Remove(availableActions[0]);//removing the Follow basic action
+                learning = false;
+                player.OnTeach -= Learn;//turning off learning listener
+                player.CheckForStudents();//telling player to stop teaching unless other students
+                GetPlan();
             }
         }
-        if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
-            SetGoals();
-            availableActions.Remove(availableActions[0]);//removing the Follow basic action
-            learning = false;
-            player.OnTeach -= Learn;//turning off learning listener
-            player.CheckForStudents();//telling player to stop teaching unless other students
-            GetPlan();
-        }
+        //end tutorial shit
     }
 
     public void SwitchToAILearn(){

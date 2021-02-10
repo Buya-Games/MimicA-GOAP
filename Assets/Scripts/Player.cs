@@ -7,7 +7,7 @@ public class Player : Creature
 {
     PlayerControl control;
     public event Action OnTeach;
-    public GOAPAct CurrentEvent;
+    public GOAPAct CurrentAction;
     [SerializeField] LayerMask interactLM;
     bool teaching = false; //set by companions to true when they're born (and false after 10 turns)
     public float bobHeight;
@@ -31,10 +31,10 @@ public class Player : Creature
 
     protected override void Update(){
         if (manager.PlayerAlive){
-            //base.Update();
-            Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
-            bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
-            visibleMesh.localPosition = bobPos;
+            base.Update();
+            // Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
+            // bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
+            // visibleMesh.localPosition = bobPos;
             bobHeight = visibleMesh.transform.localPosition.y * 5;
             // if (bobHeight > bobMax){
             //     bobMax = bobHeight;
@@ -66,19 +66,30 @@ public class Player : Creature
                 //Target = nearbyObjects[0].gameObject;//i only use the first object of an array which I believe is random, but that's fine I think?
                 MeleeAttack();
             } else {
-                Swing();
+                if (bobHeight < 1.3f){
+                    Swing(2);
+                } else {
+                    Swing();
+                }
             }   
         }
     }
 
     public void MeleeAttack(){
         MeleeAttack melee = new MeleeAttack(Target.gameObject.layer, bobHeight);
-        CurrentEvent = melee;//prior event should be destroyed by GC
+        CurrentAction = melee;//prior event should be destroyed by GC
         if (melee.CheckPreconditions(GetCurrentState())){
             if (melee.PerformEvent(this)){
                 if (teaching){
                     OnTeach();
                 }
+                //tutorial shit
+                if (manager.Tutorial && manager.tut.Tut0WASD){
+                    manager.tut.Tut0WASD = false;
+                    manager.tut.Tut1PickupBerry = true;
+                    manager.tut.DisplayNextTip(1);//pickup the berry
+                }
+                //end tutorial shit
             }
         }
     }
@@ -86,20 +97,41 @@ public class Player : Creature
     public override void PickUp(IThrowable item){
         base.PickUp(item);
         PickupItem pickup = new PickupItem(item.ThisGameObject().layer);
-        CurrentEvent = pickup;
+        CurrentAction = pickup;
         if (teaching){
             OnTeach();
         }
+        //tutorial shit
+        if (manager.Tutorial && manager.tut.Tut1PickupBerry){
+            manager.tut.Tut1PickupBerry = false;
+            manager.tut.Tut2EatBerry = true;
+            manager.tut.DisplayNextTip(2);//eat the berry
+        }
+        //end tutorial shit
+
         //I don't perform anything here cuz for player the logic is done inside Item.cs
     }
 
     public void EatItem(){
         if (HeldItem != null){
-            CurrentEvent = new Eat(HeldItem.layer);
-            if (CurrentEvent.PerformEvent(this)){
+            CurrentAction = new Eat(HeldItem.layer);
+            if (CurrentAction.PerformEvent(this)){
                 if (teaching){
                     OnTeach();
                 }
+                //tutorial shit
+                if (manager.Tutorial){
+                    if (manager.tut.Tut2EatBerry){
+                        manager.tut.Tut2EatBerry = false;
+                        manager.tut.Tut3HardMelee = true;
+                        manager.tut.DisplayNextTip(3);//hit bush well
+                        manager.tut.SpawnBush();
+                    } else {
+                        manager.tut.SpawnBush();   
+                    }
+                    
+                }
+                //end tutorial shit
             }
         }
     }
@@ -112,9 +144,9 @@ public class Player : Creature
         //     CurrentEvent = eat;
         // } else {
             ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
-            CurrentEvent = throwItem;
+            CurrentAction = throwItem;
         //}
-        if (CurrentEvent.PerformEvent(this)){
+        if (CurrentAction.PerformEvent(this)){
             if (teaching){
                 OnTeach();
             }

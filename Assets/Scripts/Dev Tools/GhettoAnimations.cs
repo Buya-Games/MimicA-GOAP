@@ -19,7 +19,7 @@ public static class GhettoAnimations
     }
 
     public static IEnumerator FallOver(Transform deadThing){
-        int posNeg = Random.Range(0,2)*2-1;//using this so he might fall left or right
+        int posNeg = Random.Range(0,2)*2-1;//using this so it falls left or right
         float fallAngle = 0;
         Vector3 rot = deadThing.rotation.eulerAngles;
         while (fallAngle > 90 * posNeg){
@@ -29,7 +29,11 @@ public static class GhettoAnimations
             yield return null;
         }
         yield return new WaitForSeconds(5);
-        deadThing.transform.DOScale(Vector3.zero,0.1f).OnComplete(() => {GameObject.Destroy(deadThing.gameObject);});
+        deadThing.transform.DOScale(Vector3.zero,0.2f).OnComplete(() => {Wipe(deadThing);});//does this do anything??
+    }
+
+    static void Wipe(Transform deadThing){
+        GameObject.Destroy(deadThing.gameObject);
     }
 
     // public static IEnumerator AnimHitRB(Vector3 dir, Rigidbody rb){

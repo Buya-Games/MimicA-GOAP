@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 public class MeleeAttack : GOAPAct
 {
-
     public MeleeAttack(int targetLayer, float playerAbility){
         Init();
         eventRange = 3f;//distance necessary to melee someone
@@ -21,13 +20,14 @@ public class MeleeAttack : GOAPAct
         }
         if (ActionLayer == 11){//if attacking enemy
             motiveAttack++;
-            coreCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
+            ActionSkill*=2;//inflict more damage to an enemy (EZ mode)
+            //coreCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
             Preconditions.Add(GameState.State.availEnemy);
             Effects.Add(GameState.State.goalAttackEnemies);
         }
         if (ActionLayer == 12){//if attacking buddy (for enemies)
             motiveAttack++;
-            coreCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
+            //coreCost*=2;//cost of attacking an enemy with melee should be higher than attacking them with bomb
             Preconditions.Add(GameState.State.availEnemy);
             Effects.Add(GameState.State.goalAttackEnemies);
         }
@@ -110,23 +110,21 @@ public class MeleeAttack : GOAPAct
         } else {
             hitStrength = 1;
         }
-        // if (agent is Player){
-        //     Debug.Log(baseSkill);
-        //     if (baseSkill < 1.3f){
-        //         hitStrength = 2;
-        //     } else {
-        //         hitStrength = 1;
-        //     }
-        //     //hitStrength = (int)baseSkill;
-        // } else {
-        //     float s = baseSkill * Random.Range(0.8f,1.2f);
-        //     if (s < 1.5f){
-        //         hitStrength = 2;
-        //     } else {
-        //         hitStrength = 1;
-        //     }
-        //     //hitStrength = (int)(baseSkill * Random.Range(0.8f,1.2f));
-        // }
+
+        //tutorial shit
+        if (agent is Player){
+            if (manager.Tutorial && manager.tut.Tut3HardMelee){
+                if (hitStrength > 1){
+                    manager.tut.Tut3HardMelee = false;
+                    manager.tut.Tut4ThrowBerryCow = true;
+                    manager.tut.DisplayNextTip(4);//throw berry at cow
+                } else {
+                    manager.tut.TryAgain();
+                }
+            }
+        }
+        //end tutorial shit
+        
         
         if (ActionLayer == 6){//if harvesting Bush
             for (int i = 0;i<hitStrength;i++){
@@ -134,7 +132,6 @@ public class MeleeAttack : GOAPAct
             }
             manager.spawner.DespawnEnvironment(agent.Target,Spawner.EnvironmentType.Bush);
             manager.particles.DestroyingBush(agent.Target.transform.position);
-            
         }
         if (ActionLayer == 8){//if harvesting Mushroom
             for (int i = 0;i<hitStrength;i++){
@@ -146,7 +143,7 @@ public class MeleeAttack : GOAPAct
         if (ActionLayer == 11 || ActionLayer == 12 || ActionLayer == 13 || ActionLayer == 14){//if attacking a creature or the cow
             agent.Target.GetComponent<IHittable>().TakeHit(agent.gameObject,hitStrength);
         }
-        agent.Swing();
+        agent.Swing(hitStrength);
         CompleteEvent(agent);
         return true;
     }

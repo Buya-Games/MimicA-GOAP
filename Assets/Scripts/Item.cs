@@ -62,13 +62,13 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     public void PickUp(Creature agent){
         //accessible = false;
         //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
-        Vector3 pos = agent.visibleMesh.position;
+        Vector3 pos = agent.visibleMesh.transform.position;
         pos.y += 3;
         transform.position = pos;
         transform.rotation = Quaternion.identity;
         rb.isKinematic = true;
 
-        transform.SetParent(agent.visibleMesh);
+        transform.SetParent(agent.visibleMesh.transform);
         Vector3 newScale = transform.localScale;//just adjusting scale cuz player/buddy scale isn't uniform
         newScale.x/=agent.transform.localScale.x;
         newScale.z/=agent.transform.localScale.z;
@@ -117,25 +117,28 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     protected virtual void OnCollisionEnter(Collision col){
-        if (thrown && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
-            Drop();
-        //if (!accessible && col.gameObject.layer == 11){//if collide with enemy after it has been thrown
-            //Drop();
-            if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
-                BombBoom();
-            }
-        }
         if (thrown && col.gameObject.layer == 4){//if collide with ground after it has been thrown
         //if (!accessible && col.gameObject.layer == 4){//if collide with ground after it has been thrown
             Drop();
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = 0f;
             if (MyType == Spawner.EnvironmentType.BerryPoop){
+                BombBoom();
                 manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Bush);
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
                 manager.particles.BombExplosion(transform.position);
+
+                //tutorial shit
+                if (manager.Tutorial && manager.tut.Tut5ThrowPoop){
+                    manager.tut.Tut5ThrowPoop = false;
+                    manager.tut.Tut6FeedShroomCow = true;
+                    manager.tut.DisplayNextTip(6);//hit the fungus
+                    manager.tut.SpawnShroom();
+                }
+                //end tutorial shit
             }
             if (MyType == Spawner.EnvironmentType.FungusPoop){
+                BombBoom();
                 manager.spawner.SpawnEnvironment(spawnPoint,Spawner.EnvironmentType.Mushroom);
                 manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
                 manager.particles.BombExplosion(transform.position);
@@ -158,34 +161,40 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 }
             }
         }
+        if (thrown && col.gameObject.layer == 11){//if collide with enemy in any capacity
+            //Drop();
+            if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
+                BombBoom();
+            }
+        }
         thrown = false;
     }
 
     void BombBoom(){
         Collider[] colliders = Physics.OverlapSphere(transform.position,3f);
 
-        bool enemyHit = false;
+        //bool enemyHit = false;
         foreach (Collider nearbyObject in colliders){
             Rigidbody rb = nearbyObject.GetComponent<Rigidbody>();
-            if (rb != null && nearbyObject != gameObject){
-                rb.AddExplosionForce(2000f,transform.position,3f);
-                float dist = ((transform.position - nearbyObject.transform.position).magnitude) * 2;
-                dist = 1 / dist; ///perfect will be like .5, so work from there to calculate the damage?
+            //if (rb != null && nearbyObject != gameObject){
+                //rb.AddExplosionForce(1000f,transform.position,3f);
+                // float dist = ((transform.position - nearbyObject.transform.position).magnitude) * 2;
+                // dist = 1 / dist; ///perfect will be like .5, so work from there to calculate the damage?
                 Enemy enemy = nearbyObject.GetComponent<Enemy>();
                 if (enemy != null){
                     enemy.TakeHit(gameObject,100);
-                    enemyHit = true;
+                    //enemyHit = true;
                 }
-            }
+            //}
         }
-        if (enemyHit){
-            manager.particles.BombExplosion(transform.position);
-            if (MyType == Spawner.EnvironmentType.BerryPoop){
-            manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
-            }
-            if (MyType == Spawner.EnvironmentType.FungusPoop){
-                manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
-            }
-        }
+        // if (enemyHit){
+        //     manager.particles.BombExplosion(transform.position);
+        //     if (MyType == Spawner.EnvironmentType.BerryPoop){
+        //     manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
+        //     }
+        //     if (MyType == Spawner.EnvironmentType.FungusPoop){
+        //         manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
+        //     }
+        // }
     }
 }
