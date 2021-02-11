@@ -24,6 +24,11 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
         SetType();
     }
 
+    void OnEnable(){
+        thrown = false;
+        Debug.Log("enabled, thrown: " + thrown);
+    }
+
     void SetType(){
         if (gameObject.layer == 7){
             MyType = Spawner.EnvironmentType.Berry;
@@ -144,11 +149,12 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 manager.particles.BombExplosion(transform.position);
             }
         }
-        if ((col.gameObject.layer == 14)// || col.gameObject.layer == 7 || col.gameObject.layer == 9 || col.gameObject.layer == 10 || col.gameObject.layer == 16) 
-            && (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop)){//if cow and this item is poop
-            Drop();
-        }
+        // if ((col.gameObject.layer == 14)// || col.gameObject.layer == 7 || col.gameObject.layer == 9 || col.gameObject.layer == 10 || col.gameObject.layer == 16) 
+        //     && (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop)){//if cow and this item is poop
+        //     Drop();
+        // }
         if (col.gameObject.layer == 13){//if player
+            thrown = false;
             Player player = col.gameObject.GetComponent<Player>();
             if (player.HeldItem == null){
                 PickUp(player);
@@ -167,13 +173,13 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 BombBoom();
             }
         }
-        thrown = false;
+        //thrown = false;
     }
 
     void BombBoom(){
         Collider[] colliders = Physics.OverlapSphere(transform.position,3f);
 
-        //bool enemyHit = false;
+        bool enemyHit = false;
         foreach (Collider nearbyObject in colliders){
             Rigidbody rb = nearbyObject.GetComponent<Rigidbody>();
             //if (rb != null && nearbyObject != gameObject){
@@ -183,18 +189,18 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 Enemy enemy = nearbyObject.GetComponent<Enemy>();
                 if (enemy != null){
                     enemy.TakeHit(gameObject,100);
-                    //enemyHit = true;
+                    enemyHit = true;
                 }
             //}
         }
-        // if (enemyHit){
-        //     manager.particles.BombExplosion(transform.position);
-        //     if (MyType == Spawner.EnvironmentType.BerryPoop){
-        //     manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
-        //     }
-        //     if (MyType == Spawner.EnvironmentType.FungusPoop){
-        //         manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
-        //     }
-        // }
+        if (enemyHit){
+            manager.particles.BombExplosion(transform.position);
+            if (MyType == Spawner.EnvironmentType.BerryPoop){
+            manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.BerryPoop);
+            }
+            if (MyType == Spawner.EnvironmentType.FungusPoop){
+                manager.spawner.DespawnEnvironment(gameObject,Spawner.EnvironmentType.FungusPoop);
+            }
+        }
     }
 }

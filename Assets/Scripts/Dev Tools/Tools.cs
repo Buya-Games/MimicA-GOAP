@@ -108,6 +108,7 @@ public static class Tools
                 }
             }
         }
+        objects.Add(agent);
         return weakest;
     }
 

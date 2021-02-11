@@ -125,7 +125,9 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
         manager.GameOver(false);
         healthBar.gameObject.SetActive(false);
         birthBar.gameObject.SetActive(false);
-        GhettoAnimations.FallOver(transform);
+        manager.particles.DestroyingCow(transform.position);
+        gameObject.SetActive(false);
+        //GhettoAnimations.FallOver(transform);
     }
 
     void OnCollisionEnter(Collision col){

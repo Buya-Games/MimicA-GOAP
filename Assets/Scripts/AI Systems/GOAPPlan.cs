@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class GOAPPlan : MonoBehaviour
 {
+    GameManager manager;
 
-    [SerializeField] bool debug;
+    void Awake(){
+        manager = FindObjectOfType<GameManager>();
+    }
 
     protected class Node {
 		public Node parent;
@@ -30,7 +33,7 @@ public class GOAPPlan : MonoBehaviour
         //ideally move this to another function that runs every 1-2 seconds to reduce call freq cuz world dont change that quickly
         foreach (GOAPAct a in agent.availableActions){
             a.EstimateActionCost(agent);
-            if (debug){Debug.Log(string.Format("{0}{1}-{2} cost is {3}",a,a.ActionLayer,a.ActionLayer2,a.Cost));}
+            if (manager.debug){Debug.Log(string.Format("{0}{1}-{2} cost is {3}",a,a.ActionLayer,a.ActionLayer2,a.Cost));}
         }
         
         List<Node> leaves = new List<Node>();
@@ -40,15 +43,15 @@ public class GOAPPlan : MonoBehaviour
 
         if (!success){ //if no action can get us to the goal, see what actions are possible and judge based on motive alignment, etc
             List<GOAPAct> possibleActions = getPossibleActions(agent.availableActions,worldState);
-            if (debug){Debug.Log(string.Format("[{0}] no direct path to goal ({1}) but looking at possible secondary actions",agent.name,goals[0]));}
-            if (debug) {Tools.PrintList(agent.name, "POSSIBLE SECONDARY ACTIONS", possibleActions);}
+            if (manager.debug){Debug.Log(string.Format("[{0}] no direct path to goal ({1}) but looking at possible secondary actions",agent.name,goals[0]));}
+            if (manager.debug) {Tools.PrintList(agent.name, "POSSIBLE SECONDARY ACTIONS", possibleActions);}
             bool secondaryActions = false;
             foreach (GOAPAct action in possibleActions){
                 float alignmentBonus = 0;
                 if (agent is Buddy){//only buddies have motives
                     alignmentBonus = checkGoalAlignment((Buddy)agent,action);
                 }
-                if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
+                if (manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} alignment bonus: {4}",
                             agent.name,action,action.ActionLayer,action.ActionLayer2,alignmentBonus));}
                 if (alignmentBonus > 0){//if it's a task that at least somewhat aligns with agent's motivation
                 
@@ -58,7 +61,7 @@ public class GOAPPlan : MonoBehaviour
                     //additional benefit if more actions become possible after this
                     List<GOAPAct> futureActions = getPossibleActions(agent.availableActions,GameState.CombineStates(worldState,action.Effects));
                     if (futureActions.Count > 0){
-                        if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} leads to {4} more actions",
+                        if (manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} leads to {4} more actions",
                             agent.name,action,action.ActionLayer,action.ActionLayer2,futureActions.Count));}
                         secondaryActionNode.costBenefit -= (futureActions.Count * 5);
                     }
@@ -74,7 +77,7 @@ public class GOAPPlan : MonoBehaviour
                     //additional benefit if more actions become possible after this
                     List<GOAPAct> futureActions = getPossibleActions(agent.availableActions,GameState.CombineStates(worldState,action.Effects));
                     if (futureActions.Count > 0){
-                        if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} leads to {4} more actions",
+                        if (manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} leads to {4} more actions",
                             agent.name,action,action.ActionLayer,action.ActionLayer2,futureActions.Count));}
                         lastResortNode.costBenefit -= (futureActions.Count * 5);
                     }
@@ -83,6 +86,15 @@ public class GOAPPlan : MonoBehaviour
                 }
                 if (!lastResort){
                     return null;
+                }
+            }
+        }
+
+        //if we were successful in finding a direct path, adding a big premium to theoretical events so we prefer actual executable ones
+        if (success){
+            for (int i = 0;i<leaves.Count;i++){
+                if (leaves[i].costBenefit == 26){
+                    leaves[i].costBenefit+=100;
                 }
             }
         }
@@ -101,7 +113,7 @@ public class GOAPPlan : MonoBehaviour
 
         Queue<GOAPAct> plan = new Queue<GOAPAct>();
 		foreach (GOAPAct e in result) {
-            if (debug){Debug.Log(string.Format("[{0}] adding {1}{2}-{3} to the queue", agent.name, e,e.ActionLayer,e.ActionLayer2));}
+            if (manager.debug){Debug.Log(string.Format("[{0}] adding {1}{2}-{3} to the queue", agent.name, e,e.ActionLayer,e.ActionLayer2));}
 			plan.Enqueue(e);
 		}
         return plan;
@@ -110,11 +122,11 @@ public class GOAPPlan : MonoBehaviour
     bool buildPath(Node node, List<Node> leaves, List<GOAPAct> availActions, List<GameState.State> worldState, CreatureLogic agent){
         bool foundPath = false;
         List<GOAPAct> goalActions = getGoalActions(availActions,node.goalState);//actions with Effects that satisfy goalState
-        if (debug){
+        if (manager.debug){
             Debug.Log(string.Format("[{0}] BUILD PATH",agent.name));
             Tools.PrintList(agent.name, "GOAL", node.goalState);
-            Tools.PrintList(agent.name, "AVAIL ACTIONS", availActions);
-            Tools.PrintList(agent.name, "WORLD STATE", worldState);
+            //Tools.PrintList(agent.name, "AVAIL ACTIONS", availActions);
+            //Tools.PrintList(agent.name, "WORLD STATE", worldState);
             Tools.PrintList(agent.name, "ACTIONS SATISFYING GOAL STATE", goalActions);
         }
         foreach (GOAPAct action in goalActions){
@@ -122,7 +134,7 @@ public class GOAPPlan : MonoBehaviour
             Node thisNode = new Node(node.parent,action.Cost,node.goalState,action);
             
             //just for avoiding debugging crap
-            if (debug){
+            if (manager.debug){
                 node.action = action;
                 node.costBenefit = action.Cost;
             }
@@ -130,7 +142,7 @@ public class GOAPPlan : MonoBehaviour
             //otherwise, this action has to be cheaper than parent (##WE MAKE A BIG ASSUMPTION THAT CHEAPER KIDS LEAD TO CHEAPER PARENTS)
             if (leaves.Count == 0 || thisNode.costBenefit < node.parent.costBenefit){
                 if (GameState.CompareStates(action.Preconditions,worldState)){//if can be performed in current state
-                    if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can be performed now, so addding it to leaves",
+                    if (manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can be performed now, so addding it to leaves",
                         agent.name, action, action.ActionLayer,action.ActionLayer2,thisNode.costBenefit));}
                     leaves.Add(thisNode);
                     foundPath = true;
@@ -143,14 +155,14 @@ public class GOAPPlan : MonoBehaviour
                     //if cheaper actions do exist, then create a new path with a new cost
                     if (buildPath(transitionNode,leaves,Tools.ListSubset(availActions,action),worldState,agent)){
                         //Node newPathNode = new Node(node.parent,childNode.costBenefit,node.goalState,action);
-                        if (debug){Debug.Log(string.Format("[{0}] new path found {1}{2}-{3} ({4}) via child {5}{6}-{7} ({8})",
+                        if (manager.debug){Debug.Log(string.Format("[{0}] new path found {1}{2}-{3} ({4}) via child {5}{6}-{7} ({8})",
                             agent.name,thisNode.action,thisNode.action.ActionLayer,thisNode.action.ActionLayer2,thisNode.costBenefit,
                             transitionNode.action,transitionNode.action.ActionLayer,transitionNode.action.ActionLayer2,transitionNode.costBenefit));}
                         foundPath = true;
                     }
                 //}
             } else {
-                if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) wasn't cheaper than parent {5}{6}-{7} ({8})",
+                if (manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) wasn't cheaper than parent {5}{6}-{7} ({8})",
                     agent.name, action, action.ActionLayer,action.ActionLayer2,thisNode.costBenefit,
                     thisNode.parent.action,thisNode.parent.action.ActionLayer,thisNode.parent.action.ActionLayer2,thisNode.parent.costBenefit));}
             }
@@ -203,14 +215,17 @@ public class GOAPPlan : MonoBehaviour
 
     Node FindCheapestNode(List<Node> leaves, CreatureLogic agent){
         Node cheapest = null;
-        if (debug) {Debug.Log(string.Format("------------------ checking cheapest of {0} leaves ({1}) ------------------",leaves.Count,agent.name));}
+        if (manager.debug) {Debug.Log(string.Format("------------------ checking cheapest of {0} leaves ({1}) ------------------",leaves.Count,agent.name));}
         for (int i = 0;i<leaves.Count;i++){
+            if (leaves[i].costBenefit == 26){
+                leaves[i].costBenefit+=100;//adding a big premium to theoretical events
+            }
             if (cheapest == null){
                 cheapest = leaves[i];
-                if(debug){Debug.Log(string.Format("[{0}] cheapest set to: {1}{2}-{3} ({4})", 
+                if(manager.debug){Debug.Log(string.Format("[{0}] cheapest set to: {1}{2}-{3} ({4})", 
                     agent.name, cheapest.action, cheapest.action.ActionLayer, cheapest.action.ActionLayer2,cheapest.costBenefit));}
             }
-            if(debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) vs {5}{6}-{7} ({8})",
+            if(manager.debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) vs {5}{6}-{7} ({8})",
                 agent.name, cheapest.action, cheapest.action.ActionLayer, cheapest.action.ActionLayer2,cheapest.costBenefit,
                 leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));}
             if (leaves[i].costBenefit < cheapest.costBenefit){

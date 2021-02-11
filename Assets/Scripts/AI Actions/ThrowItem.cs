@@ -18,8 +18,10 @@ public class ThrowItem : GOAPAct
         }
         if (heldItemLayer == 9){//if holding fungus
             Preconditions.Add(GameState.State.itemFungus);
-            Effects.Add(GameState.State.goalGatherShrooms);
-            motiveReproduction++;
+            if (targetedLayer == 14){
+                Effects.Add(GameState.State.goalGatherShrooms);
+                motiveReproduction++;
+            }
         }
         if (heldItemLayer == 10){//if holding berry poop
             Preconditions.Add(GameState.State.itemBerryPoop);
@@ -46,6 +48,12 @@ public class ThrowItem : GOAPAct
             }
         }
         if (targetedLayer == 12 || targetedLayer == 13){//if target buddy or player with any item, then they are a helper
+            if (targetedLayer == 12){
+                Preconditions.Add(GameState.State.availBuddy);
+            }
+            if (targetedLayer == 13){
+                Preconditions.Add(GameState.State.playerAlive);
+            }
             Effects.Add(GameState.State.goalHelpOthers);
             motiveHelper++;
         }
@@ -76,7 +84,7 @@ public class ThrowItem : GOAPAct
         }
     }
 
-    protected override GameObject FindClosestObjectOfLayer(Creature agent){
+    protected override GameObject FindClosestObjectOfLayer(Creature agent){ 
         GameObject target = null;
         if (ActionLayer2 == 4){//target is null (ground)
             if (throwTargetPos == null){

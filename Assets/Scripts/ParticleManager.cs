@@ -5,7 +5,7 @@ using UnityEngine;
 public class ParticleManager : MonoBehaviour
 {
     GameManager manager;
-    [SerializeField] ParticleSystem EatBerry, EatFungus, DestroyBush, DestroyMushroom, BombBoom;
+    [SerializeField] ParticleSystem EatBerry, EatFungus, DestroyBush, DestroyMushroom, BombBoom, DestroyBuddy, DestroyEnemy, DestroyCow;
 
     void Awake(){
         manager = FindObjectOfType<GameManager>();
@@ -28,6 +28,24 @@ public class ParticleManager : MonoBehaviour
         where.y = 2;
         DestroyMushroom.transform.position = where;
         DestroyMushroom.Play();
+    }
+
+    public void DestroyingEnemy(Vector3 where){
+        where.y = 2;
+        DestroyEnemy.transform.position = where;
+        DestroyEnemy.Play();
+    }
+
+    public void DestroyingBuddy(Vector3 where){
+        where.y = 2;
+        DestroyBuddy.transform.position = where;
+        DestroyBuddy.Play();
+    }
+
+    public void DestroyingCow(Vector3 where){
+        where.y = 2;
+        DestroyCow.transform.position = where;
+        DestroyCow.Play();
     }
 
     public void BombExplosion(Vector3 where){

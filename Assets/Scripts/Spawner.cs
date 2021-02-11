@@ -13,7 +13,6 @@ public class Spawner : MonoBehaviour
     Queue<GameObject> mushroomQueue = new Queue<GameObject>();
     Queue<GameObject> fungusQueue = new Queue<GameObject>();
     Queue<GameObject> bushQueue = new Queue<GameObject>();
-    Queue<GameObject> enemyQueue = new Queue<GameObject>();
     Queue<GameObject> berryQueue = new Queue<GameObject>();
     Queue<GameObject> berryPoopQueue = new Queue<GameObject>();
     Queue<GameObject> fungusPoopQueue = new Queue<GameObject>();
@@ -85,14 +84,16 @@ public class Spawner : MonoBehaviour
         if (who.GetComponent<Buddy>() != null){ //if its a buddy
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
+            manager.particles.DestroyingBuddy(who.transform.position);
         } else { //if its an enemy
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
+            manager.particles.DestroyingEnemy(who.transform.position);
             //manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
-        manager.ui.DisplayMessage(who.transform.position,who.name + " died!");
+        manager.ui.DisplayMessage(who.transform.position,who.name + " died!", Color.black);
         manager.UpdateScore();
-        StartCoroutine(GhettoAnimations.FallOver(who.transform));
+        Destroy(who);
 
         if (!manager.PlayerAlive && ActiveBuddies.Count == 0){
             manager.GameOver(false);

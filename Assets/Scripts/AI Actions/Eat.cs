@@ -10,17 +10,24 @@ public class Eat: GOAPAct
         }
         if (ActionLayer == 9){
             Preconditions.Add(GameState.State.itemFungus);
-            coreCost = -20; 
+            coreCost = -50; 
         }
         if (ActionLayer == 10){
             Preconditions.Add(GameState.State.itemBerryPoop);
-            coreCost = 30;//eating poop is pretty bad so try not to do it
+            coreCost = 30;//eating poop is pretty bad so try not to do it but if you got no other choice...
         }
         if (ActionLayer == 16){
             Preconditions.Add(GameState.State.itemFungusPoop);
-            coreCost = 30;//eating poop is pretty bad so try not to do it
+            coreCost = 30;//eating poop is pretty bad so try not to do it  but if you got no other choice...
         }
+        //eating allows ALL goals. MUST STAY NOURISHED!!!!
         Effects.Add(GameState.State.goalEat);
+        // Effects.Add(GameState.State.goalFollowPlayer);
+        // Effects.Add(GameState.State.goalGatherFood);
+        // Effects.Add(GameState.State.goalGatherShrooms);
+        // Effects.Add(GameState.State.goalHelpOthers);
+        // Effects.Add(GameState.State.goalAttackEnemies);
+        // Effects.Add(GameState.State.goalAttackCow);
         Effects.Add(GameState.State.itemNone);
     }
 

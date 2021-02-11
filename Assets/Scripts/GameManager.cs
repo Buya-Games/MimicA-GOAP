@@ -113,12 +113,13 @@ public class GameManager : MonoBehaviour
     public void PlayerDeath(){
         if (PlayerAlive){
             PlayerAlive = false;
-            StartCoroutine(GhettoAnimations.FallOver(player.transform));
+            particles.DestroyingBuddy(player.transform.position);
+            player.gameObject.SetActive(false);
             CheckPlayerDead();
             if (CurrentState.Contains(GameState.State.playerAlive)){
                 CurrentState.Remove(GameState.State.playerAlive);
             }
-            ui.DisplayMessage(cow.transform.position,"player died");
+            ui.DisplayMessage(cow.transform.position,"player died",Color.black);
         }
         
     }

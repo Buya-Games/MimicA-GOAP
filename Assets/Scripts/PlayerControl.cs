@@ -45,6 +45,9 @@ public class PlayerControl : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.V)){
                 manager.spawner.SpawnCreature(manager.spawner.EmptyNearbyLocation(transform.position,15,20),true);
             }
+            if (Input.GetKeyDown(KeyCode.C)){
+                Debug.Log(manager.spawner.ActiveBuddies.Count);
+            }
         }
     }
 

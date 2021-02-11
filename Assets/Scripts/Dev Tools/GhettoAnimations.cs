@@ -18,19 +18,19 @@ public static class GhettoAnimations
         melee.gameObject.SetActive(false);
     }
 
-    public static IEnumerator FallOver(Transform deadThing){
-        int posNeg = Random.Range(0,2)*2-1;//using this so it falls left or right
-        float fallAngle = 0;
-        Vector3 rot = deadThing.rotation.eulerAngles;
-        while (fallAngle > 90 * posNeg){
-            fallAngle-=2;
-            rot.z = fallAngle;
-            deadThing.transform.rotation = Quaternion.Euler(rot);
-            yield return null;
-        }
-        yield return new WaitForSeconds(5);
-        deadThing.transform.DOScale(Vector3.zero,0.2f).OnComplete(() => {Wipe(deadThing);});//does this do anything??
-    }
+    // public static IEnumerator FallOver(Transform deadThing){
+    //     int posNeg = Random.Range(0,2)*2-1;//using this so it falls left or right
+    //     float fallAngle = 0;
+    //     Vector3 rot = deadThing.rotation.eulerAngles;
+    //     while (fallAngle > 90 * posNeg){
+    //         fallAngle-=2;
+    //         rot.z = fallAngle;
+    //         deadThing.transform.rotation = Quaternion.Euler(rot);
+    //         yield return null;
+    //     }
+    //     yield return new WaitForSeconds(5);
+    //     deadThing.transform.DOScale(Vector3.zero,0.2f).OnComplete(() => {Wipe(deadThing);});//does this do anything??
+    // }
 
     static void Wipe(Transform deadThing){
         GameObject.Destroy(deadThing.gameObject);

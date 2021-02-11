@@ -113,9 +113,10 @@ public class CreatureLogic : Creature
                 DropItem();
             }
         } else { //carry on with your goals
-            GameState.State goal = myGoals.Dequeue();
-            whatToDo.Add(goal);//just adding one goal at a time... passing them all would be more ideal but more work for GOAPPlan
-            myGoals.Enqueue(goal);
+            //GameState.State goal = myGoals.Peek();
+            whatToDo.Add(myGoals.Peek());//just adding one goal at a time... passing them all would be more ideal but more work for GOAPPlan
+            if (manager.debug){Debug.Log(string.Format("[{0}] goal is {1}",myName,whatToDo[0]));}
+            //myGoals.Enqueue(goal);
         }
         return whatToDo;
     }

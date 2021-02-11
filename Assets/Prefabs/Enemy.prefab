@@ -565,9 +565,9 @@ MonoBehaviour:
   melee: {fileID: 116421762096105379}
   healthBar: {fileID: 6450004816159890767}
   health: 10
-  myText: {fileID: 2565595559974854805}
   visibleMesh: {fileID: 5706112570802484988}
   head: {fileID: 116421761175920175}
+  alive: 1
 --- !u!1 &2218684254174037175
 GameObject:
   m_ObjectHideFlags: 0
@@ -5553,7 +5553,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5867921415406553049
 RectTransform:
   m_ObjectHideFlags: 0

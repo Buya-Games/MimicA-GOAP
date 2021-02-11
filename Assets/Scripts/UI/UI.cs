@@ -4,9 +4,11 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 using UnityEngine.UI;
+using System;
 
 public class UI : MonoBehaviour
 {
+    GameManager manager;
     public TMP_Text textPlayerPopulation, textTutorial;
     [SerializeField] TMP_Text textTitle, textResult;
     [SerializeField] GameObject btnStartGame;
@@ -19,6 +21,7 @@ public class UI : MonoBehaviour
     [SerializeField] GameObject panelPause;
 
     void Start(){
+        manager = FindObjectOfType<GameManager>();
         InitQueues();
         
     }
@@ -31,9 +34,9 @@ public class UI : MonoBehaviour
         }
     }
 
-    public void DisplayMessage(Vector3 where, string message, string subText = ""){
+    public void DisplayMessage(Vector3 where, string message, Color textColor, string subText = ""){
         string text = message + subText;
-        PopUp(where,text);
+        PopUp(where,text, textColor);
 
     }
 
@@ -60,19 +63,21 @@ public class UI : MonoBehaviour
         btnStartGame.GetComponentInChildren<TMP_Text>().text = "Restart";
     }
 
-    public void DisplayAction(Vector3 where, GOAPAct action, string subText = ""){
+    public void DisplayAction(Vector3 where, GOAPAct action, Color textColor, string subText = ""){
         string text = ActionToText(action,action.ActionLayer) + " " + LayerToText(action.ActionLayer) + " " + LayerToText(action.ActionLayer2) + subText;
-        PopUp(where,text);
+        textColor = ActionToColor(action);
+        PopUp(where,text, textColor);
     }
 
-    void PopUp (Vector3 where, string text){
-        where.z += Random.Range(-10,10f);
+    void PopUp (Vector3 where, string text, Color textColor){
+        //where.z += Random.Range(-10,10f);
         TMP_Text popUp;
         if (popUpQueue.Count > 0){
             popUp = popUpQueue.Dequeue();
         } else {
             popUp = Instantiate(textPopUpPrefab);
         }
+        popUp.color = textColor;
         popUp.text = text;
         popUp.transform.position = where;
         popUp.transform.localScale = Vector3.zero;
@@ -144,6 +149,25 @@ public class UI : MonoBehaviour
             text = "Threw";
         }
         return text;
+    }
+
+    Color ActionToColor(GOAPAct action){
+        Color textColor = Color.white;
+        float[] motives = new float[]{action.motiveAttack,action.motiveHarvest,action.motiveReproduction,action.motiveHelper};
+        Array.Sort(motives);
+        if (motives[motives.Length-1] == action.motiveAttack){
+            textColor = manager.HeadColor.Evaluate(0.5f);
+        }
+        if (motives[motives.Length-1] == action.motiveHarvest){
+            textColor = manager.HeadColor.Evaluate(0.25f);
+        }
+        if (motives[motives.Length-1] == action.motiveReproduction){
+            textColor = manager.HeadColor.Evaluate(0.7f);
+        }
+        if (motives[motives.Length-1] == action.motiveHelper){
+            textColor = manager.HeadColor.Evaluate(1f);
+        }
+        return textColor;
     }
 
     string BuddyGUIActions(CreatureLogic buddy){

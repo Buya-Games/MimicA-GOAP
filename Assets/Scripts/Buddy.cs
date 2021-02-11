@@ -12,14 +12,17 @@ public class Buddy : CreatureLogic
     [HideInInspector]public bool learning;
     int learningActions;//# of player actions that creature will observe to learn, then start mimicing
     public float motiveReproduction, motiveHarvest, motiveAttack, motiveHelper;//the 4 possible goals of a creature
+    List<GOAPAct> learnedActs = new List<GOAPAct>();
     
     protected override void Awake(){
         base.Awake();
         player = GameObject.FindObjectOfType<Player>();
+        
     }
 
     void Start(){
         Init();
+        
     }
 
     public override void Init(){ 
@@ -35,9 +38,23 @@ public class Buddy : CreatureLogic
 
             //give buddies the basic goal of following the player
             myGoals.Enqueue(GameState.State.goalFollowPlayer);
-            availableActions.Insert(0,new Follow());
+            availableActions.Insert(0,new Follow());//0
             availableActions.Add(new Eat(7));
-            availableActions.Add(new PickupItem(7,false));
+            availableActions.Add(new MeleeAttack(6,1));//2
+            // availableActions.Add(new MeleeAttack(8,1));//3
+            // availableActions.Add(new MeleeAttack(11,1));//4
+            availableActions.Add(new PickupItem(7,false));//5
+            // availableActions.Add(new PickupItem(9,false));
+            // availableActions.Add(new PickupItem(10,false));
+            // availableActions.Add(new PickupItem(16,false));
+            // availableActions.Add(new ThrowItem(Vector3.zero,7,12));
+            // availableActions.Add(new ThrowItem(Vector3.zero,7,14));//10
+            // availableActions.Add(new ThrowItem(Vector3.zero,9,12));
+            // availableActions.Add(new ThrowItem(Vector3.zero,9,14));
+            // availableActions.Add(new ThrowItem(Vector3.zero,10,4));
+            // availableActions.Add(new ThrowItem(Vector3.zero,10,11));
+            // availableActions.Add(new ThrowItem(Vector3.zero,16,4));//15
+            // availableActions.Add(new ThrowItem(Vector3.zero,16,11));
             learningActions = manager.buddyLearningActions;//availableActions.Count + 5;//buddies can learn 9 actions from the player
         
         //if player is dead, learn from another AI
@@ -49,7 +66,60 @@ public class Buddy : CreatureLogic
             }
         }
         GetPlan();
-        
+    }
+
+    void Learn(){
+        if (!manager.Tutorial){//if live game
+            if (availableActions.Count<learningActions){//listen until X actions
+                if (!IsDupeAction(player.CurrentAction)){
+                    availableActions.Add(player.CurrentAction.Clone());
+                    manager.ui.DisplayAction(transform.position,player.CurrentAction,Color.white,
+                    "<br><size=6>(" + (learningActions-availableActions.Count).ToString() + " left)");
+                }    
+            }
+            if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
+                SetGoals();
+                availableActions.Remove(availableActions[0]);//removing the Follow basic action
+                learning = false;
+                player.OnTeach -= Learn;//turning off learning listener
+                player.CheckForStudents();//telling player to stop teaching unless other students
+                GetPlan();
+            }
+            // if (learnedActs.Count<learningActions){//listen until X actions
+            //     learnedActs.Add(player.CurrentAction.Clone());
+            //     manager.ui.DisplayAction(transform.position,player.CurrentAction, 
+            //         "<br><size=6>(" + (learningActions-learnedActs.Count).ToString() + " left)");
+            //     // if (!IsDupeAction(player.CurrentAction)){
+            //     //     availableActions.Add(player.CurrentAction.Clone());
+                
+            //     // }    
+            // }
+            // if (learnedActs.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
+            //     SetGoals();
+            //     //availableActions.Remove(availableActions[0]);//removing the Follow basic action
+            //     learning = false;
+            //     player.OnTeach -= Learn;//turning off learning listener
+            //     player.CheckForStudents();//telling player to stop teaching unless other students
+            //     GetPlan();
+            // }
+        } else {
+            if (manager.tut.Tut8TeachAny){
+                manager.tut.Tut8TeachAny = false;
+                manager.tut.Tut9TeachFeedPlayer = true;
+                manager.tut.DisplayNextTip(9);//throw berry at me
+                manager.tut.SpawnBush();
+            }
+            if (manager.tut.Tut9TeachFeedPlayer){
+                ThrowItem test = new ThrowItem(Vector3.zero,7,13);
+                if (player.CurrentAction.GetType() == test.GetType() && 
+                    player.CurrentAction.ActionLayer == test.ActionLayer && player.CurrentAction.ActionLayer2 == test.ActionLayer2){
+                        manager.tut.Tut9TeachFeedPlayer = false;
+                        manager.tut.DisplayNextTip(10);//final message
+                        manager.tut.EndTutorial();
+                }
+            }
+        }
+        //end tutorial shit
     }
 
     void LearnFromAI(){
@@ -90,10 +160,13 @@ public class Buddy : CreatureLogic
     }
 
     void LearnRandomSkills(){
-        //not sure if this ever occurs, but if it does the buddy learns EVERYTHING to become super smart
-        availableActions.Add(new Eat(9));
-        availableActions.Add(new Eat(10));
-        availableActions.Add(new Eat(16));
+        //not sure if this ever occurs (or should occur), but if it does the buddy learns EVERYTHING to become super smart
+        availableActions.Add(new Eat(7));//0
+        //availableActions.Add(new Eat(9));
+        // availableActions.Add(new Eat(10));
+        // availableActions.Add(new Eat(16));
+        availableActions.Add(new MeleeAttack(6,UnityEngine.Random.Range(1,3)));
+        availableActions.Add(new MeleeAttack(8,UnityEngine.Random.Range(1,3)));
         availableActions.Add(new PickupItem(9,false));
         availableActions.Add(new PickupItem(10,false));
         availableActions.Add(new PickupItem(16,false));
@@ -106,45 +179,6 @@ public class Buddy : CreatureLogic
         availableActions.Add(new ThrowItem(Vector3.zero,16,4));
         availableActions.Add(new ThrowItem(Vector3.zero,16,11));
         Debug.Log(myName + " learned random skills");
-    }
-
-    void Learn(){
-        //tutorial shit
-        if (manager.Tutorial){
-            if (manager.tut.Tut8TeachAny){
-                manager.tut.Tut8TeachAny = false;
-                manager.tut.Tut9TeachFeedPlayer = true;
-                manager.tut.DisplayNextTip(9);//throw berry at me
-                manager.tut.SpawnBush();
-            }
-            if (manager.tut.Tut9TeachFeedPlayer){
-                ThrowItem test = new ThrowItem(Vector3.zero,7,13);
-                if (player.CurrentAction.GetType() == test.GetType() && 
-                    player.CurrentAction.ActionLayer == test.ActionLayer && player.CurrentAction.ActionLayer2 == test.ActionLayer2){
-                        manager.tut.Tut9TeachFeedPlayer = false;
-                        manager.tut.DisplayNextTip(10);//final message
-                        manager.tut.EndTutorial();
-                }
-            }
-        } else {
-            //end tutorial shit
-            if (availableActions.Count<learningActions){//listen until X actions
-                if (!IsDupeAction(player.CurrentAction)){
-                    availableActions.Add(player.CurrentAction.Clone());
-                    manager.ui.DisplayAction(transform.position,player.CurrentAction, 
-                        "<br><size=6>(" + (learningActions-availableActions.Count).ToString() + " left)");
-                }    
-            }
-            if (availableActions.Count >= learningActions){//after X, we will stop listening and setup our lifetime goals and GET ON WITH OUR LIVES!
-                SetGoals();
-                availableActions.Remove(availableActions[0]);//removing the Follow basic action
-                learning = false;
-                player.OnTeach -= Learn;//turning off learning listener
-                player.CheckForStudents();//telling player to stop teaching unless other students
-                GetPlan();
-            }
-        }
-        //end tutorial shit
     }
 
     public void SwitchToAILearn(){
@@ -162,10 +196,10 @@ public class Buddy : CreatureLogic
                 if (act.ActionLayer == newAction.ActionLayer && act.ActionLayer2 == newAction.ActionLayer2){
                     learningActions--;//buddy was taught a dupe, expending a learning opportunity
                     if (manager.PlayerAlive){
-                        manager.ui.DisplayAction(transform.position,newAction, 
+                        manager.ui.DisplayAction(transform.position,newAction,Color.white,
                             "<br><size=6>(" + (learningActions-availableActions.Count).ToString() + " left)");
                     }
-                    //ImproveCoreHarvestSkill(newAction);
+                    ImproveCoreHarvestSkill(newAction);
                     return true;
                 }
             }
@@ -176,14 +210,34 @@ public class Buddy : CreatureLogic
     //all creatures by default know how to harvest bush at low efficiency but if they are taught that action again
     //they will overwrite their default action with new one (its how they can improve with better teaching)
     void ImproveCoreHarvestSkill(GOAPAct newHarvest){
-        if (newHarvest.GetType() == harvestBerry.GetType()){
-            if (newHarvest.ActionLayer == harvestBerry.ActionLayer && newHarvest.ActionLayer2 == harvestBerry.ActionLayer2){
-                if (availableActions.Contains(harvestBerry)){
-                    availableActions.Remove(harvestBerry);
-                    //availableActions.Add(newHarvest.Clone());
-                    harvestBerry = newHarvest.Clone() as MeleeAttack;
-                    Debug.Log("switched for better melee");
-                }
+        MeleeAttack hitBush = new MeleeAttack(6,1);
+        if (newHarvest.GetType() == hitBush.GetType()){
+            if (newHarvest.ActionLayer == hitBush.ActionLayer && newHarvest.ActionLayer2 == hitBush.ActionLayer2){
+                availableActions[2] = newHarvest;
+                // if (availableActions.Contains(harvestBerry)){
+                //     availableActions.Remove(harvestBerry);
+                //     //availableActions.Add(newHarvest.Clone());
+                //     harvestBerry = newHarvest.Clone() as MeleeAttack;
+                //     Debug.Log("switched for better melee");
+                // }
+            }
+        }
+    }
+
+    //if player teaches buddy to hit more effectively, then learn that
+    void LearnHigherSkill(){
+        MeleeAttack hitBush = new MeleeAttack(6,1);
+        MeleeAttack hitShroom = new MeleeAttack(8,1);
+        MeleeAttack hitEnemy = new MeleeAttack(11,1);
+        for (int i = 0;i<learnedActs.Count;i++){
+            if (learnedActs[i].GetType() == hitBush.GetType()){
+                availableActions[2] = learnedActs[i];
+            }
+            if (learnedActs[i].GetType() == hitShroom.GetType()){
+                availableActions[3] = learnedActs[i];
+            }
+            if (learnedActs[i].GetType() == hitEnemy.GetType()){
+                availableActions[4] = learnedActs[i];
             }
         }
     }
@@ -192,35 +246,41 @@ public class Buddy : CreatureLogic
         StopAllCoroutines();
 
         TallyGoals();
+        //LearnHigherSkill();
         myGoals.Clear();
         float[] motives = new float[]{motiveAttack,motiveHarvest,motiveReproduction,motiveHelper};
         Array.Sort(motives);
-        string popUp = "";
+        string popUpMessage = "";
+        Color popUpColor = Color.white;
         if (motives[motives.Length-1] > 0){ //##fuck it everyone just gets one goal for now. too complicated to have multiple goals
             if (motives[motives.Length-1] == motiveHarvest){
                 myGoals.Enqueue(GameState.State.goalGatherFood);
                 head.GetComponent<MeshRenderer>().material.color = manager.HeadColor.Evaluate(0.25f);//choose their hair color
-                popUp = myName + " is gathering food";
+                popUpMessage = myName + " is gathering food";
+                popUpColor = manager.HeadColor.Evaluate(0.25f);
             }
             if (motives[motives.Length-1] == motiveReproduction){
                 myGoals.Enqueue(GameState.State.goalGatherShrooms);
                 head.GetComponent<MeshRenderer>().material.color = manager.HeadColor.Evaluate(0.7f);
-                popUp = myName + " is gathering shrooms";
+                popUpMessage = myName + " is gathering shrooms";
+                popUpColor = manager.HeadColor.Evaluate(0.7f);
             }
             if (motives[motives.Length-1] == motiveAttack){
                 myGoals.Enqueue(GameState.State.goalAttackEnemies);
                 head.GetComponent<MeshRenderer>().material.color = manager.HeadColor.Evaluate(0.5f);
-                popUp = myName + " is defending";
+                popUpMessage = myName + " is defending";
+                popUpColor = manager.HeadColor.Evaluate(0.5f);
             }
             if (motives[motives.Length-1] == motiveHelper){
                 myGoals.Enqueue(GameState.State.goalHelpOthers);
                 head.GetComponent<MeshRenderer>().material.color = manager.HeadColor.Evaluate(1);
-                popUp = myName + " is helping others";
+                popUpMessage = myName + " is helping others";
+                popUpColor = manager.HeadColor.Evaluate(1f);
             }
         }
         Vector3 popUpPos = transform.position;
         popUpPos.y-=5;
-        manager.ui.DisplayMessage(popUpPos,popUp);
+        manager.ui.DisplayMessage(popUpPos,popUpMessage,popUpColor);
     }
 
     void TallyGoals(){
@@ -230,6 +290,12 @@ public class Buddy : CreatureLogic
             motiveReproduction+=availableActions[i].motiveReproduction;
             motiveHelper+=availableActions[i].motiveHelper;
         }
+        // for (int i = 0;i<learnedActs.Count;i++){
+        //     motiveAttack+=learnedActs[i].motiveAttack;
+        //     motiveHarvest+=learnedActs[i].motiveHarvest;
+        //     motiveReproduction+=learnedActs[i].motiveReproduction;
+        //     motiveHelper+=learnedActs[i].motiveHelper;
+        // }
     }
 
     void OnMouseDown(){

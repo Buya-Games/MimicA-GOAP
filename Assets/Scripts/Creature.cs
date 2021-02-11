@@ -56,7 +56,7 @@ public class Creature : MonoBehaviour, IHittable
         }
         gameObject.name = myName;
         if (this is Buddy){
-            manager.ui.DisplayMessage(transform.position,myName + " was born!");
+            manager.ui.DisplayMessage(transform.position,myName + " was born!",Color.white);
         }
 
         bobSpeed = MyStats.Speed * 7;
@@ -83,7 +83,7 @@ public class Creature : MonoBehaviour, IHittable
             currentState.Add(GameState.State.itemBerryPoop);
         } else if (HeldItem.layer == 16){//if holding fungus poop
             currentState.Add(GameState.State.itemFungusPoop);
-        } 
+        }
         currentState.AddRange(manager.CurrentState);
         return currentState;
     }
@@ -171,22 +171,24 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     public void Eat(Spawner.EnvironmentType type){
+        float eatBenefit = 0;
         if (type == Spawner.EnvironmentType.Berry){
-            health = Mathf.Clamp(health + 50,50,100);
+            eatBenefit = 50;
             manager.particles.EatingBerry(HeldItem.transform.position);
         }
         if (type == Spawner.EnvironmentType.Fungus){
-            health = Mathf.Clamp(health + 25,50,100);
+            eatBenefit = 25;
             manager.particles.EatingFungus(HeldItem.transform.position);
         }
         if (type == Spawner.EnvironmentType.BerryPoop || type == Spawner.EnvironmentType.FungusPoop){
-            health = Mathf.Clamp(health + 10,0,100);
+            eatBenefit = 10;
             manager.particles.BombExplosion(HeldItem.transform.position);
-            
         }
+        health = Mathf.Clamp(health + eatBenefit,10,100);
         HeldItem.GetComponent<Item>().Drop();//not using DropItem cuz it causes a conflict.... it's a turd i know i need to clean it up
         manager.spawner.DespawnEnvironment(HeldItem,type);
         HeldItem = null;
+        manager.ui.DisplayMessage(transform.position,"+" + eatBenefit.ToString("F0"),Color.white);
         manager.audioManager.PlaySound("eat",0,1,Random.Range(.9f,1.1f));
     }
 
