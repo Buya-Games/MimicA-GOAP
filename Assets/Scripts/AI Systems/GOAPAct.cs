@@ -16,7 +16,7 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
 
     protected void Init(){
         manager = GameObject.FindObjectOfType<GameManager>();
-        Cow cowCheck = GameObject.FindObjectOfType<Cow>();
+        CowHead cowCheck = GameObject.FindObjectOfType<CowHead>();
         if (cowCheck != null){
             cow = cowCheck.gameObject;
         } else {

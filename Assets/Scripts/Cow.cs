@@ -21,11 +21,37 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
         health = 100;
 
         Invoke("PostMovementChecks",1f);
+
     }
 
     protected override void Update(){
         base.Update();
+        //MoveLegs();
     }
+
+    // void MoveLegs(){
+    //     legBase.rotation = transform.rotation;
+    //     velocity = Vector3.MoveTowards(velocity,velocity+moveDir.normalized,Time.deltaTime);
+    //     if (Time.time > lastStep){
+    //         StartCoroutine(MoveLeg(legs[legIndex],legOffset[legIndex]));
+    //         lastStep = Time.time + timeBetweenSteps;
+    //         legIndex = (legIndex + 1) % legs.Length;
+    //         Debug.Log(legIndex);
+    //     }
+    // }
+
+    // IEnumerator MoveLeg(Transform leg, Vector3 offset){
+    //     Vector3 target = transform.position + offset;
+    //     leg.position = target;
+    //     //Vector3 target = leg.position + (moveDir * stepSize);
+    //     // int counter = 0;
+    //     // while (counter < 250){
+    //     //     leg.position = leg.position + target * (Time.fixedDeltaTime * .5f);
+    //     //     counter++;
+    //     // }
+    //     yield return null;
+
+    // }
 
     protected override IEnumerator Movement(Vector3 dir){
         dir.Normalize();

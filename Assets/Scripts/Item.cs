@@ -26,7 +26,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
 
     void OnEnable(){
         thrown = false;
-        Debug.Log("enabled, thrown: " + thrown);
     }
 
     void SetType(){
