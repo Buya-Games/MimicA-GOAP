@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+//a watered down Item.cs for bushes and mushrooms. just used to manage ownership/targeting. extends same interface as item.cs
 public class Resources : MonoBehaviour, ITargettable
 {
-    bool accessible;
     public Spawner.EnvironmentType MyType;
     GameManager manager;
     [SerializeField] public GameObject Owner { get; set; }
@@ -25,17 +23,9 @@ public class Resources : MonoBehaviour, ITargettable
         }
     }
     public void Targeted(GameObject who){
-        if (accessible){
-            accessible = false;
-            Owner = who;
-            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        }
+        Owner = who;
     }
     public void NotTargeted(){
-        if (!accessible){
-            accessible = true;
-            Owner = null;
-            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        }
+        Owner = null;
     }
 }

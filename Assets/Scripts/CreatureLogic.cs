@@ -1,7 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//handles creating action plans around goals. need to optimize more
 public class CreatureLogic : Creature
 {
     public List<GOAPAct> availableActions = new List<GOAPAct>();
@@ -11,31 +11,16 @@ public class CreatureLogic : Creature
     float eventMaxTime = 5; //don't spend more than 5 seconds on any given decision
     float breakTime = .5f;//amount of time between decisions and stuff
     GOAPPlan planner;
-    protected Eat eatBerry;
-    protected PickupItem pickupBerry;
-    protected MeleeAttack harvestBerry;
 
     protected override void Awake() {
         base.Awake();
         planner = FindObjectOfType<GOAPPlan>();
-
-        //everyone gets basic skills to eat and survive
-        eatBerry = new Eat(7);
-        pickupBerry = new PickupItem(7);
-        harvestBerry = new MeleeAttack(6,2);
-    }
-
-    protected void AddCoreSkills(){
-        availableActions.Add(harvestBerry);//eat berry
-        availableActions.Add(pickupBerry);//harvest berries from bushes
-        availableActions.Add(eatBerry);//pickup berries from ground
     }
 
 
     protected virtual void GetPlan(){
         if (alive){
             CurrentAction = null;
-            //myText.text = "";
             toDo = planner.MakePlan(this,GetCurrentState(),HungryCheck());
             if (toDo == null || toDo.Count == 0){ //if failed to find a plan or plan has no moves
                 if(manager.debug){Debug.Log("toDo was null");}
@@ -54,7 +39,6 @@ public class CreatureLogic : Creature
     //ideally this should take the game state when deciding, instead of just randomly choosing from possibleEvents
     protected virtual void GetDecision(){
         CurrentAction = null;
-        //myText.text = "";
 
         if (Target != null && !Target.activeSelf){//if somehow target became inactive, set it to null
             if (manager.debug){Debug.Log("target set to null");}
@@ -63,7 +47,6 @@ public class CreatureLogic : Creature
 
         if (toDo != null && toDo.Count>0){//if we still got things we wanna peform
             CurrentAction = toDo.Dequeue();
-            //myText.text = CurrentAction.ToString();
             PerformDecision();
         } else {
             GetPlan();
@@ -72,22 +55,27 @@ public class CreatureLogic : Creature
 
     //need to tidy this up later
     protected virtual void PerformDecision(){
-        if (Time.time > eventMaxTime){//should we really just give up? what if still moving to X?
+        
+        //maximum time to spend on an action before check if a better plan exists
+        //should we really just give up? what if still in the process of moving?
+        if (Time.time > eventMaxTime){
             eventMaxTime+=Time.time;
             GetDecision();
         } else {
             if (CurrentAction != null){ 
-                if (CurrentAction.GetTarget(this)){
+                if (CurrentAction.GetTarget(this)){//checks if there's a target for this action
                     if (CurrentAction.CheckPreconditions(GetCurrentState())){//checks that currentevent can still be performed
-                        if (CurrentAction.CheckRange(this)){
+                        if (CurrentAction.CheckRange(this)){//checks if in range
+                            
+                            //if already in range, creature would sometimes look wrong way
                             StartCoroutine(FaceTarget((Target.transform.position - transform.position).normalized));
-                            if (CurrentAction.PerformEvent(this)){
+                            if (CurrentAction.PerformEvent(this)){//performs actual action
                                 //Debug.Log(nextEvent + " SUCCEEDED");
                             } else {
                                 Debug.Log(CurrentAction + " FAILED");
                             }
                             Invoke("GetDecision",breakTime * Random.Range(0.4f,.6f));
-                        } else {
+                        } else { //if not in range, move to target
                             StopAllCoroutines();
                             StartCoroutine(Movement((Target.transform.position - transform.position).normalized));
                         }
@@ -103,6 +91,8 @@ public class CreatureLogic : Creature
         }
     }
 
+    //checks if health is below 50 and if it is, sets the goal to EATING
+    //for now creatures have just one goal so myGoals doesn't need to be a queue. but might have multiple goals in future
     protected List<GameState.State> HungryCheck(){
         List<GameState.State> whatToDo = new List<GameState.State>();
         if (health<50){//if hungry, start eating

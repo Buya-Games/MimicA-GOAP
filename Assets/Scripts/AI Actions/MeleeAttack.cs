@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 public class MeleeAttack : GOAPAct
 {
     public MeleeAttack(int targetLayer, float playerAbility){
@@ -64,28 +63,18 @@ public class MeleeAttack : GOAPAct
 
     protected override GameObject FindClosestObjectOfLayer(Creature agent){
         GameObject target = null;
-
-        //in case player already targeting object of this action's layer, pass that to the search tool
-        //(targeting an object removes it from the accessible targets list (to avoid conflicts where everyone targets same thing) so it's necessary
-        //to include it in the search tool when double-checking that plans)
-        // bool searchPlayerHeldItem = false;
-        // if (agent.Target != null && agent.Target.layer == ActionLayer){
-        //     searchPlayerHeldItem = true;   
-        // }
-
-        ITargettable fuck = null;
+        ITargettable itarget = null;
         if (ActionLayer == 6){
-            //target = Tools.FindClosestObjectInList(manager.spawner.ActiveBushes,agent.gameObject);
-            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBushes),agent.gameObject);
-            if (fuck != null){
-                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBushes),agent.gameObject).gameObj;
+            //need to use this thing to search for closest + check ownership of item. its kinda messy but works
+            itarget = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveBushes),agent.gameObject);
+            if (itarget != null){
+                target = itarget.gameObj;
             }
         }
         if (ActionLayer == 8){
-            //target = Tools.FindClosestObjectInList(manager.spawner.ActiveMushrooms,agent.gameObject);
-            fuck = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveMushrooms),agent.gameObject);
-            if (fuck != null){
-                target = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveMushrooms),agent.gameObject).gameObj;
+            itarget = Tools.FindClosestTargetInList(Tools.ConvertToITargettable(manager.spawner.ActiveMushrooms),agent.gameObject);
+            if (itarget != null){
+                target = itarget.gameObj;
             }
         }
         if (ActionLayer == 11){

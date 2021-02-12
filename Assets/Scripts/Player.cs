@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+//extends Creature but basically it's own class. handles player actions
 public class Player : Creature
 {
     PlayerControl control;
@@ -10,7 +9,7 @@ public class Player : Creature
     public GOAPAct CurrentAction;
     [SerializeField] LayerMask interactLM;
     bool teaching = false; //set by companions to true when they're born (and false after 10 turns)
-    public float bobHeight;
+    public float bobHeight; //determines timing skill for melee action
 
     // Awake is called before Start so I use it to initialize all the core stuff
     protected override void Awake(){
@@ -32,19 +31,8 @@ public class Player : Creature
     protected override void Update(){
         if (manager.PlayerAlive){
             base.Update();
-            // Vector3 bobPos = visibleMesh.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;//mesh bobs up/down (collider doesn't move)
-            // bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
-            // visibleMesh.localPosition = bobPos;
-            bobHeight = visibleMesh.transform.localPosition.y * 5;
-            // if (bobHeight > bobMax){
-            //     bobMax = bobHeight;
-            // }
-            // if (bobHeight < bobMin){
-            //     bobMin = bobHeight;
-            // }
-            // if (visibleMesh.localPosition.y > .7f || visibleMesh.localPosition.y < 0){
-            //     visibleMesh.localPosition = new Vector3(0,0.25f,0);
-            // }
+            bobHeight = visibleMesh.transform.localPosition.y * 5;//just an artbitrary number watched by MeleeAttack
+            
             if (HeldItem != null){
                 control.mouseHighlight = true;
             } else {
@@ -53,6 +41,7 @@ public class Player : Creature
         }
     }
 
+    //triggered when pressing space bar (via PlayerControl)
     public void Interact(){
         if (HeldItem != null){
             ThrowItem();
@@ -67,7 +56,7 @@ public class Player : Creature
                 MeleeAttack();
             } else {
                 if (bobHeight < 1.3f){
-                    Swing(2);
+                    Swing(2);//2 will show a red trail streak to indicate pw0ness
                 } else {
                     Swing();
                 }
@@ -77,11 +66,11 @@ public class Player : Creature
 
     public void MeleeAttack(){
         MeleeAttack melee = new MeleeAttack(Target.gameObject.layer, bobHeight);
-        CurrentAction = melee;//prior event should be destroyed by GC
-        if (melee.CheckPreconditions(GetCurrentState())){
-            if (melee.PerformEvent(this)){
-                if (teaching){
-                    OnTeach();
+        CurrentAction = melee;//prior event should be destroyed by GC i think?
+        if (melee.CheckPreconditions(GetCurrentState())){ //if this can be performed
+            if (melee.PerformEvent(this)){ //perform it
+                if (teaching){//and if you're teaching someone
+                    OnTeach();//broadcast the teaching event
                 }
                 //tutorial shit
                 if (manager.Tutorial && manager.tut.Tut0WASD){
@@ -108,10 +97,9 @@ public class Player : Creature
             manager.tut.DisplayNextTip(2);//eat the berry
         }
         //end tutorial shit
-
-        //I don't perform anything here cuz for player the logic is done inside Item.cs
     }
 
+    //you can eat anything you can pick up. and that will be taught to buddies.
     public void EatItem(){
         if (HeldItem != null){
             CurrentAction = new Eat(HeldItem.layer);
@@ -136,16 +124,16 @@ public class Player : Creature
         }
     }
 
+    //throwing an item is determined by where the mouse is
     public void ThrowItem(){
-        Vector3 mousePos = control.MousePos();
-        int targetLayer = control.ThrowingTarget(mousePos);
-        // if (targetLayer == 13 && HeldItem.layer == 7){//throwing to self
-        //     Eat eat = new Eat();
-        //     CurrentEvent = eat;
-        // } else {
-            ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
-            CurrentAction = throwItem;
-        //}
+        Vector3 mousePos = control.MousePos();//get mouse position
+        int targetLayer = control.ThrowingTarget(mousePos);//get what is at the mouse position
+
+        //note, mousePos isn't actually used yet. I thought about teaching buddies to throw to a specific position throw RELATIVE to the cow for example
+        //but unnecessary
+        ThrowItem throwItem = new ThrowItem(mousePos,HeldItem.layer,control.ThrowingTarget(mousePos));
+        
+        CurrentAction = throwItem;
         if (CurrentAction.PerformEvent(this)){
             if (teaching){
                 OnTeach();
@@ -175,7 +163,6 @@ public class Player : Creature
         StopAllCoroutines();
         control.StopMovement();
         healthBar.gameObject.SetActive(false);
-        Debug.Log(myName + " has died");
         manager.PlayerDeath();
     }
 }

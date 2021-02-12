@@ -1,12 +1,13 @@
 using System.Collections;
 using UnityEngine;
 
-public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a few funcs, but maybe better just to be self
+//makes the cow walk around randomly, handles eating and pooping, and moves the entire play area
+public class Cow : Creature //inherit from Creature for TakeHit and a few funcs, but maybe better just to be self
 {
     [SerializeField] Transform poopPos;
-    [SerializeField] MeshRenderer birthBar;
+    [SerializeField] MeshRenderer birthBar;//to indicate how much until birthing buddy
     MaterialPropertyBlock matBlockBirth;
-    float eatenFungus = 0;
+    int eatenFungus = 0;
     [SerializeField] Transform ground;
 
     protected override void Awake(){
@@ -19,41 +20,11 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
         birthBar.SetPropertyBlock(matBlockBirth);
 
         health = 100;
-
         Invoke("PostMovementChecks",1f);
 
     }
 
-    protected override void Update(){
-        base.Update();
-        //MoveLegs();
-    }
-
-    // void MoveLegs(){
-    //     legBase.rotation = transform.rotation;
-    //     velocity = Vector3.MoveTowards(velocity,velocity+moveDir.normalized,Time.deltaTime);
-    //     if (Time.time > lastStep){
-    //         StartCoroutine(MoveLeg(legs[legIndex],legOffset[legIndex]));
-    //         lastStep = Time.time + timeBetweenSteps;
-    //         legIndex = (legIndex + 1) % legs.Length;
-    //         Debug.Log(legIndex);
-    //     }
-    // }
-
-    // IEnumerator MoveLeg(Transform leg, Vector3 offset){
-    //     Vector3 target = transform.position + offset;
-    //     leg.position = target;
-    //     //Vector3 target = leg.position + (moveDir * stepSize);
-    //     // int counter = 0;
-    //     // while (counter < 250){
-    //     //     leg.position = leg.position + target * (Time.fixedDeltaTime * .5f);
-    //     //     counter++;
-    //     // }
-    //     yield return null;
-
-    // }
-
-    protected override IEnumerator Movement(Vector3 dir){
+    protected override IEnumerator Movement(Vector3 dir){//i don't even inherit this from Creature but i should
         dir.Normalize();
         StartCoroutine(FaceTarget(dir));
         int counter = Random.Range(1000,2000);
@@ -70,10 +41,10 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
 
     protected override void PostMovementChecks()
     {
-        StartCoroutine(Movement(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
+        StartCoroutine(Movement(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));//just loops inifinitely
     }
 
-    protected override IEnumerator FaceTarget(Vector3 dir, float turnSpeed = .01f){
+    protected override IEnumerator FaceTarget(Vector3 dir, float turnSpeed = .01f){//again, doesn't inherit from Creature which it should
         Quaternion rot = Quaternion.LookRotation(new Vector3(dir.x,0,dir.z));
         int counter = 0;
         while (counter<250){
@@ -134,7 +105,7 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
         manager.spawner.SpawnEnvironment(poopPos.position,Spawner.EnvironmentType.BerryPoop);
         manager.particles.EatingBerry(berry.transform.position);
         manager.audioManager.PlaySound("eat",0,1,Random.Range(.9f,1.1f));
-        health = Mathf.Clamp(health + 5,5,100);
+        health = Mathf.Clamp(health + 5,5,100);//cow gets a bit of health from eating
 
         //tutorial shit
         if (manager.Tutorial && manager.tut.Tut4ThrowBerryCow){
@@ -149,13 +120,11 @@ public class Cow : Creature, IHittable //inherit from Creature for TakeHit and a
         alive = false;
         StopAllCoroutines();
         manager.GameOver(false);
-        healthBar.gameObject.SetActive(false);
-        birthBar.gameObject.SetActive(false);
         manager.particles.DestroyingCow(transform.position);
         gameObject.SetActive(false);
-        //GhettoAnimations.FallOver(transform);
     }
 
+    //this is how cow detects berry/mushroom collisions
     void OnCollisionEnter(Collision col){
         if (col.gameObject.layer == 7){ //if berry
             EatBerry(col.gameObject);

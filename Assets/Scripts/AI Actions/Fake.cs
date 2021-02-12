@@ -1,5 +1,6 @@
 using UnityEngine;
-using System.Collections.Generic;
+
+//fake action I created for the fake parent node in GOAPAct. Only need this for debug
 public class Fake: GOAPAct
 {
     public Fake(){

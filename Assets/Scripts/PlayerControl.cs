@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System;
 
+
+//handles player input and passes it to Player.cs
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerControl : MonoBehaviour
 {
@@ -39,15 +38,6 @@ public class PlayerControl : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Escape)){
                 manager.PauseGame();
             }
-            if (Input.GetKeyDown(KeyCode.B)){
-                manager.spawner.SpawnCreature(transform.position);
-            }
-            if (Input.GetKeyDown(KeyCode.V)){
-                manager.spawner.SpawnCreature(manager.spawner.EmptyNearbyLocation(transform.position,15,20),true);
-            }
-            if (Input.GetKeyDown(KeyCode.C)){
-                Debug.Log(manager.spawner.ActiveBuddies.Count);
-            }
         }
     }
 
@@ -59,7 +49,6 @@ public class PlayerControl : MonoBehaviour
                 rb.MovePosition(rb.position + keybInputDirection * Time.fixedDeltaTime * moveSpeed);
                 Quaternion rot = Quaternion.LookRotation(keybInputDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation,rot,Time.fixedDeltaTime * 10);
-                //player.health-=0.04f;
             }
             if (lookTarget != Vector3.zero){
                 LookAtTarget();
@@ -133,6 +122,7 @@ public class PlayerControl : MonoBehaviour
         highlightedObject = null;
     }
 
+    //moves the head of the player toward the mouse position. just giving it a bit more life
     void LookAtTarget(){
         Vector3 lookDir = (lookTarget - head.transform.position);
         Quaternion lookRot = Quaternion.LookRotation(new Vector3(lookDir.x,0,lookDir.z));

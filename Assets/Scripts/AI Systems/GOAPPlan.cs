@@ -1,7 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//creates a path from current worldstate to goal using available actions
+//heavily modified from: https://gamedevelopment.tutsplus.com/tutorials/goal-oriented-action-planning-for-a-smarter-ai--cms-20793
+//used list instead of dictionary cuz logic isn't that complex
+//still need to opitmize and implement heaps
 public class GOAPPlan : MonoBehaviour
 {
     GameManager manager;
@@ -179,8 +182,6 @@ public class GOAPPlan : MonoBehaviour
 
     void tallyParentCosts(List<Node> leaves, CreatureLogic agent){
         for (int i = 0;i<leaves.Count;i++){
-            // if (debug) {Debug.Log(string.Format("[{0}] {1}{2}-{3} starting cost: {4}",
-            //     agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));}
             
             //we estimate that total path cost will be a multiple of the initial (child) action cost
             //ie: if initial action cost = 20 * 5 steps in path = total path cost estimate is 100
@@ -191,34 +192,16 @@ public class GOAPPlan : MonoBehaviour
                 pathSteps++;
                 p = p.parent;
             }
-            // if (debug) {Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) total paths: {5}",
-            //     agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit,pathSteps));}
             leaves[i].costBenefit*=pathSteps;
-            // if (debug) {Debug.Log(string.Format("[{0}] {1}{2}-{3} end cost: {4}",
-            //     agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));}
         }
-        // for (int i = 0;i<leaves.Count;i++){
-        //     Debug.Log(string.Format("[{0}] {1}{2}-{3} starting cost: {4}",
-        //         agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));
-        //     Node p = leaves[i].parent;
-        //     while (p.parent != null){
-        //         Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) adding cost of parent {5}{6}-{7} ({8})",
-        //         agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit,
-        //         p.action,p.action.ActionLayer,p.action.ActionLayer2,p.costBenefit));
-        //         leaves[i].costBenefit+=p.costBenefit;
-        //         p = p.parent;
-        //     }
-        //     Debug.Log(string.Format("[{0}] {1}{2}-{3} end cost: {4}",
-        //         agent.name,leaves[i].action,leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));
-        // }
     }
 
     Node FindCheapestNode(List<Node> leaves, CreatureLogic agent){
         Node cheapest = null;
         if (manager.debug) {Debug.Log(string.Format("------------------ checking cheapest of {0} leaves ({1}) ------------------",leaves.Count,agent.name));}
         for (int i = 0;i<leaves.Count;i++){
-            if (leaves[i].costBenefit == 26){
-                leaves[i].costBenefit+=100;//adding a big premium to theoretical events
+            if (leaves[i].costBenefit == 26){//26 is the exact value of "theoretical" event (where we didn't find an existing target)
+                leaves[i].costBenefit+=100;//adding a big premium to theoretical events to favor real ones with real targets
             }
             if (cheapest == null){
                 cheapest = leaves[i];
@@ -274,140 +257,5 @@ public class GOAPPlan : MonoBehaviour
         }
         return alignmentScore;
     }
-
-    //starts at current world state and checks if any actions can lead to goal
-    // bool forwardGraph(Node node, List<Node> leaves, List<GOAPAct> availActions, List<GameState.State> worldState, CreatureLogic agent, float cheapest){
-    //     bool foundIndirectGoalPath = false;
-    //     List<GOAPAct> possibleActions = getPossibleActions(availActions,worldState);//actions possible in current state
-    //     if (debug){
-    //         Debug.Log(string.Format("[{0}] FORWARD GRAPH",agent.name));
-    //         Tools.PrintList(agent.name, "AVAIL ACTIONS", availActions);
-    //         Tools.PrintList(agent.name, "GOAL", node.goalState);
-    //         Tools.PrintList(agent.name, "WORLD STATE", worldState);
-    //         Tools.PrintList(agent.name, "CURRENTLY POSSIBLE ACTIONS", possibleActions);
-    //     }
-    //     foreach (var action in possibleActions){//review the leftovers not used by backwardGraph
-    //         node.costBenefit = action.EstimateActionCost(agent);
-    //         if (node.parent != null){
-    //             node.costBenefit+= node.parent.costBenefit;
-    //         }
-    //         if (node.costBenefit < cheapest){//if cheaper than cheapest from backwardGraph
-    //             if (GameState.CompareStates(action.Preconditions,worldState)){//and if it can be performed in world state
-    //                 if (GameState.CompareStates(node.goalState,action.Effects)){//and if it will satisfy the creature's ultimate goal
-    //                     if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can be performed now, so adding it to leaves (parent {5}{6}-{7})",
-    //                         agent.name, action, action.ActionLayer, action.ActionLayer2, node.costBenefit,
-    //                         node.parent.action,node.parent.action.ActionLayer,node.parent.action.ActionLayer2));}
-    //                     node.action = action;
-    //                     leaves.Add(node);
-    //                     foundIndirectGoalPath = true;
-    //                 } else {//if it does not satisfy ultimate goal but can be performed, check if it will lead to something that can satisfy ultimate goal
-    //                     if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} doesn't satify goal but looking if it leads to other actions (parent {4}{5}-{6})",
-    //                         agent.name,action,action.ActionLayer,action.ActionLayer2,
-    //                         node.parent.action,node.parent.action.ActionLayer,node.parent.action.ActionLayer2));}
-    //                     // Node childNode = new Node(//then add it to leaves
-    //                     //     node,//parent
-    //                     //     0,//this action cost + parent cost
-    //                     //     node.goalState,//ultimate goal
-    //                     //     null);
-    //                     // if (forwardGraph(childNode,leaves,Tools.ListSubset(availActions,action),GameState.CombineStates(worldState,action.Effects),agent,cheapest)){
-    //                     //     foundIndirectGoalPath = true;
-    //                     //     node.action = action;
-    //                     // }
-
-    //                     //new node to check if another action can lead to this action at a cheaper cost
-    //                     Node childNode = new Node(node, 0, node.goalState, new Fake());
-
-    //                     //if cheaper actions do exist, then create a new path with a new cost
-    //                     if (forwardGraph(childNode,leaves,Tools.ListSubset(availActions,action),GameState.CombineStates(worldState,action.Effects),agent,cheapest)){
-    //                         // Node newPathNode = new Node(node.parent,node.costBenefit,node.goalState,action);
-    //                         // if (debug){Debug.Log(string.Format("[{0}] new path found {1} ({2}) via child {3} ({4})",
-    //                         //     agent.name,action,newPathNode.costBenefit,childNode.action,childNode.costBenefit));}
-    //                         // leaves.Add(newPathNode);
-    //                         node.action = action;
-    //                         foundIndirectGoalPath = true;
-    //                     }
-    //                 }
-    //             } else {
-    //                 if (debug){Debug.Log(string.Format("[{0}]'s {1}{2}-{3} couldn't be performed now (parent {4}{5}-{6}",
-    //                 agent.name,action,action.ActionLayer,action.ActionLayer2,node.parent.action,node.parent.action.ActionLayer,node.parent.action.ActionLayer2));}
-    //             }
-    //         } else {
-    //             if (debug){Debug.Log(string.Format("[{0}]'s {1}{2}-{3} cost ({4}) wasn't cheapest (parent {5}{6}-{7})",
-    //                 agent.name,action,action.ActionLayer,action.ActionLayer2,node.costBenefit,
-    //                 node.parent.action,node.parent.action.ActionLayer,node.parent.action.ActionLayer2));}
-    //         }
-    //     }
-    //     if (debug){
-    //         Debug.Log(string.Format("------------------ {0} leaves after {1} forwardGraph------------------",leaves.Count,agent.name));
-    //         for (int i = 0;i<leaves.Count;i++){
-    //             Debug.Log(string.Format("[{0}] {1}{2}-{3} : {4}",agent.name,leaves[i].action,
-    //                 leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));
-    //         }
-    //     }
-    //     return foundIndirectGoalPath;
-
-    // }
-    //starts at goal and checks if any actions can directly lead to that goal. more performant than forwardGraph
-    // bool backwardGraph(Node node, List<Node> leaves, List<GOAPAct> availActions, List<GameState.State> worldState, Creature agent){
-    //     bool foundDirectGoalPath = false;
-    //     List<GOAPAct> goalActions = getGoalActions(availActions,node.goalState);//actions with Effects that will create goalState
-    //     if (debug){
-    //         Debug.Log(string.Format("[{0}] BACKWARD GRAPH",agent.name));
-    //         Tools.PrintList(agent.name, "AVAIL ACTIONS", availActions);
-    //         Tools.PrintList(agent.name, "GOAL", node.goalState);
-    //         Tools.PrintList(agent.name, "ACTIONS SATISFYING GOAL STATE", goalActions);
-    //     }
-    //     foreach (GOAPAct action in goalActions){
-    //         node.costBenefit = action.EstimateActionCost(agent);
-    //         if (node.parent != null){
-    //             node.costBenefit+=node.parent.costBenefit;
-    //         }
-    //         if (GameState.CompareStates(action.Preconditions,worldState)){
-    //             node.action = action;
-    //             if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can be performed now, so addding it to leaves",
-    //                 agent.name, action, action.ActionLayer,action.ActionLayer2,node.costBenefit));}
-    //             leaves.Add(node);
-    //             //Node goodNode = new Node(currentNode, action.EstimateActionCost(agent), null, action);//create new node cuz currentNode will be recycled
-    //             // if (debug){Debug.Log(string.Format("[{0}] {1} ({2}) can be performed now, so addding it to leaves",
-    //             //     agent.name, action, goodNode.costBenefit));}
-    //             // leaves.Add(goodNode);
-    //             foundDirectGoalPath = true;
-    //         } else {
-    //             if (debug){Debug.Log(string.Format("[{0}] {1}{2}-{3} ({4}) can't be performed now but looking if other actions can meet its preconditions",
-    //                 agent.name, action, action.ActionLayer,action.ActionLayer2,node.costBenefit));}
-                
-    //             //make new node representing the world state required to run this action
-    //             Node childNode = new Node(node, 0, action.Preconditions, null);
-    //             //if new node is possible in current world state, then that is the action we need to do
-    //             if (backwardGraph(childNode,leaves,Tools.ListSubset(availActions,action),worldState,agent)){
-    //                 node.action = action;
-    //                 foundDirectGoalPath = true;
-    //             };
-    //         }
-    //     }
-    //     if (debug){
-    //         Debug.Log(string.Format("------------------ checking cheapest of {0} ({1}) ------------------",leaves.Count,agent.name));
-    //         for (int i = 0;i<leaves.Count;i++){
-    //             Debug.Log(string.Format("[{0}] {1}{2}-{3} : {4}",agent.name,leaves[i].action,
-    //                 leaves[i].action.ActionLayer,leaves[i].action.ActionLayer2,leaves[i].costBenefit));
-    //         }
-    //     }
-    //     return foundDirectGoalPath;
-    // }
-
-    
-
-    
-
-    // float calculateCost(Buddy agent,GOAPAct action){
-    //     //float benefit = Mathf.Max(agent.motiveReproduction,Mathf.Max(agent.motiveAttack,agent.motiveHarvest));
-    //     return action.EstimateActionCost(agent);
-    //     //return benefit/cost;
-    //     //need to include movement cost in here somewhere
-    //     // float repro = action.motiveReproduction - agent.motiveReproduction;
-    //     // float harvest = action.motiveHarvest - agent.motiveHarvest;
-    //     // float attack = action.motiveReproduction - agent.motiveReproduction;
-    //     // return Mathf.Min(repro,Mathf.Min(harvest,attack));
-    // }
     
 }

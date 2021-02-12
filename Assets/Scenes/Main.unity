@@ -497,7 +497,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1134,7 +1134,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1229,7 +1229,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1638,7 +1638,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1733,7 +1733,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -7138,7 +7138,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17828,7 +17828,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fc8cd399390cad2488082e5e43e895ce, type: 2}
+  - {fileID: 2100000, guid: 209401b977fb4a5409b018cf94a672bb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -22771,7 +22771,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -27996,7 +27996,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -28562,7 +28562,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1945215641}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: StartGame
+        m_MethodName: QuitGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -49427,11 +49427,13 @@ MonoBehaviour:
   player: {fileID: 0}
   spawner: {fileID: 0}
   ui: {fileID: 0}
+  tut: {fileID: 0}
   CurrentState: 
   particles: {fileID: 0}
   cow: {fileID: 0}
+  Tutorial: 1
+  GameLive: 0
   debug: 0
-  vcam: {fileID: 1073013288}
   HeadColor:
     serializedVersion: 2
     key0: {r: 1, g: 0.4392157, b: 0.4392157, a: 1}
@@ -49461,15 +49463,12 @@ MonoBehaviour:
     m_Mode: 1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  playerDeathScore: 10
   winScore: 20
-  PlayerAlive: 0
-  ShroomsForBirth: 2
+  ShroomsForBirth: 10
   buddyLearningActions: 10
+  PlayerAlive: 0
   camFollow: {fileID: 946888676}
   HitMaterial: {fileID: 2100000, guid: cc3d70aa453cfed42b67d7644cc9a0c0, type: 2}
-  Tutorial: 1
-  GameLive: 0
   swingNormal:
     serializedVersion: 2
     key0: {r: 1, g: 1, b: 1, a: 1}
@@ -49528,7 +49527,6 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  tut: {fileID: 0}
 --- !u!114 &1945215642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49614,8 +49612,8 @@ MonoBehaviour:
     bar.
   - Congratulations! Your buddy will learn by mimicking you. They will learn up to
     10 actions. It is up to you what you teach them.
-  - Try teaching them to feed YOU (while holding a berry, highlight yourself with
-    the mouse and press space).
+  - Your buddy learned 10 actions and will now function depending on how you taught
+    them. Try growing your population to 20!
   - Lastly, look out for enemies. Try hitting them or throwing poop at them. (Of
     course you can train your buddies to do all this.)
   Tut0WASD: 0
@@ -49760,31 +49758,26 @@ MonoBehaviour:
     volume: 1
     pitch: 1
     source: {fileID: 0}
-    loop: 0
   - name: eat
     clip: {fileID: 8300000, guid: 0663a483d7602224c8a7c3e320622926, type: 3}
     volume: 1
     pitch: 1
     source: {fileID: 0}
-    loop: 0
   - name: melee
     clip: {fileID: 8300000, guid: 525c255eda908614daaa917c0e8273af, type: 3}
     volume: 1
     pitch: 1
     source: {fileID: 0}
-    loop: 0
   - name: pickup
     clip: {fileID: 8300000, guid: 5524b86a1abfa7247afbde6c7a2088bd, type: 3}
     volume: 1
     pitch: 1
     source: {fileID: 0}
-    loop: 0
   - name: swing
     clip: {fileID: 8300000, guid: 32ac0458f367a4442b435813c6edb4f9, type: 3}
     volume: 1
     pitch: 1
     source: {fileID: 0}
-    loop: 0
 --- !u!1 &2064780270
 GameObject:
   m_ObjectHideFlags: 0
@@ -50108,7 +50101,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fe67bb1de3a6f344fb0e7f2175a73d04, type: 2}
+  - {fileID: 2100000, guid: 5bba831ec0b180a4baef86b9469599ab, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -37,13 +37,8 @@ public static class Tools
         return closest;
     }
 
-    public static ITargettable FindClosestTargetInList(List<ITargettable> objects, GameObject agent, bool searchPlayerItem = false){
+    public static ITargettable FindClosestTargetInList(List<ITargettable> objects, GameObject agent){
         ITargettable closest = null;
-
-        //if player is already holding item of the targeted layer, then start search from there
-        if (searchPlayerItem){
-            closest = agent.GetComponent<Creature>().Target.GetComponent<ITargettable>();
-        }
 
         if (objects.Count>0){
             float dist = 5;//starting distance to search through

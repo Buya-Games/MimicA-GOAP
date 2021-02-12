@@ -3,6 +3,7 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+//from https://assetstore.unity.com/packages/tools/animation/fast-ik-139972
 //namespace DitzelGames.FastIK{
     /// <summary>
     /// Fabrik IK Solver

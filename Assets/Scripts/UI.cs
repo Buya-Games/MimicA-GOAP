@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -46,12 +45,12 @@ public class UI : MonoBehaviour
         textResult.gameObject.SetActive(false);
     }
 
-    public void EndGame(bool win = true){
+    public void EndGame(bool win = true, float timer = 0){
         panelPause.SetActive(true);
         btnStartGame.GetComponentInChildren<TMP_Text>().text = "Play Again";
 
         if (win){
-            textResult.text = "You won!";
+            textResult.text = "You won!<br><br>Time: " + timer.ToString("F2");
         } else {
             textResult.text = "You lost :(";
         }
@@ -83,7 +82,6 @@ public class UI : MonoBehaviour
         popUp.transform.localScale = Vector3.zero;
         popUp.gameObject.SetActive(true);
         popUp.transform.DOScale(Vector3.one,0.1f).OnComplete(() => {
-            //popUp.transform.DOPunchScale(Vector3.one*1.2f,0.2f,0,0);
             popUp.transform.DOMoveY(where.y+28,6).OnComplete(() => popUp.gameObject.SetActive(false));
             popUpQueue.Enqueue(popUp);
         });

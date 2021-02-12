@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//this could be better
 public static class NameGenerator
 {
     public static string CreateRandomName(){
@@ -29,17 +30,6 @@ public static class NameGenerator
 
         char firstLetter = char.ToUpper(rando[0]);
         rando = firstLetter + rando.Substring(1);
-        // for (int i = 0;i<nameLength;i++){
-        //     if (vowel){
-        //         vowel = false;
-        //         int character = Random.Range(0,vowels.Length);
-        //         rando+=vowels[character];
-        //     } else {
-        //         vowel = true;
-        //         int character = Random.Range(0,consonants.Length);
-        //         rando+=consonants[character];
-        //     }
-        // }
         return rando;
     }
 }

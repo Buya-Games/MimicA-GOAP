@@ -1,8 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
+//huge class that handles spawning of everything except the cow and the player
+//recycle most items via queue (except buddies and enemies, altho I should do that too)
 public class Spawner : MonoBehaviour
 {
     
@@ -46,7 +47,6 @@ public class Spawner : MonoBehaviour
 
     void ActualSpawn(GameObject prefab, Queue<GameObject> thingQueue){
         GameObject newThing = Instantiate(prefab);
-        //newThing.transform.SetParent(transform);
         newThing.SetActive(false);
         thingQueue.Enqueue(newThing);
     }
@@ -143,7 +143,6 @@ public class Spawner : MonoBehaviour
             newItem = useQueue.Dequeue();
         } else {
             newItem = Instantiate(usePrefab);
-            //newItem.transform.SetParent(transform);
         }
         if (newItem != null){//dunno why but I had this exception thrown once
             useList.Add(newItem);
@@ -209,7 +208,6 @@ public class Spawner : MonoBehaviour
             manager.CurrentState.Remove(GameState.State.availFungusPoop);
         }
         item.SetActive(false);
-        //item.transform.SetParent(transform);
     }
 
     public void CleanUp(){
@@ -239,6 +237,7 @@ public class Spawner : MonoBehaviour
         }
     }
 
+    //finds an empty location near the cow (for spawning items)
     public Vector3 EmptyLocation(){
         int posNegX = Random.Range(0,2)*2-1;
         int posNegZ = Random.Range(0,2)*2-1;
@@ -253,6 +252,7 @@ public class Spawner : MonoBehaviour
         return pos;
     }
 
+    //finds an empty location near where you tell it
     public Vector3 EmptyNearbyLocation(Vector3 center, int minRadius, int maxRadius){
         int posNegX = Random.Range(0,2)*2-1;
         int posNegZ = Random.Range(0,2)*2-1;

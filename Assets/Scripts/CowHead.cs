@@ -7,6 +7,7 @@ public class CowHead : MonoBehaviour
     bool colliding = false;
     Transform lookAtTarget;
     [SerializeField] LayerMask cowHeadLM;
+    
     void Update(){
         if (colliding){
             Vector3 lookDir = (lookAtTarget.position - transform.position);

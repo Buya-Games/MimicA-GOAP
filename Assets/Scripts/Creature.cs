@@ -1,14 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
-//base class for stats, moving, swinging melee
+//base class for stats, moving, swinging, taking damage, eating, dying
 public class Creature : MonoBehaviour, IHittable
 {
     protected GameManager manager;
     Rigidbody rb;
-    public Stats MyStats;
+    public Stats MyStats;//class is defined at bottom of this script
     public GameObject Target;
     public GameObject HeldItem;
     [SerializeField] Transform melee;//melee attacking "arm"
@@ -17,7 +16,6 @@ public class Creature : MonoBehaviour, IHittable
     protected Transform mainCamera;
     public float health;
     protected string myName;
-    //[SerializeField] protected TMP_Text myText;
     public MeshRenderer visibleMesh;
     protected float bobSpeed;
     [SerializeField] protected Transform head;
@@ -25,7 +23,7 @@ public class Creature : MonoBehaviour, IHittable
     bool enemy = false;
     bool cow = false;
     Material origMat;
-    TrailRenderer trail;
+    TrailRenderer trail;//shows a little trail when swinging the melee
 
     protected virtual void Awake(){
         if (this is Enemy){
@@ -33,6 +31,9 @@ public class Creature : MonoBehaviour, IHittable
         }
         if (this is Cow){
             cow = true;
+        } else {
+            trail = GetComponentInChildren<TrailRenderer>();
+            melee.gameObject.SetActive(false);
         }
         manager = FindObjectOfType<GameManager>();
         rb = GetComponent<Rigidbody>();
@@ -41,10 +42,6 @@ public class Creature : MonoBehaviour, IHittable
         mainCamera = Camera.main.transform;
         visibleMesh = visibleMesh.GetComponent<MeshRenderer>();
         origMat = visibleMesh.material;
-        if (!cow){
-            trail = GetComponentInChildren<TrailRenderer>();
-            melee.gameObject.SetActive(false);
-        }
     }
 
     public virtual void Init(){
@@ -71,6 +68,40 @@ public class Creature : MonoBehaviour, IHittable
         MyStats.HarvestSkill = 1;
     }
 
+    protected virtual void Update(){
+        if (alive){
+            if (!cow){//cow don't bob or lose health
+                //bobs the mesh up and down (collider doesn't move)
+                Vector3 bobPos = visibleMesh.transform.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;
+                bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
+                visibleMesh.transform.localPosition = bobPos;
+                if (manager.GameLive){
+                    health-=.01f;//everyone gets a little hungry every frame
+                }
+            }
+            
+            UpdateHealth();
+            if (health <= 0){
+                Die();
+            }
+        }
+    }
+
+    //updating the healthbars and keeps them aligned with camera
+    protected virtual void UpdateHealth(){
+        if (mainCamera != null) {
+            var forward = healthBar.transform.position - mainCamera.transform.position;
+            forward.Normalize();
+            var up = Vector3.Cross(forward, mainCamera.transform.right);
+            healthBar.transform.rotation = Quaternion.LookRotation(forward, up);
+        }
+
+        healthBar.GetPropertyBlock(matBlock);
+        matBlock.SetFloat("_Fill", Mathf.Clamp(health/100,0,1));
+        healthBar.SetPropertyBlock(matBlock);
+    }
+
+    //snapshot of current world state
     protected List<GameState.State> GetCurrentState(){
         List<GameState.State> currentState = new List<GameState.State>();
         if (HeldItem == null){
@@ -88,38 +119,7 @@ public class Creature : MonoBehaviour, IHittable
         return currentState;
     }
 
-    protected virtual void Update(){
-        if (alive){
-            if (!cow){
-                //mesh bobs up/down (collider doesn't move)
-                Vector3 bobPos = visibleMesh.transform.localPosition + transform.up * Mathf.Sin(Time.time * bobSpeed) * 0.015f;
-                bobPos.y = Mathf.Clamp(bobPos.y,0,.7f);
-                visibleMesh.transform.localPosition = bobPos;
-                if (manager.GameLive){
-                    health-=.01f;
-                }
-            }
-            
-            UpdateHealth();
-            if (health <= 0){
-                Die();
-            }
-        }
-    }
-
-    protected virtual void UpdateHealth(){
-        if (mainCamera != null) {
-            var forward = healthBar.transform.position - mainCamera.transform.position;
-            forward.Normalize();
-            var up = Vector3.Cross(forward, mainCamera.transform.right);
-            healthBar.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
-
-        healthBar.GetPropertyBlock(matBlock);
-        matBlock.SetFloat("_Fill", Mathf.Clamp(health/100,0,1));
-        healthBar.SetPropertyBlock(matBlock);
-    }
-
+    //used to target (set "ownership") of items so multiple agents don't go for same thing
     public void SetTarget(GameObject targetedObj){
         if (!enemy){
             if (Target != null){
@@ -143,13 +143,14 @@ public class Creature : MonoBehaviour, IHittable
         Target = null;
     }
 
+    //was too lazy to make an animtion, so here's a derpy one
     public void Swing(int strength = 1){
         if (strength > 1){
             manager.audioManager.PlaySound("swing",0,.7f,2f);
             trail.colorGradient = manager.swingHard;
         } else {
-            trail.colorGradient = manager.swingNormal;
             manager.audioManager.PlaySound("swing",0,.7f,Random.Range(.9f,1.1f));
+            trail.colorGradient = manager.swingNormal;
         }
         StopCoroutine(GhettoAnimations.AnimSwing(melee));
         StartCoroutine(GhettoAnimations.AnimSwing(melee));
@@ -170,6 +171,7 @@ public class Creature : MonoBehaviour, IHittable
         }
     }
 
+    //you can eat anything, but gives you different nourishment 
     public void Eat(Spawner.EnvironmentType type){
         float eatBenefit = 0;
         if (type == Spawner.EnvironmentType.Berry){
@@ -194,7 +196,9 @@ public class Creature : MonoBehaviour, IHittable
 
     public void TakeHit(GameObject attacker, float damage){
         health -=damage;
-        // Vector3 dir = (transform.position - attacker.transform.position).normalized; //pushes me in direction opposite to attacker
+        
+        //pushes me in direction opposite to attacker
+        // Vector3 dir = (transform.position - attacker.transform.position).normalized; 
         // dir.y = 0;
         // rb.AddForce(dir * 600);
 
@@ -210,22 +214,19 @@ public class Creature : MonoBehaviour, IHittable
     }
 
     protected void Idle(){
-        //myText.text = "Idle";
         StartCoroutine(Movement(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));
     }
 
     protected virtual void Die(){
+        StopAllCoroutines();
+        alive = false;
+
         if (HeldItem != null){
             DropItem();
         }
         if (Target != null){
             ClearTarget();
         }
-        alive = false;
-        StopAllCoroutines();
-        Debug.Log(myName + " has died");
-        //myText.gameObject.SetActive(false);
-        healthBar.gameObject.SetActive(false);
         manager.spawner.DespawnCreature(this.gameObject);
     }
 

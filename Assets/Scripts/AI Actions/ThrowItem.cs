@@ -97,7 +97,8 @@ public class ThrowItem : GOAPAct
             throwTargetPos.transform.parent = agent.transform;
         }
         if (ActionLayer2 == 14){//target is cow
-            target = cow;
+            //i want AIs to throw it at the cow's head (but MeleeAttack for enemies will still target cow's body)
+            target = GameObject.FindObjectOfType<CowHead>().gameObject;
         }
         if (ActionLayer2 == 12){//target is buddy
             target = Tools.FindWeakestAndClosestCreature(manager.spawner.ActiveBuddies,agent.gameObject);//target the nearest, weakest buddy

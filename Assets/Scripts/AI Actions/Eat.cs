@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 public class Eat: GOAPAct
 {
     public Eat(int itemLayer){

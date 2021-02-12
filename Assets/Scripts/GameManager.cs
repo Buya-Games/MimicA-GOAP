@@ -1,41 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Cinemachine;
 using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
-    public AudioManager audioManager;
-    public PlayerControl player;
+    [HideInInspector] public AudioManager audioManager;
+    [HideInInspector] public Player player;
     [HideInInspector] public Spawner spawner;
     [HideInInspector] public UI ui;
-    int collectedFungus;
+    [HideInInspector] public Tutorial tut;
     [SerializeField] public List<GameState.State> CurrentState = new List<GameState.State>();
     [HideInInspector] public ParticleManager particles;
     [HideInInspector] public Cow cow;
+    [HideInInspector] public bool Tutorial = true;
+    [HideInInspector] public bool GameLive;
     public bool debug;
-    [SerializeField] CinemachineVirtualCamera vcam;
-    public Gradient HeadColor;
-    [SerializeField] int playerDeathScore, winScore;
-    public bool PlayerAlive = false;
-    public int ShroomsForBirth;
-    public int buddyLearningActions;
+    public Gradient HeadColor;//should really be in Creature.cs
+    [SerializeField] int winScore;
+    public int ShroomsForBirth, buddyLearningActions;
+    [HideInInspector] public bool PlayerAlive = false;
     [SerializeField] Transform camFollow; //target of camera. I move it between player/cow to switch camera focus before/after player death
-    public Material HitMaterial;
-    public bool Tutorial = true;
-    public bool GameLive;
-    public Gradient swingNormal, swingHard;
-    public Tutorial tut;
+    public Material HitMaterial;//red color used to indicate when a creature was hit. should really be in Creature.cs
+    public Gradient swingNormal, swingHard;//should also be in Creature.cs
+    float roundTime;
 
     //Awake is called before Start
     void Awake(){
-        player = FindObjectOfType<PlayerControl>();
+        player = FindObjectOfType<Player>();
         spawner = GetComponent<Spawner>();
         ui = GetComponent<UI>();
         particles = GetComponent<ParticleManager>();
         cow = FindObjectOfType<Cow>();
-        vcam = vcam.GetComponent<CinemachineVirtualCamera>();
         audioManager = FindObjectOfType<AudioManager>();
         tut = GetComponent<Tutorial>();
         CurrentState.Add(GameState.State.playerAlive);
@@ -74,7 +70,9 @@ public class GameManager : MonoBehaviour
             StartCoroutine(SpawnMushrooms());
             StartCoroutine(SpawnEnemy());
             StartCoroutine(CheckStuff());
+            roundTime = Time.time;
         }
+        UpdateScore();
     }
 
     void StartTutorial(){
@@ -138,24 +136,19 @@ public class GameManager : MonoBehaviour
     }
 
     public void GameOver(bool win = true){
-        ui.EndGame(win);
+        roundTime = Time.time-roundTime;
+        ui.EndGame(win,roundTime);
     }
 
     public void ToggleTutorial(bool value){
         Tutorial = value;
     }
 
-    void SpawnEnvironment(int howMany, Spawner.EnvironmentType type){
-        for (int i = 0;i<howMany;i++){
-            spawner.SpawnEnvironment(spawner.EmptyLocation(), type);
-        }
-    }
-
     IEnumerator SpawnBushes(){
         int counter = 0;
         while (counter < 10000 && GameLive){
             counter++;
-            SpawnEnvironment(1,Spawner.EnvironmentType.Bush);
+            spawner.SpawnEnvironment(spawner.EmptyLocation(), Spawner.EnvironmentType.Bush);
             yield return new WaitForSeconds(Random.Range(15,25));
         }
     }
@@ -164,7 +157,7 @@ public class GameManager : MonoBehaviour
         int counter = 0;
         while (counter < 10000 && GameLive){
             counter++;
-            SpawnEnvironment(1,Spawner.EnvironmentType.Mushroom);
+            spawner.SpawnEnvironment(spawner.EmptyLocation(), Spawner.EnvironmentType.Mushroom);
             yield return new WaitForSeconds(Random.Range(15,25));
         }
     }
@@ -210,18 +203,10 @@ public class GameManager : MonoBehaviour
     }
 
     public void UpdateScore(){
-        if (spawner.ActiveBuddies.Count > playerDeathScore){
-            PlayerDeath();
-        }
         if (spawner.ActiveBuddies.Count > winScore){
             GameOver(true);
         }
-        ui.textPlayerPopulation.text = "Goblin Population: " + (spawner.ActiveBuddies.Count).ToString();
-        if (PlayerAlive){
-            ui.textPlayerPopulation.text = ui.textPlayerPopulation.text + " (Player Dies After " + playerDeathScore + ")";
-        } else {
-            ui.textPlayerPopulation.text = ui.textPlayerPopulation.text + " (Win at " + winScore + ")";
-        }
+        ui.textPlayerPopulation.text = "Goblin Population: " + spawner.ActiveBuddies.Count + " (Win at " + winScore + ")";
     }
 
     //just for looks
@@ -236,6 +221,10 @@ public class GameManager : MonoBehaviour
             Vector3 randomSpotOnMap = new Vector3(Random.Range(-mapSize,mapSize),0,Random.Range(-mapSize,mapSize));
             spawner.SpawnEnvironment(randomSpotOnMap, Spawner.EnvironmentType.Tree);
         }
+    }
+
+    public void QuitGame(){
+        Application.Quit();
     }
 
     // public void SpeedUpTime(){

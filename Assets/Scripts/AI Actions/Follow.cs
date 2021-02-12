@@ -1,5 +1,6 @@
 using UnityEngine;
-using System.Collections.Generic;
+
+//only used by buddies to follow player when learning
 public class Follow : GOAPAct
 {
     public Follow(){

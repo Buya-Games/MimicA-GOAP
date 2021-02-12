@@ -1,14 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public abstract class GOAPAct //parent class for actions (melee attack, throw item, etc)
+//parent class for actions (melee attack, throw item, etc)
+public abstract class GOAPAct 
 {
     public int ActionLayer, ActionLayer2;//2 is used by some actions like ThrowItem
     public List<GameState.State> Preconditions = new List<GameState.State>();//gameStates required to preform this action
     public List<GameState.State> Effects = new List<GameState.State>();//gameStates created by this action
     protected float coreCost = 1;//just the action itself, doesn't include movement (higher means lower priority)
     public float Cost;//core action + move (higher means lower priority)
-    public float ActionSkill;
+    public float ActionSkill;//only used by MeleeAttack
     public float motiveReproduction, motiveHarvest, motiveAttack, motiveHelper;//counts toward the 3 possible creature goals
     protected float eventRange;//used to calculate CheckRange
     protected GameObject player,cow;
@@ -16,7 +17,7 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
 
     protected void Init(){
         manager = GameObject.FindObjectOfType<GameManager>();
-        CowHead cowCheck = GameObject.FindObjectOfType<CowHead>();
+        Cow cowCheck = GameObject.FindObjectOfType<Cow>();
         if (cowCheck != null){
             cow = cowCheck.gameObject;
         } else {
@@ -37,11 +38,6 @@ public abstract class GOAPAct //parent class for actions (melee attack, throw it
         } else {
             Cost += 25;
         }
-        // float cost = 0;
-        // cost += coreCost;
-        // GameObject estimatedClosestObj = FindClosestObjectOfLayer(agent.gameObject);
-        //if closest obj exists, add its distance to cost, else use flat value (20) to estimate theoretical distance 
-        //return (estimatedClosestObj != null) ? cost += Tools.GetDist(estimatedClosestObj,agent.gameObject) : cost += 20;
     }
 
     public bool CheckPreconditions(List<GameState.State> currentState){ //checking if current state meets conditions to perform this action

@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+//handles logic for food, shroom and poop
+//tracks ownership (who is targeting this item), calculates throwing trajectory, and handles collisions
 public class Item : MonoBehaviour, IThrowable, ITargettable
 {
     GameManager manager;
@@ -9,10 +9,9 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     float gravity;
     float height = 5;
     public Spawner.EnvironmentType MyType;
-    //bool accessible = true;//once object is pickedup/thrown it is inaccessible until it drops
     Vector3 origScale;
     public GameObject Owner { get; set; }
-    public GameObject gameObj { get; set; }
+    public GameObject gameObj { get; set; }//this is so stupid
     bool thrown = false;
 
     void Awake(){
@@ -25,7 +24,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     void OnEnable(){
-        thrown = false;
+        thrown = false;//when pooped (spawned) it is not thrown so don't detect collisions
     }
 
     void SetType(){
@@ -43,29 +42,21 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
         }
     }
 
+    //ownership means this item is targeted by a buddy. this is so we avoid multiple buddies targeting same item
+    //note: enemies cannot an item
     public void Targeted(GameObject who){
-        //if (accessible){
-            //accessible = false;
-            Owner = who;
-            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        //}
+        Owner = who;
     }
 
     public void NotTargeted(){
-        // if (!accessible){
-        //     accessible = true;
-            Owner = null;
-            //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);    
-        //}
+        Owner = null;
     }
 
-    public GameObject ThisGameObject(){
+    public GameObject ThisGameObject(){//this is also so stupid
         return this.gameObject;
     }
 
     public void PickUp(Creature agent){
-        //accessible = false;
-        //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         Vector3 pos = agent.visibleMesh.transform.position;
         pos.y += 3;
         transform.position = pos;
@@ -81,9 +72,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void Drop(){
-        //thrown = false;
-        //accessible = true;
-        //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
         rb.velocity = Vector3.zero;
         rb.isKinematic = false;
 
@@ -92,11 +80,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     }
 
     public void ThrowObject(Vector3 where, float throwStrength){
-        // if (accessible){
-        //     accessible = false;
-        //     //manager.spawner.ThrowOrPickUpObject(gameObject,MyType,accessible);
-        // }
-
         thrown = true;
         Vector3 higherPos = transform.position;
         higherPos.y = 5;
@@ -108,6 +91,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
         }
     }
 
+    //from the great sebastian lague
     Vector3 CalculateTrajectory(Vector3 where, float throwStrength){
         height = (transform.position - where).sqrMagnitude/10; 
         float disY = where.y - transform.position.y;
@@ -122,7 +106,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
 
     protected virtual void OnCollisionEnter(Collision col){
         if (thrown && col.gameObject.layer == 4){//if collide with ground after it has been thrown
-        //if (!accessible && col.gameObject.layer == 4){//if collide with ground after it has been thrown
             Drop();
             Vector3 spawnPoint = transform.position;
             spawnPoint.y = 0f;
@@ -148,10 +131,6 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
                 manager.particles.BombExplosion(transform.position);
             }
         }
-        // if ((col.gameObject.layer == 14)// || col.gameObject.layer == 7 || col.gameObject.layer == 9 || col.gameObject.layer == 10 || col.gameObject.layer == 16) 
-        //     && (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop)){//if cow and this item is poop
-        //     Drop();
-        // }
         if (col.gameObject.layer == 13){//if player
             thrown = false;
             Player player = col.gameObject.GetComponent<Player>();
@@ -167,24 +146,28 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
             }
         }
         if (thrown && col.gameObject.layer == 11){//if collide with enemy in any capacity
-            //Drop();
             if (MyType == Spawner.EnvironmentType.BerryPoop || MyType == Spawner.EnvironmentType.FungusPoop){
                 BombBoom();
             }
         }
-        //thrown = false;
     }
 
+    //kills all enemies within 3f "blast" range
     void BombBoom(){
         Collider[] colliders = Physics.OverlapSphere(transform.position,3f);
 
         bool enemyHit = false;
         foreach (Collider nearbyObject in colliders){
-            Rigidbody rb = nearbyObject.GetComponent<Rigidbody>();
+
+            //i had it so BoomBoom blows everything away with ExplosionForce but it got a little silly
+
+            //Rigidbody rb = nearbyObject.GetComponent<Rigidbody>();
             //if (rb != null && nearbyObject != gameObject){
                 //rb.AddExplosionForce(1000f,transform.position,3f);
                 // float dist = ((transform.position - nearbyObject.transform.position).magnitude) * 2;
                 // dist = 1 / dist; ///perfect will be like .5, so work from there to calculate the damage?
+                
+                //if one of the objects we hit is an enemy, then kill them
                 Enemy enemy = nearbyObject.GetComponent<Enemy>();
                 if (enemy != null){
                     enemy.TakeHit(gameObject,100);
