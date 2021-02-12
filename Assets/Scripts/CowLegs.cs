@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-//moving cow's legs. adopted and simplified from https://www.weaverdev.io/blog/bonehead-procedural-animation
+//moving cow's legs via procedural and IK
 public class CowLegs : MonoBehaviour
 {
     [SerializeField] Transform target;

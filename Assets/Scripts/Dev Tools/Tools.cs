@@ -46,7 +46,7 @@ public static class Tools
                 // if (dist >= 100) {Debug.Log(dist);}
                 foreach (ITargettable b in objects){
                     //Debug.Log(b.TargetBy);
-                    if (b.Owner == null || b.Owner == agent){
+                    if (b.GetOwner() == null || b.GetOwner() == agent){
                         float thisDist = GetDist(b.gameObj,agent);
                         if (thisDist < dist){
                             closest = b;

@@ -5,7 +5,7 @@ public class Resources : MonoBehaviour, ITargettable
 {
     public Spawner.EnvironmentType MyType;
     GameManager manager;
-    [SerializeField] public GameObject Owner { get; set; }
+    public GameObject Owner;
     public GameObject gameObj { get; set; }
 
     void Awake(){
@@ -27,5 +27,9 @@ public class Resources : MonoBehaviour, ITargettable
     }
     public void NotTargeted(){
         Owner = null;
+    }
+
+    public GameObject GetOwner(){
+        return Owner;
     }
 }

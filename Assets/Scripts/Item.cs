@@ -10,7 +10,7 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
     float height = 5;
     public Spawner.EnvironmentType MyType;
     Vector3 origScale;
-    public GameObject Owner { get; set; }
+    public GameObject Owner;
     public GameObject gameObj { get; set; }//this is so stupid
     bool thrown = false;
 
@@ -50,6 +50,10 @@ public class Item : MonoBehaviour, IThrowable, ITargettable
 
     public void NotTargeted(){
         Owner = null;
+    }
+
+    public GameObject GetOwner(){
+        return Owner;
     }
 
     public GameObject ThisGameObject(){//this is also so stupid

@@ -7,7 +7,7 @@ public class Cow : Creature //inherit from Creature for TakeHit and a few funcs,
     [SerializeField] Transform poopPos;
     [SerializeField] MeshRenderer birthBar;//to indicate how much until birthing buddy
     MaterialPropertyBlock matBlockBirth;
-    int eatenFungus = 0;
+    float eatenFungus = 0;
     [SerializeField] Transform ground;
 
     protected override void Awake(){
@@ -41,7 +41,21 @@ public class Cow : Creature //inherit from Creature for TakeHit and a few funcs,
 
     protected override void PostMovementChecks()
     {
-        StartCoroutine(Movement(new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f))));//just loops inifinitely
+        float moveLimit = 50;
+        Vector3 movePos = new Vector3(Random.Range(-1f,1f),0,Random.Range(-1f,1f));
+        if (transform.position.x>moveLimit){
+            movePos.x = Random.Range(-.8f,-1f);
+        }
+        if (transform.position.x<-moveLimit){
+            movePos.x = Random.Range(.8f,1);
+        }
+        if (transform.position.z>moveLimit){
+            movePos.z = Random.Range(-.8f,-1f);
+        }
+        if (transform.position.z<-moveLimit){
+            movePos.z = Random.Range(.8f,1);
+        }
+        StartCoroutine(Movement(movePos));//just loops inifinitely
     }
 
     protected override IEnumerator FaceTarget(Vector3 dir, float turnSpeed = .01f){//again, doesn't inherit from Creature which it should

@@ -23,10 +23,23 @@ public class Tutorial : MonoBehaviour
         manager.spawner.SpawnEnvironment(manager.spawner.EmptyNearbyLocation(manager.cow.transform.position,5,10),Spawner.EnvironmentType.Bush);
     }
 
+    public void ResetTutorial(){
+        Tut0WASD = true;
+        Tut1PickupBerry = false; 
+        Tut2EatBerry = false; 
+        Tut3HardMelee = false; 
+        Tut4ThrowBerryCow = false; 
+        Tut5ThrowPoop = false; 
+        Tut6FeedShroomCow = false; 
+        Tut7GiveBirth = false; 
+        Tut8TeachAny = false; 
+        Tut9TeachFeedPlayer = false;
+    }
+
     public void EndTutorial(){
         manager.Tutorial = false;
         Tut0WASD = true;
-        manager.StartGame();
+        manager.EndTutorial();
         StartCoroutine(CloseTutorialText());
     }
 
@@ -38,7 +51,7 @@ public class Tutorial : MonoBehaviour
         manager.spawner.SpawnEnvironment(manager.spawner.EmptyNearbyLocation(manager.cow.transform.position,5,10),Spawner.EnvironmentType.Mushroom);
     }
 
-    IEnumerator CloseTutorialText(){
+    public IEnumerator CloseTutorialText(){
         yield return new WaitForSeconds(10);
         manager.ui.textTutorial.gameObject.SetActive(false);
         

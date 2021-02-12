@@ -584,9 +584,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'MimicA + GOAP: A Goblins Story<br><br><size=12>Teach your fellow goblins
-    to survive. <br>Protect the goblin cow from enemies. <br>Grow your tribe to 20
-    population.'
+  m_text: MimicA + GOAP Prototype<br><br><size=12>Teach your fellow goblins to survive.
+    <br>Protect the goblin cow from enemies. <br>Grow your tribe to 25 population.
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 313284322300d1a4c8bd641cc3ddf315, type: 2}
   m_sharedMaterial: {fileID: -3796000464795136688, guid: 313284322300d1a4c8bd641cc3ddf315, type: 2}
@@ -28174,8 +28173,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 230, y: 30}
-  m_SizeDelta: {x: 450, y: 50}
+  m_AnchoredPosition: {x: 230, y: 130}
+  m_SizeDelta: {x: 450, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1358583414
 CanvasRenderer:
@@ -28232,8 +28231,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -28268,7 +28267,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 1
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 0, w: -77.55621}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -38856,8 +38855,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -49463,7 +49462,7 @@ MonoBehaviour:
     m_Mode: 1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  winScore: 20
+  winScore: 25
   ShroomsForBirth: 10
   buddyLearningActions: 10
   PlayerAlive: 0
@@ -49527,6 +49526,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
+  students: []
 --- !u!114 &1945215642
 MonoBehaviour:
   m_ObjectHideFlags: 0

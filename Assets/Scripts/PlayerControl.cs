@@ -35,9 +35,6 @@ public class PlayerControl : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.E)){
                 player.EatItem();
             }
-            if (Input.GetKeyDown(KeyCode.Escape)){
-                manager.PauseGame();
-            }
         }
     }
 

@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
     public Material HitMaterial;//red color used to indicate when a creature was hit. should really be in Creature.cs
     public Gradient swingNormal, swingHard;//should also be in Creature.cs
     float roundTime;
+    [HideInInspector] public List<Buddy> students = new List<Buddy>();//list of all buddies currently learning actions from player
 
     //Awake is called before Start
     void Awake(){
@@ -34,7 +35,6 @@ public class GameManager : MonoBehaviour
         cow = FindObjectOfType<Cow>();
         audioManager = FindObjectOfType<AudioManager>();
         tut = GetComponent<Tutorial>();
-        CurrentState.Add(GameState.State.playerAlive);
         ui.ToggleTutorial.onValueChanged.AddListener(ToggleTutorial);
     }
 
@@ -44,9 +44,22 @@ public class GameManager : MonoBehaviour
         SpawnRandomTrees();
     }
 
+    void Update(){
+        if (Input.GetKeyDown(KeyCode.Escape)){
+            PauseGame();
+        }
+    }
+
     public void StartGame(){//called by menu button
+        player.health = 100;
+        CurrentState.Clear();
+        CurrentState.Add(GameState.State.playerAlive);
+        students.Clear();
+        StopAllCoroutines();
         Time.timeScale = 1;
         Time.fixedDeltaTime = Time.timeScale * 0.02f;
+        spawner.CleanUp();
+        tut.ResetTutorial();
         if (GameLive){
             EndGame();
         }
@@ -71,6 +84,7 @@ public class GameManager : MonoBehaviour
             StartCoroutine(SpawnEnemy());
             StartCoroutine(CheckStuff());
             roundTime = Time.time;
+            StartCoroutine(tut.CloseTutorialText());
         }
         UpdateScore();
     }
@@ -89,9 +103,17 @@ public class GameManager : MonoBehaviour
         tut.DisplayNextTip(0);//walk to bush and hit it
     }
 
+    public void EndTutorial(){
+        GameLive = true;
+        StartCoroutine(SpawnBushes());
+        StartCoroutine(SpawnMushrooms());
+        StartCoroutine(SpawnEnemy());
+        StartCoroutine(CheckStuff());
+        roundTime = Time.time;
+    }
+
     public void EndGame(){
         GameLive = false;
-        spawner.CleanUp();
         player.gameObject.SetActive(false);
         StopAllCoroutines();
     }
@@ -189,12 +211,19 @@ public class GameManager : MonoBehaviour
             //so this goes throgh all the targettable items and resets them if they are no longer a target
             var targets = FindObjectsOfType<MonoBehaviour>().OfType<ITargettable>();
             foreach (ITargettable target in targets){
-                if (target.Owner != null){
-                    CreatureLogic owner = target.Owner.GetComponent<CreatureLogic>();
+                if (target.GetOwner() != null){
+                    CreatureLogic owner = target.GetOwner().GetComponent<CreatureLogic>();
                     if (owner != null && owner.Target != target.gameObj){
                         //Debug.Log(target + " is free from shackles of " + owner.name);
                         target.NotTargeted();
                     }
+                }
+            }
+
+            //is player is dead while teaching anyone, switch to learn from AI
+            if (!PlayerAlive && students.Count > 0){
+                foreach (Buddy b in students){
+                    b.LearnFromAI();
                 }
             }
             yield return new WaitForSeconds(1);
@@ -203,7 +232,7 @@ public class GameManager : MonoBehaviour
     }
 
     public void UpdateScore(){
-        if (spawner.ActiveBuddies.Count > winScore){
+        if (spawner.ActiveBuddies.Count >= winScore){
             GameOver(true);
         }
         ui.textPlayerPopulation.text = "Goblin Population: " + spawner.ActiveBuddies.Count + " (Win at " + winScore + ")";

@@ -85,15 +85,15 @@ public class Spawner : MonoBehaviour
             ActiveBuddies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availBuddy);
             manager.particles.DestroyingBuddy(who.transform.position);
+            manager.ui.DisplayMessage(who.transform.position,who.name + " died!", Color.black);
         } else { //if its an enemy
             ActiveEnemies.Remove(who);
             manager.CurrentState.Remove(GameState.State.availEnemy);
             manager.particles.DestroyingEnemy(who.transform.position);
             //manager.ui.textEnemyPopulation.text = "Human Population: " + ActiveEnemies.Count;
         }
-        manager.ui.DisplayMessage(who.transform.position,who.name + " died!", Color.black);
-        manager.UpdateScore();
         Destroy(who);
+        manager.UpdateScore();
 
         if (!manager.PlayerAlive && ActiveBuddies.Count == 0){
             manager.GameOver(false);
@@ -212,29 +212,38 @@ public class Spawner : MonoBehaviour
 
     public void CleanUp(){
         for (int i = 0;i<ActiveBushes.Count;i++){
-            Despawn(ActiveBushes[i]);
+            Destroy(ActiveBushes[i]);
         }
         for (int i = 0;i<ActiveBerries.Count;i++){
-            Despawn(ActiveBerries[i]);
+            Destroy(ActiveBerries[i]);
         }
         for (int i = 0;i<ActiveBerryPoop.Count;i++){
-            Despawn(ActiveBerryPoop[i]);
+            Destroy(ActiveBerryPoop[i]);
         }
         for (int i = 0;i<ActiveFungusPoop.Count;i++){
-            Despawn(ActiveFungusPoop[i]);
+            Destroy(ActiveFungusPoop[i]);
         }
         for (int i = 0;i<ActiveMushrooms.Count;i++){
-            Despawn(ActiveMushrooms[i]);
+            Destroy(ActiveMushrooms[i]);
         }
         for (int i = 0;i<ActiveFungus.Count;i++){
-            Despawn(ActiveFungus[i]);
+            Destroy(ActiveFungus[i]);
         }
         for (int i = 0;i<ActiveEnemies.Count;i++){
-            Despawn(ActiveEnemies[i]);
+            Destroy(ActiveEnemies[i]);
         }
         for (int i = 0;i<ActiveBuddies.Count;i++){ 
-            Despawn(ActiveBuddies[i]);
+            Destroy(ActiveBuddies[i]);
         }
+        ActiveBushes.Clear();
+        ActiveBerries.Clear();
+        ActiveBerryPoop.Clear();
+        ActiveMushrooms.Clear();
+        ActiveFungus.Clear();
+        ActiveFungusPoop.Clear();
+        ActiveEnemies.Clear();
+        ActiveBuddies.Clear();
+        InitializeQueues();
     }
 
     //finds an empty location near the cow (for spawning items)

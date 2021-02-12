@@ -21,6 +21,7 @@ public class Buddy : CreatureLogic
         if (manager.PlayerAlive){
             learning = true;
             learningActions = manager.buddyLearningActions;
+            manager.students.Add(this);
             manager.player.CheckForStudents();
 
             //tells companion to listen everytime Player.cs uses OnTeach, and in those cases to run Learn
@@ -60,6 +61,9 @@ public class Buddy : CreatureLogic
 
             learning = false;
             manager.player.OnTeach -= Learn;//turning off learning listener
+            if (manager.students.Contains(this)){
+                manager.students.Remove(this);
+            }
             manager.player.CheckForStudents();//telling player to stop teaching unless other students
 
             SetGoals();
@@ -77,18 +81,10 @@ public class Buddy : CreatureLogic
                 }
                 //end tutorial shit
             }
-
-            // //tutorial shit
-            // if (manager.Tutorial && manager.tut.Tut9TeachFeedPlayer){
-            //     manager.tut.Tut9TeachFeedPlayer = false;
-            //     manager.tut.DisplayNextTip(10);//final message
-            //     manager.tut.EndTutorial();
-            // }
-            // //end tutorial shit
         }
     }
 
-    void LearnFromAI(){
+    public void LearnFromAI(){
         //select a teacher (using queue instead of rando so we get a healthy balance of peeps)
         CreatureLogic learnFrom = null;
         while (learnFrom == null){
@@ -112,6 +108,7 @@ public class Buddy : CreatureLogic
             LearnRandomSkills();
             return;
         }
+        SetGoals();
     }
 
     //this is actually super OP cuz they learn all possible actions except throwing to each other
@@ -133,6 +130,7 @@ public class Buddy : CreatureLogic
         availableActions.Add(new ThrowItem(Vector3.zero,10,11));
         availableActions.Add(new ThrowItem(Vector3.zero,16,4));
         availableActions.Add(new ThrowItem(Vector3.zero,16,11));
+        SetGoals();
     }
 
     public void SwitchToAILearn(){
@@ -170,7 +168,7 @@ public class Buddy : CreatureLogic
         }
     }
 
-    void SetGoals(){
+    public void SetGoals(){
         StopAllCoroutines();
 
         TallyGoals();

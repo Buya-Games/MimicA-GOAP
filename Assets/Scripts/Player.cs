@@ -50,7 +50,13 @@ public class Player : Creature
             if (nearbyObjects.Length>0){
                 GameObject closest = Tools.FindClosestColliderInGroup(nearbyObjects,transform.position);
                 if (closest != null){
-                    SetTarget(closest);
+                    Target = closest;
+
+                    ITargettable oldTarget = Target.GetComponent<ITargettable>();
+                    if (oldTarget != null){
+                        oldTarget.NotTargeted();
+                    }
+                    //SetTarget(closest);
                 }
                 //Target = nearbyObjects[0].gameObject;//i only use the first object of an array which I believe is random, but that's fine I think?
                 MeleeAttack();
@@ -143,17 +149,20 @@ public class Player : Creature
 
     //checks if any companions still teachable
     public void CheckForStudents(){
-        bool anyoneLearning = false;
-        foreach (GameObject b in manager.spawner.ActiveBuddies){
-            if (b.GetComponent<Buddy>().learning){
-                anyoneLearning = true;
-            }
-        }
-        if (anyoneLearning){
+        //bool anyoneLearning = false;
+        if (manager.students.Count > 0){
             teaching = true;
-        } else {
-            teaching = false;
         }
+        // foreach (GameObject b in manager.spawner.ActiveBuddies){
+        //     if (b.GetComponent<Buddy>().learning){
+        //         anyoneLearning = true;
+        //     }
+        // }
+        // if (anyoneLearning){
+        //     teaching = true;
+        // } else {
+        //     teaching = false;
+        // }
     }
 
     protected override void Die(){
